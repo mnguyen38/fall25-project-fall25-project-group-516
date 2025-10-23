@@ -1,0 +1,53 @@
+.collection-page {
+  padding: 2rem;
+  font-family: Arial, sans-serif;
+  background-color: #f9f9f9;
+  min-height: 100vh;
+}
+
+.collection-header {
+  margin-bottom: 2rem;
+}
+
+.collection-title {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+  color: #1e293b;
+}
+
+.collection-description {
+  font-size: 1rem;
+  color: #475569;
+  margin-bottom: 0.5rem;
+
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  line-clamp: 3;
+  box-orient: vertical;
+  overflow: hidden;
+}
+
+.collection-meta {
+  font-size: 0.9rem;
+  color: #64748b;
+}
+
+.questions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.collection-title {
+  font-size: 2rem;
+  color: #1e293b;
+}

@@ -1,0 +1,21 @@
+.new-community-button {
+  background-color: #3b82f6;
+  color: #fff;
+  padding: 0.5rem 1.25rem;
+  font-size: 1rem;
+  border: none;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    transform 0.1s ease;
+}
+
+.new-community-button:hover {
+  background-color: #2563eb;
+}
+
+.new-community-button:active {
+  background-color: #2563eb;
+}

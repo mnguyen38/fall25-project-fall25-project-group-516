@@ -1,0 +1,43 @@
+.community-page {
+  padding: 2rem;
+  font-family: Arial, sans-serif;
+  background-color: #f9f9f9;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.community-title {
+  font-size: 2rem;
+  color: #333;
+}
+
+.community-controls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.community-search {
+  flex: 1;
+  min-width: 250px;
+  max-width: 400px;
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+
+.communities-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+}
+
+.community-error {
+  color: red;
+  margin-top: 1rem;
+}

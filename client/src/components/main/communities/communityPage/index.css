@@ -1,0 +1,101 @@
+.community-page-layout {
+  display: flex;
+  gap: 2rem;
+  padding: 2rem;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  font-family: Arial, sans-serif;
+  background-color: #ffffff;
+}
+
+/* Main questions section */
+.questions-section {
+  flex: 1;
+  min-width: 0;
+}
+
+.section-heading {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  color: #111827;
+}
+
+/* Sidebar */
+.community-sidebar {
+  width: 300px;
+  flex-shrink: 0;
+  background-color: #f9fafb;
+  border-left: 1px solid #e5e7eb;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  position: sticky;
+  top: 2rem;
+  border-radius: 8px;
+}
+
+.community-title {
+  font-size: 1.75rem;
+  margin-bottom: 1rem;
+  color: #1f2937;
+}
+
+.community-description {
+  font-size: 1rem;
+  color: #4b5563;
+  margin-bottom: 2rem;
+}
+
+/* Members list */
+.community-members {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  max-height: 35vh;
+}
+
+.members-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  overflow-y: auto;
+  max-height: 200px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background-color: #ffffff;
+}
+
+.member-item {
+  padding: 0.5rem 1rem;
+  border-bottom: 1px solid #f3f4f6;
+  font-size: 0.95rem;
+}
+
+.member-item:last-child {
+  border-bottom: none;
+}
+
+.delete-community-btn {
+  background-color: #dc2626; /* Red-600 */
+  color: #fff;
+  padding: 0.5rem 1rem;
+  font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    transform 0.1s ease;
+}
+
+.delete-community-btn:hover {
+  background-color: #b91c1c; /* Red-700 */
+}
+
+.delete-community-btn:active {
+  background-color: #991b1b; /* Red-800 */
+}

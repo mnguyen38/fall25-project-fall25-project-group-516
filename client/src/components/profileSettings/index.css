@@ -1,0 +1,150 @@
+.profile-settings {
+  --color-bg: #f2f4f7;
+  --color-card-bg: #ffffff;
+  --color-border: #d1d5db;
+  --color-primary: #2563eb;
+  --color-primary-hover: #1e40af;
+  --color-danger: #dc2626;
+  --color-danger-hover: #991b1b;
+  --color-success: #16a34a;
+  --color-error: #b91c1c;
+  --radius: 0.75rem;
+  --spacing: 1rem;
+  --font-md: 1rem;
+  --font-lg: 1.25rem;
+
+  background-color: var(--color-bg);
+  padding: 2rem;
+  display: flex;
+  justify-content: center;
+  min-height: 100vh;
+  color: #111827;
+}
+
+.profile-settings .profile-card {
+  background: var(--color-card-bg);
+  padding: 2rem;
+  border-radius: var(--radius);
+  max-width: 700px;
+  width: 100%;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.06);
+}
+
+.profile-settings h2 {
+  font-size: var(--font-lg);
+  margin-bottom: 1.5rem;
+  color: #1f2937;
+}
+
+.profile-settings h4 {
+  margin-top: 2rem;
+  font-size: var(--font-md);
+}
+
+.profile-settings .input-text {
+  display: block;
+  width: 100%;
+  padding: 0.5rem;
+  margin-top: 0.5rem;
+  margin-bottom: 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  font-size: var(--font-md);
+}
+
+.profile-settings .button {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: var(--radius);
+  font-size: var(--font-md);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  margin-right: 0.5rem;
+}
+
+.profile-settings .button-primary {
+  background-color: var(--color-primary);
+  color: white;
+}
+
+.profile-settings .button-primary:hover {
+  background-color: var(--color-primary-hover);
+}
+
+.profile-settings .button-danger {
+  background-color: var(--color-danger);
+  color: white;
+}
+
+.profile-settings .button-danger:hover {
+  background-color: var(--color-danger-hover);
+}
+
+.profile-settings .button-secondary {
+  background-color: #e5e7eb;
+  color: #111827;
+}
+
+.profile-settings .button-secondary:hover {
+  background-color: #d1d5db;
+}
+
+.profile-settings .success-message {
+  color: var(--color-success);
+  font-weight: 500;
+  margin-bottom: 1rem;
+}
+
+.profile-settings .error-message {
+  color: var(--color-error);
+  font-weight: 500;
+  margin-bottom: 1rem;
+}
+
+.profile-settings .markdown {
+  margin-bottom: 1rem;
+  white-space: pre-wrap;
+  line-height: 1.5;
+}
+
+.profile-settings .bio-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+
+.profile-settings .password-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.profile-settings .modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profile-settings .modal-content {
+  background: white;
+  padding: 2rem;
+  border-radius: var(--radius);
+  width: 90%;
+  max-width: 400px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+  text-align: center;
+}
+
+.profile-settings .modal-actions {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
