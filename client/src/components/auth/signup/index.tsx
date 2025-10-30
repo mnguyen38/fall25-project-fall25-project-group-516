@@ -15,6 +15,8 @@ const Signup = () => {
     err,
     handleSubmit,
     handleInputChange,
+    handleGitHubOAuth,
+    handleGoogleOAuth,
     togglePasswordVisibility,
   } = useAuth('signup');
 
@@ -62,7 +64,7 @@ const Signup = () => {
         <button type='submit' className='login-button'>
           Submit
         </button>
-        <button type='button' className='github-button'>
+        <button type='button' className='github-button' onClick={handleGitHubOAuth}>
           <svg aria-hidden='true' viewBox='0 0 24 24'>
             <path
               fill-rule='evenodd'
@@ -72,7 +74,7 @@ const Signup = () => {
           </svg>
           Sign up with GitHub
         </button>
-        <button type='button' className='google-button'>
+        <button type='button' className='google-button' onClick={handleGoogleOAuth}>
           <svg aria-hidden='true' viewBox='0 0 48 48'>
             <circle cx='24' cy='24' r='23' fill='white' />
             <clipPath id='g-clip'>

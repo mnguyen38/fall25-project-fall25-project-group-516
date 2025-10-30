@@ -62,7 +62,6 @@ form {
 
 /* Button styles */
 .signup-button {
-  /* Use the correct class from your signup component JSX */
   padding: 12px;
   font-size: 16px;
   background-color: #007bff;
@@ -125,13 +124,13 @@ form {
 
 .github-button:focus {
   outline: none;
-  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.3); /* Blue focus ring */
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.3);
 }
 
 .github-button svg {
-  width: 1.25rem; /* 20px */
-  height: 1.25rem; /* 20px */
-  margin-right: 0.5rem; /* 8px */
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-right: 0.5rem;
   fill: currentColor;
 }
 
@@ -143,7 +142,7 @@ form {
   padding: 12px;
   font-size: 16px;
   background-color: #007bff;
-  color: #ffffff; /* Dark text for contrast on white */
+  color: #ffffff;
   border: none;
   border-radius: 6px;
   cursor: pointer;
@@ -156,12 +155,11 @@ form {
 
 .google-button:focus {
   outline: none;
-  box-shadow: 0 0 0 4px rgba(66, 133, 244, 0.3); /* Blue focus ring */
+  box-shadow: 0 0 0 4px rgba(66, 133, 244, 0.3);
 }
 
 .google-button svg {
-  width: 1.25rem; /* 20px */
-  height: 1.25rem; /* 20px */
-  margin-right: 0.5rem; /* 8px */
-  /* The SVG has its own fill colors, so we don't set 'fill' here */
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-right: 0.5rem;
 }

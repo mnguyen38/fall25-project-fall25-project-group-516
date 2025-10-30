@@ -14,26 +14,11 @@ const Login = () => {
     err,
     handleSubmit,
     handleInputChange,
+    handleGitHubOAuth,
+    handleGoogleOAuth,
     togglePasswordVisibility,
   } = useAuth('login');
 
-  const handleGitHubLogin = () => {
-    const serverUrl = import.meta.env.VITE_SERVER_URL || 'http://localhost:8000';
-
-    const redirectUrl = `${serverUrl}/api/auth/github`;
-    console.log('Redirecting to:', redirectUrl);
-
-    window.location.href = redirectUrl;
-  };
-
-   const handleGoogleLogin = () => {
-     const serverUrl = import.meta.env.VITE_SERVER_URL || 'http://localhost:8000';
-
-     const redirectUrl = `${serverUrl}/api/auth/google`;
-     console.log('Redirecting to:', redirectUrl);
-
-     window.location.href = redirectUrl;
-   }; 
 
   return (
     <div className='container'>
@@ -72,7 +57,7 @@ const Login = () => {
          <button type='submit' className='login-button'>
           Submit
         </button>
-        <button type='button' className='github-button' onClick={handleGitHubLogin}>
+        <button type='button' className='github-button' onClick={handleGitHubOAuth}>
           <svg aria-hidden='true' viewBox='0 0 24 24'>
             <path
               fill-rule='evenodd'
@@ -82,7 +67,7 @@ const Login = () => {
           </svg>
           Sign in with GitHub
         </button>
-        <button type='button' className='google-button' onClick={handleGoogleLogin}>
+        <button type='button' className='google-button' onClick={handleGoogleOAuth}>
           <svg aria-hidden='true' viewBox='0 0 48 48'>
             <circle cx='24' cy='24' r='23' fill='white' />
             <clipPath id='g-clip'>

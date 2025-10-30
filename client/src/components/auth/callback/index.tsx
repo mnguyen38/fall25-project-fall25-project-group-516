@@ -18,7 +18,7 @@ const AuthCallbackPage: React.FC = () => {
         <>
           <h2>Authentication Error</h2>
           <p>{error}</p>
-          <a href='/login' className='signup-link'>
+          <a href='/' className='signup-link'>
             Go to Login
           </a>
         </>

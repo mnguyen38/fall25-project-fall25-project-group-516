@@ -5,7 +5,7 @@ import { generateToken } from '../utils/jwt'; //
 import { UserResponse, OAuthUserProfile, GitHubEmail } from '../types/types'; //
 
 /**
- * Controller factory for handling OAuth 2.0 authorization flows, starting with GitHub.
+ * Controller for handling OAuth 2.0 authorization flows.
  * @returns {Router} An Express router instance with OAuth routes configured.
  */
 const openAuthorizationController = () => {
@@ -28,10 +28,6 @@ const openAuthorizationController = () => {
     res.redirect(url);
   };
 
-  // Inside openAuthorizationController.ts
-
-  // ... imports ...
-
   /**
    * @route GET /api/auth/google/callback
    * @description Handles the callback from Google after user authorization.
@@ -44,7 +40,6 @@ const openAuthorizationController = () => {
     const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
     const clientUrl = process.env.CLIENT_URL || 'http://localhost:4530';
 
-    // This URI MUST match the one used in getGoogleAuthorization
     const redirectUri = `${process.env.SERVER_URL}/api/auth/google/callback`;
 
     if (!code) {
@@ -60,7 +55,6 @@ const openAuthorizationController = () => {
     }
 
     try {
-      // --- Step 1: Exchange code for tokens ---
       const tokenRes = await axios.post(
         'https://oauth2.googleapis.com/token',
         {
@@ -82,42 +76,37 @@ const openAuthorizationController = () => {
         throw new Error('Failed to retrieve Google access token.');
       }
 
-      // --- Step 2: Fetch Google user profile ---
       const userRes = await axios.get('https://www.googleapis.com/oauth2/v3/userinfo', {
         headers: { Authorization: `Bearer ${access_token}` },
       });
 
-      const googleUser = userRes.data; // Contains sub, name, email, picture, email_verified
+      const googleUser = userRes.data;
 
       if (!googleUser.email_verified) {
         throw new Error('Google account email is not verified.');
       }
 
-      // --- Step 3: Map Google data to the standard OAuthUserProfile ---
       const userProfile: OAuthUserProfile = {
-        id: googleUser.sub, // Google's unique user ID
-        username: googleUser.email, // Use email as the default username
+        id: googleUser.sub,
+        username: googleUser.name,
         displayName: googleUser.name,
         email: googleUser.email,
-        avatar_url: googleUser.picture, // Google calls it 'picture'
-        bio: '', // Google doesn't provide a 'bio' field
+        avatar_url: googleUser.picture,
+        bio: '',
       };
 
-      // --- Step 4: Call findOrCreateOAuthUser with the correct signature ---
       const userResult: UserResponse = await findOrCreateOAuthUser(
-        'google', // 1. oauthProvider
-        userProfile.id, // 2. oauthId
-        userProfile, // 3. profile object
+        'google',
+        userProfile.id,
+        userProfile,
       );
 
       if ('error' in userResult) {
         throw new Error(`User service error: ${userResult.error}`);
       }
 
-      // --- Step 5: Generate your application's JWT ---
       const token = generateToken(userResult);
 
-      // --- Step 6: Redirect back to frontend ---
       res.redirect(`${clientUrl}/auth/callback?token=${token}`);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown OAuth error';
@@ -231,7 +220,7 @@ const openAuthorizationController = () => {
         throw new Error(`User service error: ${userResult.error}`);
       }
 
-      const token = generateToken(userResult); //
+      const token = generateToken(userResult);
 
       res.redirect(`${clientUrl}/auth/callback?token=${token}`);
     } catch (error) {
