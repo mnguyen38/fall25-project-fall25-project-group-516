@@ -17,6 +17,7 @@ import {
 } from '../services/user.service';
 import { upload, processProfilePicture, processBannerImage } from '../utils/upload';
 import { generateToken, verifyToken } from '../utils/jwt';
+import { checkAndAwardBadges } from '../services/badge.service';
 
 const userController = (socket: FakeSOSocket) => {
   const router: Router = express.Router();
@@ -42,6 +43,9 @@ const userController = (socket: FakeSOSocket) => {
       if ('error' in result) {
         throw new Error(result.error);
       }
+
+      // Check and award badges for the new user (e.g., First Steps badge)
+      await checkAndAwardBadges(result.username);
 
       // Generate JWT token for the new user
       const token = generateToken(result);
@@ -74,6 +78,9 @@ const userController = (socket: FakeSOSocket) => {
       if ('error' in user) {
         throw Error(user.error);
       }
+
+      // Check and award badges based on login streak
+      await checkAndAwardBadges(user.username);
 
       // Generate JWT token for the logged-in user
       const token = generateToken(user);

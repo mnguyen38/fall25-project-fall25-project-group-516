@@ -5,6 +5,10 @@ import './index.css';
 import useProfileSettings from '../../hooks/useProfileSettings';
 import ImageUpload from '../imageUpload';
 import BadgeDisplay from '../badgeDisplay';
+import ResetPasswordModal from '../resetPasswordModal';
+import DeleteAccountModal from '../deleteAccountModal';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faPencil, faGears, faKey, faTrash } from '@fortawesome/free-solid-svg-icons';
 
 const ProfileSettings: React.FC = () => {
   const {
@@ -12,20 +16,11 @@ const ProfileSettings: React.FC = () => {
     loading,
     editBioMode,
     newBio,
-    newPassword,
-    confirmNewPassword,
     successMessage,
     errorMessage,
-    showConfirmation,
-    pendingAction,
     canEditProfile,
-    showPassword,
-    togglePasswordVisibility,
     setEditBioMode,
     setNewBio,
-    setNewPassword,
-    setConfirmNewPassword,
-    setShowConfirmation,
     handleResetPassword,
     handleUpdateBiography,
     handleDeleteUser,
@@ -37,6 +32,32 @@ const ProfileSettings: React.FC = () => {
     handleBannerImageUpload,
     handleToggleBadge,
   } = useProfileSettings();
+
+  const [showResetPasswordModal, setShowResetPasswordModal] = React.useState(false);
+  const [showDeleteAccountModal, setShowDeleteAccountModal] = React.useState(false);
+  const [showSettingsDropdown, setShowSettingsDropdown] = React.useState(false);
+  const [editMode, setEditMode] = React.useState(false);
+  const settingsDropdownRef = React.useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        settingsDropdownRef.current &&
+        !settingsDropdownRef.current.contains(event.target as Node)
+      ) {
+        setShowSettingsDropdown(false);
+      }
+    };
+
+    if (showSettingsDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showSettingsDropdown]);
 
   if (loading) {
     return (
@@ -71,38 +92,178 @@ const ProfileSettings: React.FC = () => {
 
         {/* Profile Header Card */}
         <div className='profile-card profile-header'>
-          {/* Banner */}
-          <div className='profile-banner'>
-            {userData.bannerImage ? <img src={userData.bannerImage} alt='Profile banner' /> : null}
-          </div>
+          {!editMode ? (
+            <>
+              {/* View Mode */}
+              {/* Banner */}
+              <div className='profile-banner'>
+                {userData.bannerImage ? (
+                  <img src={userData.bannerImage} alt='Profile banner' />
+                ) : null}
+              </div>
 
-          {/* Profile Info */}
-          <div className='profile-main-info'>
-            <div className='profile-picture-section'>
-              <div className='profile-picture-wrapper'>
-                {userData.profilePicture ? (
-                  <img src={userData.profilePicture} alt={userData.username} />
-                ) : (
-                  <div className='profile-picture-placeholder'>
-                    {userData.username.charAt(0).toUpperCase()}
+              {/* Profile Info */}
+              <div className='profile-main-info'>
+                <div className='profile-picture-section'>
+                  <div className='profile-picture-wrapper'>
+                    {userData.profilePicture ? (
+                      <img src={userData.profilePicture} alt={userData.username} />
+                    ) : (
+                      <div className='profile-picture-placeholder'>
+                        {userData.username.charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                  </div>
+                  <div className='profile-identity'>
+                    <h1 className='profile-name'>{userData.username}</h1>
+                    <p className='profile-username'>@{userData.username}</p>
+                    {userData.showLoginStreak &&
+                      userData.loginStreak !== undefined &&
+                      userData.loginStreak > 0 && (
+                        <p className='profile-login-streak'>
+                          {userData.loginStreak} day login streak
+                        </p>
+                      )}
+                    {userData.dateJoined && (
+                      <p className='profile-date'>
+                        Joined{' '}
+                        {new Date(userData.dateJoined).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'long',
+                        })}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Action Icons */}
+                {canEditProfile && (
+                  <div className='profile-header-actions'>
+                    <button
+                      className='icon-button'
+                      onClick={() => setEditMode(true)}
+                      title='Edit profile'
+                      aria-label='Edit profile'>
+                      <FontAwesomeIcon icon={faPencil} />
+                    </button>
+                    <div className='settings-dropdown-wrapper' ref={settingsDropdownRef}>
+                      <button
+                        className='icon-button'
+                        onClick={() => setShowSettingsDropdown(!showSettingsDropdown)}
+                        title='Settings'
+                        aria-label='Settings'>
+                        <FontAwesomeIcon icon={faGears} />
+                      </button>
+                      {showSettingsDropdown && (
+                        <div className='settings-dropdown'>
+                          <button
+                            className='dropdown-item'
+                            onClick={() => {
+                              setShowSettingsDropdown(false);
+                              setShowResetPasswordModal(true);
+                            }}>
+                            <FontAwesomeIcon icon={faKey} />
+                            <span>Reset Password</span>
+                          </button>
+                          <button
+                            className='dropdown-item dropdown-item-danger'
+                            onClick={() => {
+                              setShowSettingsDropdown(false);
+                              setShowDeleteAccountModal(true);
+                            }}>
+                            <FontAwesomeIcon icon={faTrash} />
+                            <span>Delete Account</span>
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
-              <div className='profile-identity'>
-                <h1 className='profile-name'>{userData.username}</h1>
-                <p className='profile-username'>@{userData.username}</p>
-                {userData.dateJoined && (
-                  <p className='profile-date'>
-                    Joined{' '}
-                    {new Date(userData.dateJoined).toLocaleDateString('en-US', {
-                      year: 'numeric',
-                      month: 'long',
-                    })}
-                  </p>
+            </>
+          ) : (
+            <>
+              {/* Edit Mode - Same Layout as View Mode */}
+              {/* Banner - Editable */}
+              <div className='profile-banner editable-banner'>
+                {userData.bannerImage ? (
+                  <img src={userData.bannerImage} alt='Profile banner' />
+                ) : (
+                  <div className='empty-banner' />
                 )}
+                <div className='edit-overlay'>
+                  <span>Click to change banner</span>
+                </div>
+                <ImageUpload
+                  label=''
+                  aspectRatio='banner'
+                  currentImageUrl={userData.bannerImage}
+                  onUpload={handleBannerImageUpload}
+                />
               </div>
-            </div>
-          </div>
+
+              {/* Profile Info */}
+              <div className='profile-main-info'>
+                <div className='profile-picture-section'>
+                  {/* Profile Picture - Editable */}
+                  <div className='profile-picture-wrapper editable-picture'>
+                    {userData.profilePicture ? (
+                      <img src={userData.profilePicture} alt={userData.username} />
+                    ) : (
+                      <div className='profile-picture-placeholder'>
+                        {userData.username.charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                    <div className='edit-overlay'>
+                      <span>Click to change</span>
+                    </div>
+                    <ImageUpload
+                      label=''
+                      aspectRatio='square'
+                      currentImageUrl={userData.profilePicture}
+                      onUpload={handleProfilePictureUpload}
+                    />
+                  </div>
+                  <div className='profile-identity'>
+                    <h1 className='profile-name'>{userData.username}</h1>
+                    <p className='profile-username'>@{userData.username}</p>
+                    {userData.showLoginStreak &&
+                      userData.loginStreak !== undefined &&
+                      userData.loginStreak > 0 && (
+                        <p className='profile-login-streak'>
+                          {userData.loginStreak} day login streak
+                        </p>
+                      )}
+                    {userData.dateJoined && (
+                      <p className='profile-date'>
+                        Joined{' '}
+                        {new Date(userData.dateJoined).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'long',
+                        })}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Done Button */}
+                <div className='profile-header-actions'>
+                  <button
+                    className='button button-primary'
+                    onClick={() => setEditMode(false)}
+                    aria-label='Done editing'>
+                    Done
+                  </button>
+                </div>
+              </div>
+
+              {uploadingImage && (
+                <div className='uploading-indicator-overlay'>
+                  <span>Uploading image...</span>
+                </div>
+              )}
+            </>
+          )}
         </div>
 
         {/* Biography Section */}
@@ -167,119 +328,27 @@ const ProfileSettings: React.FC = () => {
           </div>
         )}
 
-        {/* Profile Customization (Edit Mode Only) */}
-        {canEditProfile && (
-          <div className='profile-card'>
-            <div className='profile-section'>
-              <h2 className='section-title'>Profile Customization</h2>
-              {uploadingImage && (
-                <div className='uploading-indicator'>
-                  <span>Uploading image...</span>
-                </div>
-              )}
-              <div className='image-upload-section'>
-                <ImageUpload
-                  label='Profile Picture'
-                  aspectRatio='square'
-                  currentImageUrl={userData.profilePicture}
-                  onUpload={handleProfilePictureUpload}
-                />
-                <ImageUpload
-                  label='Banner Image'
-                  aspectRatio='banner'
-                  currentImageUrl={userData.bannerImage}
-                  onUpload={handleBannerImageUpload}
-                />
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Actions */}
+        {/* Collections Link */}
         <div className='profile-card'>
           <div className='profile-section'>
-            <h2 className='section-title'>Actions</h2>
-            <div className='button-group'>
-              <button className='button button-primary' onClick={handleViewCollectionsPage}>
-                View Collections
-              </button>
-            </div>
+            <button className='button button-primary' onClick={handleViewCollectionsPage}>
+              View Collections
+            </button>
           </div>
         </div>
 
-        {/* Account Settings (Edit Mode Only) */}
-        {canEditProfile && (
-          <>
-            {/* Reset Password */}
-            <div className='profile-card'>
-              <div className='profile-section'>
-                <h2 className='section-title'>Reset Password</h2>
-                <div className='password-section'>
-                  <input
-                    className='input-text'
-                    type={showPassword ? 'text' : 'password'}
-                    placeholder='New Password'
-                    value={newPassword}
-                    onChange={e => setNewPassword(e.target.value)}
-                  />
-                  <input
-                    className='input-text'
-                    type={showPassword ? 'text' : 'password'}
-                    placeholder='Confirm New Password'
-                    value={confirmNewPassword}
-                    onChange={e => setConfirmNewPassword(e.target.value)}
-                  />
-                  <div className='password-actions'>
-                    <button className='button button-secondary' onClick={togglePasswordVisibility}>
-                      {showPassword ? 'Hide' : 'Show'} Passwords
-                    </button>
-                    <button className='button button-primary' onClick={handleResetPassword}>
-                      Update Password
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Danger Zone */}
-            <div className='profile-card'>
-              <div className='profile-section'>
-                <div className='danger-zone'>
-                  <h3 className='danger-zone-title'>Danger Zone</h3>
-                  <p className='danger-zone-text'>
-                    Once you delete your account, there is no going back. Please be certain.
-                  </p>
-                  <button className='button button-danger' onClick={handleDeleteUser}>
-                    Delete Account
-                  </button>
-                </div>
-              </div>
-            </div>
-          </>
-        )}
-
-        {/* Confirmation Modal */}
-        {showConfirmation && (
-          <div className='modal'>
-            <div className='modal-content'>
-              <h3>Delete Account</h3>
-              <p>
-                Are you sure you want to delete <strong>{userData.username}</strong>? This action
-                cannot be undone.
-              </p>
-              <div className='modal-actions'>
-                <button
-                  className='button button-secondary'
-                  onClick={() => setShowConfirmation(false)}>
-                  Cancel
-                </button>
-                <button className='button button-danger' onClick={() => pendingAction?.()}>
-                  Delete Account
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Modals */}
+        <ResetPasswordModal
+          isOpen={showResetPasswordModal}
+          onClose={() => setShowResetPasswordModal(false)}
+          onSubmit={handleResetPassword}
+        />
+        <DeleteAccountModal
+          isOpen={showDeleteAccountModal}
+          onClose={() => setShowDeleteAccountModal(false)}
+          onConfirm={handleDeleteUser}
+          username={userData.username}
+        />
       </div>
     </div>
   );

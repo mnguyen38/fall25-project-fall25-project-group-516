@@ -8,6 +8,7 @@ import {
 } from '../types/types';
 import { addComment, saveComment } from '../services/comment.service';
 import { populateDocument } from '../utils/database.util';
+import { checkAndAwardBadges } from '../services/badge.service';
 
 const commentController = (socket: FakeSOSocket) => {
   const router = express.Router();
@@ -44,6 +45,9 @@ const commentController = (socket: FakeSOSocket) => {
       if (status && 'error' in status) {
         throw new Error(status.error);
       }
+
+      // Check and award badges to the user
+      await checkAndAwardBadges(comment.commentBy);
 
       // Populates the fields of the question or answer that this comment
       // was added to, and emits the updated object

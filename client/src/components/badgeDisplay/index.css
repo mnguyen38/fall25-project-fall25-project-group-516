@@ -56,21 +56,27 @@
 
 .badge-icon {
   flex-shrink: 0;
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  overflow: hidden;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  width: 64px;
+  height: 64px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .badge-icon img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+}
+
+/* Grayscale filter for unearned badges */
+.badge-item.unearned .badge-icon img {
+  filter: grayscale(100%) opacity(0.5);
+}
+
+/* Full color for earned badges */
+.badge-item.earned .badge-icon img {
+  filter: none;
 }
 
 .badge-placeholder {

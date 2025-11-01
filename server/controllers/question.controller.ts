@@ -21,6 +21,8 @@ import {
 } from '../services/question.service';
 import { processTags } from '../services/tag.service';
 import { populateDocument } from '../utils/database.util';
+import { checkAndAwardBadges } from '../services/badge.service';
+import QuestionModel from '../models/questions.model';
 
 const questionController = (socket: FakeSOSocket) => {
   const router = express.Router();
@@ -123,6 +125,9 @@ const questionController = (socket: FakeSOSocket) => {
         throw new Error(result.error);
       }
 
+      // Check and award badges to the user
+      await checkAndAwardBadges(question.askedBy);
+
       // Populates the fields of the question that was added, and emits the new object
       const populatedQuestion = await populateDocument(result._id.toString(), 'question');
 
@@ -168,6 +173,15 @@ const questionController = (socket: FakeSOSocket) => {
 
       if (status && 'error' in status) {
         throw new Error(status.error);
+      }
+
+      // Check and award badges to the question owner if this was an upvote
+      if (type === 'upvote') {
+        // Get the question to find the owner (without incrementing views)
+        const question = await QuestionModel.findById(qid);
+        if (question) {
+          await checkAndAwardBadges(question.askedBy);
+        }
       }
 
       // Emit the updated vote counts to all connected clients

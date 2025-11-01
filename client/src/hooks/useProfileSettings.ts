@@ -22,19 +22,11 @@ const useProfileSettings = () => {
 
   // Local state
   const [userData, setUserData] = useState<SafeDatabaseUser | null>(null);
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmNewPassword, setConfirmNewPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [editBioMode, setEditBioMode] = useState(false);
   const [newBio, setNewBio] = useState('');
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
-  // For delete-user confirmation modal
-  const [showConfirmation, setShowConfirmation] = useState(false);
-  const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
-
-  const [showPassword, setShowPassword] = useState(false);
 
   // Badge and image upload state
   const [badges, setBadges] = useState<BadgeWithProgress[]>([]);
@@ -74,45 +66,30 @@ const useProfileSettings = () => {
     fetchBadges();
   }, [username]);
 
-  /**
-   * Toggles the visibility of the password fields.
-   */
-  const togglePasswordVisibility = () => {
-    setShowPassword(prevState => !prevState);
-  };
+  // Auto-dismiss success messages after 10 seconds
+  useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => {
+        setSuccessMessage(null);
+      }, 10000);
 
-  /**
-   * Validate the password fields before attempting to reset.
-   */
-  const validatePasswords = () => {
-    if (newPassword.trim() === '' || confirmNewPassword.trim() === '') {
-      setErrorMessage('Please enter and confirm your new password.');
-      return false;
+      return () => clearTimeout(timer);
     }
-    if (newPassword !== confirmNewPassword) {
-      setErrorMessage('Passwords do not match.');
-      return false;
-    }
-    return true;
-  };
+  }, [successMessage]);
 
   /**
    * Handler for resetting the password
    */
-  const handleResetPassword = async () => {
+  const handleResetPassword = async (newPassword: string) => {
     if (!username) return;
-    if (!validatePasswords()) {
-      return;
-    }
     try {
       await resetPassword(username, newPassword);
       setSuccessMessage('Password reset successful!');
       setErrorMessage(null);
-      setNewPassword('');
-      setConfirmNewPassword('');
     } catch (error) {
       setErrorMessage('Failed to reset password.');
       setSuccessMessage(null);
+      throw error;
     }
   };
 
@@ -138,24 +115,20 @@ const useProfileSettings = () => {
   };
 
   /**
-   * Handler for deleting the user (triggers confirmation modal)
+   * Handler for deleting the user
    */
-  const handleDeleteUser = () => {
+  const handleDeleteUser = async () => {
     if (!username) return;
-    setShowConfirmation(true);
-    setPendingAction(() => async () => {
-      try {
-        await deleteUser(username);
-        setSuccessMessage(`User "${username}" deleted successfully.`);
-        setErrorMessage(null);
-        navigate('/');
-      } catch (error) {
-        setErrorMessage('Failed to delete user.');
-        setSuccessMessage(null);
-      } finally {
-        setShowConfirmation(false);
-      }
-    });
+    try {
+      await deleteUser(username);
+      setSuccessMessage(`User "${username}" deleted successfully.`);
+      setErrorMessage(null);
+      navigate('/');
+    } catch (error) {
+      setErrorMessage('Failed to delete user.');
+      setSuccessMessage(null);
+      throw error;
+    }
   };
 
   const handleViewCollectionsPage = () => {
@@ -226,10 +199,6 @@ const useProfileSettings = () => {
 
   return {
     userData,
-    newPassword,
-    confirmNewPassword,
-    setNewPassword,
-    setConfirmNewPassword,
     loading,
     editBioMode,
     setEditBioMode,
@@ -237,13 +206,7 @@ const useProfileSettings = () => {
     setNewBio,
     successMessage,
     errorMessage,
-    showConfirmation,
-    setShowConfirmation,
-    pendingAction,
-    setPendingAction,
     canEditProfile,
-    showPassword,
-    togglePasswordVisibility,
     handleResetPassword,
     handleUpdateBiography,
     handleDeleteUser,

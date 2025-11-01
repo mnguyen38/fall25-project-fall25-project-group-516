@@ -32,11 +32,13 @@ const BadgeDisplay: React.FC<BadgeDisplayProps> = ({
         className={`badge-item ${isEarned ? 'earned' : 'unearned'} ${isDisplayed ? 'displayed' : ''}`}
         title={badge.hint}>
         <div className='badge-icon'>
-          {badge.icon ? (
-            <img src={badge.icon} alt={badge.name} />
-          ) : (
-            <div className='badge-placeholder'>{badge.name.charAt(0)}</div>
-          )}
+          <img
+            src={`/badges/${badge.icon || 'default-badge.svg'}`}
+            alt={badge.name}
+            onError={e => {
+              e.currentTarget.src = '/badges/default-badge.svg';
+            }}
+          />
         </div>
         <div className='badge-info'>
           <h4 className='badge-name'>{badge.name}</h4>

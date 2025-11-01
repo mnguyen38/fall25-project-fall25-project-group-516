@@ -5,6 +5,10 @@ The team project for this class is designed to mirror the experiences of a softw
 
 Run `npm install` in the root directory to install all dependencies for the `client`, `server`, and `shared` folders.
 
+Run `cd client` and `npm install @fortawesome/react-fontawesome @fortawesome/fontawesome-svg-core @fortawesome/free-solid-svg-icons`
+
+Seed the database with `cd server` `npm run delete-db` `npm run populate-db` 
+
 > [!NOTE]
 > Refer to [IP1](https://neu-se.github.io/CS4530-Spring-2025/assignments/ip1) and [IP2](https://neu-se.github.io/CS4530-Spring-2025/assignments/ip2) for further instructions related to setting up MongoDB, setting environment variables, and running the client and server.
 

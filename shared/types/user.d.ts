@@ -24,6 +24,7 @@ export interface UserCredentials {
  * - `badges`: Array of badge IDs the user has earned.
  * - `displayedBadges`: Array of badge IDs the user wants to display.
  * - `loginStreak`: Number of consecutive days logged in.
+ * - `maxLoginStreak`: Maximum login streak ever achieved.
  * - `lastLogin`: The last date/time the user logged in.
  * - `showLoginStreak`: Whether to display the login streak on profile.
  */
@@ -37,6 +38,7 @@ export interface User extends UserCredentials {
   badges?: ObjectId[];
   displayedBadges?: ObjectId[];
   loginStreak?: number;
+  maxLoginStreak?: number;
   lastLogin?: Date;
   showLoginStreak?: boolean;
   email?: string;

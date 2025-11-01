@@ -17,19 +17,29 @@ import {
  */
 export const saveUser = async (user: User): Promise<UserResponse> => {
   try {
-    const result: DatabaseUser = await UserModel.create(user);
+    // Set initial login data for new users
+    const now = new Date();
+    const userWithLoginData = {
+      ...user,
+      lastLogin: now,
+      loginStreak: 1,
+      maxLoginStreak: 1,
+    };
+
+    const result: DatabaseUser = await UserModel.create(userWithLoginData);
 
     if (!result) {
       throw Error('Failed to create user');
     }
 
-    // Remove password field from returned object
-    const safeUser: SafeDatabaseUser = {
-      _id: result._id,
-      username: result.username,
-      dateJoined: result.dateJoined,
-      biography: result.biography,
-    };
+    // Get the user without password using select, which includes all fields
+    const safeUser: SafeDatabaseUser | null = await UserModel.findById(result._id).select(
+      '-password',
+    );
+
+    if (!safeUser) {
+      throw Error('Failed to retrieve created user');
+    }
 
     return safeUser;
   } catch (error) {
@@ -79,6 +89,7 @@ export const getUsersList = async (): Promise<UsersResponse> => {
 
 /**
  * Authenticates a user by verifying their username and password.
+ * Also updates login streak tracking.
  *
  * @param {UserCredentials} loginCredentials - An object containing the username and password.
  * @returns {Promise<UserResponse>} - Resolves with the authenticated user object (without the password) or an error message.
@@ -87,15 +98,62 @@ export const loginUser = async (loginCredentials: UserCredentials): Promise<User
   const { username, password } = loginCredentials;
 
   try {
-    const user: SafeDatabaseUser | null = await UserModel.findOne({ username, password }).select(
-      '-password',
-    );
+    const user = await UserModel.findOne({ username, password });
 
     if (!user) {
       throw Error('Authentication failed');
     }
 
-    return user;
+    // Update login streak
+    const now = new Date();
+    const lastLogin = user.lastLogin ? new Date(user.lastLogin) : null;
+
+    let newLoginStreak = 1;
+
+    if (lastLogin) {
+      const diffTime = Math.abs(now.getTime() - lastLogin.getTime());
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+      if (diffDays === 0) {
+        // Same day login - keep streak unchanged, but ensure minimum of 1
+        newLoginStreak = Math.max(user.loginStreak || 1, 1);
+      } else if (diffDays === 1) {
+        // Consecutive day login - increment streak, ensuring minimum of 1
+        newLoginStreak = Math.max(user.loginStreak || 0, 0) + 1;
+      } else {
+        // Streak broken - reset to 1
+        newLoginStreak = 1;
+      }
+    } else {
+      // First time login - set to 1
+      newLoginStreak = 1;
+    }
+
+    // Update max streak if current streak is higher, ensuring minimum of 1
+    const newMaxStreak = Math.max(newLoginStreak, user.maxLoginStreak || 0, 1);
+
+    // Update user with new login data
+    await UserModel.updateOne(
+      { username },
+      {
+        $set: {
+          lastLogin: now,
+          loginStreak: newLoginStreak,
+          maxLoginStreak: newMaxStreak,
+        },
+      },
+    );
+
+    // Get updated user without password
+    const updatedUser: SafeDatabaseUser | null = await UserModel.findOne({ username }).select(
+      '-password',
+    );
+
+    if (!updatedUser) {
+      throw Error('Failed to retrieve updated user');
+    }
+
+    return updatedUser;
   } catch (error) {
     return { error: `Error occurred when authenticating user: ${error}` };
   }

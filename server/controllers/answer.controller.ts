@@ -3,6 +3,7 @@ import { ObjectId } from 'mongodb';
 import { Answer, AddAnswerRequest, FakeSOSocket, PopulatedDatabaseAnswer } from '../types/types';
 import { addAnswerToQuestion, saveAnswer } from '../services/answer.service';
 import { populateDocument } from '../utils/database.util';
+import { checkAndAwardBadges } from '../services/badge.service';
 
 const answerController = (socket: FakeSOSocket) => {
   const router = express.Router();
@@ -32,6 +33,9 @@ const answerController = (socket: FakeSOSocket) => {
       if (status && 'error' in status) {
         throw new Error(status.error as string);
       }
+
+      // Check and award badges to the user
+      await checkAndAwardBadges(ansInfo.ansBy);
 
       const populatedAns = await populateDocument(ansFromDb._id.toString(), 'answer');
 

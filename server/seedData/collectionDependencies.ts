@@ -1,5 +1,5 @@
 import { AnswerImport, CollectionImport, QuestionImport } from '../types/populate';
-import { User, Comment, Tag, Message, Community } from '../types/types';
+import { User, Comment, Tag, Message, Community, Badge } from '../types/types';
 
 /**
  * Maps collections to their dependencies to ensure proper reference resolution.
@@ -11,6 +11,7 @@ export const collectionDependencies = {
   user: [],
   message: [],
   comment: [],
+  badge: [],
   answer: ['comment'],
   question: ['tag', 'comment', 'answer', 'community'],
   community: [],
@@ -28,4 +29,5 @@ export type CollectionDocTypes = {
   message: Message;
   community: Community;
   collection: CollectionImport;
+  badge: Badge;
 };

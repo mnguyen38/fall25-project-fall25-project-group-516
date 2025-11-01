@@ -71,6 +71,10 @@ const userSchema: Schema = new Schema(
       type: Number,
       default: 0,
     },
+    maxLoginStreak: {
+      type: Number,
+      default: 0,
+    },
     lastLogin: {
       type: Date,
       default: null,

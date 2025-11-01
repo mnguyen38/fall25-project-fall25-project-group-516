@@ -2,7 +2,7 @@
   "badge1": {
     "name": "First Question",
     "description": "Asked your first question on the platform",
-    "icon": "",
+    "icon": "first-question.PNG",
     "category": "participation",
     "requirement": {
       "type": "first_question",
@@ -14,7 +14,7 @@
   "badge2": {
     "name": "First Answer",
     "description": "Posted your first answer to help the community",
-    "icon": "",
+    "icon": "first-answer.PNG",
     "category": "participation",
     "requirement": {
       "type": "first_answer",
@@ -26,7 +26,7 @@
   "badge3": {
     "name": "Curious Mind",
     "description": "Asked 10 questions",
-    "icon": "",
+    "icon": "curious-mind.PNG",
     "category": "achievement",
     "requirement": {
       "type": "question_count",
@@ -38,7 +38,7 @@
   "badge4": {
     "name": "Helpful Helper",
     "description": "Provided 10 answers",
-    "icon": "",
+    "icon": "helpful-helper.PNG",
     "category": "achievement",
     "requirement": {
       "type": "answer_count",
@@ -50,7 +50,7 @@
   "badge5": {
     "name": "Popular Contributor",
     "description": "Received 50 upvotes across all your posts",
-    "icon": "",
+    "icon": "popular-contributor.PNG",
     "category": "achievement",
     "requirement": {
       "type": "upvote_count",
@@ -62,7 +62,7 @@
   "badge6": {
     "name": "Dedicated User",
     "description": "Maintained a 7-day login streak",
-    "icon": "",
+    "icon": "dedicated-user.PNG",
     "category": "streak",
     "requirement": {
       "type": "login_streak",
@@ -74,7 +74,7 @@
   "badge7": {
     "name": "Streak Champion",
     "description": "Maintained a 30-day login streak",
-    "icon": "",
+    "icon": "streak-champion.PNG",
     "category": "streak",
     "requirement": {
       "type": "login_streak",
@@ -86,7 +86,7 @@
   "badge8": {
     "name": "Engaged Commenter",
     "description": "Made 25 comments",
-    "icon": "",
+    "icon": "engaged-commenter.PNG",
     "category": "achievement",
     "requirement": {
       "type": "comment_count",
@@ -98,7 +98,7 @@
   "badge9": {
     "name": "Community Star",
     "description": "Received 100 upvotes across all your posts",
-    "icon": "",
+    "icon": "community-star.PNG",
     "category": "achievement",
     "requirement": {
       "type": "upvote_count",
@@ -110,7 +110,7 @@
   "badge10": {
     "name": "Expert Asker",
     "description": "Asked 50 questions",
-    "icon": "",
+    "icon": "expert-asker.PNG",
     "category": "achievement",
     "requirement": {
       "type": "question_count",
