@@ -1,28 +1,23 @@
-// src/hooks/useAuthCallback.ts
-
 import { useEffect, useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import useLoginContext from './useLoginContext';
 import { setAuthToken } from '../utils/auth';
 import { verifyStoredToken } from '../services/userService';
 
 const useAuthCallback = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const { setUser } = useLoginContext();
+
+  const { token } = useParams();
 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const handleAuth = async () => {
-      const params = new URLSearchParams(location.search);
-      const token = params.get('token');
-      const authError = params.get('error');
-
-      if (authError) {
-        setError(authError);
-        navigate('/login?error=oauth_failed');
+      if (!token) {
+        setError('OAuth Failed');
+        navigate('/');
         return;
       }
 
@@ -39,18 +34,18 @@ const useAuthCallback = () => {
           }
         } catch (err) {
           setError('Failed to log in with token.');
-          navigate('/login?error=token_verification_failed');
+          navigate('/');
         }
       } else {
         setError('No token received.');
-        navigate('/login?error=unexpected');
+        navigate('/');
       }
 
       setIsLoading(false);
     };
 
     handleAuth();
-  }, [location, navigate, setUser]);
+  }, [token, navigate, setUser]);
 
   return { isLoading, error };
 };

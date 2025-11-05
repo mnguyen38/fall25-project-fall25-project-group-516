@@ -89,7 +89,10 @@ const FakeStackOverflow = ({ socket }: { socket: FakeSOSocket | null }) => {
         {/* Public Routes - redirect to /home if already logged in */}
         <Route path='/' element={user ? <Navigate to='/home' /> : <Login />} />
         <Route path='/signup' element={user ? <Navigate to='/home' /> : <Signup />} />
-        <Route path='/auth/callback' element={<AuthCallbackPage />} />
+        <Route
+          path='/auth/callback/:token'
+          element={user ? <Navigate to='/home' /> : <AuthCallbackPage />}
+        />
         {/* Protected Routes */}
         {
           <Route
