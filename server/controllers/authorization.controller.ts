@@ -15,16 +15,16 @@ const openAuthorizationController = () => {
     const redirectUri = `${process.env.SERVER_URL}/api/auth/google/callback`;
     const clientId = process.env.GOOGLE_CLIENT_ID;
 
-    if (!redirectUri || !clientId) {
+    if (!process.env.SERVER_URL || !clientId) {
       res.status(500).send('OAuth configuration error.');
       return;
     }
 
     const scope = 'openid%20email%20profile';
 
-    const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=${scope}`;
+    const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=${scope}&prompt=select_account`;
 
-    res.redirect(url);
+    res.redirect(302, url);
   };
 
   /**
@@ -103,9 +103,9 @@ const openAuthorizationController = () => {
 
       const token = generateToken(userResult);
 
-      res.redirect(`${clientUrl}/auth/callback?token=${token}`);
+      res.redirect(`${clientUrl}/auth/callback/${token}`);
     } catch {
-      res.redirect(`${clientUrl}/auth/callback?error=google_oauth_failed`);
+      res.redirect(`${clientUrl}/auth/callback/`);
     }
   };
 
@@ -121,13 +121,13 @@ const openAuthorizationController = () => {
     const redirectUri = `${process.env.SERVER_URL}/api/auth/github/callback`;
     const clientId = process.env.GITHUB_CLIENT_ID;
 
-    if (!redirectUri || !clientId) {
+    if (!process.env.SERVER_URL || !clientId) {
       res.status(500).send('OAuth configuration error.');
       return;
     }
 
-    const url = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&scope=user:email`;
-    res.redirect(url);
+    const url = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&scope=user:email&prompt=select_account`;
+    res.redirect(302, url);
   };
 
   /**
@@ -150,7 +150,7 @@ const openAuthorizationController = () => {
       res.status(400).send('Authorization code missing.');
       return;
     }
-    if (!clientId || !clientSecret) {
+    if (!clientId || !clientSecret || !process.env.SERVER_URL) {
       res.status(500).send('OAuth configuration error.');
       return;
     }
@@ -212,9 +212,9 @@ const openAuthorizationController = () => {
 
       const token = generateToken(userResult);
 
-      res.redirect(`${clientUrl}/auth/callback?token=${token}`);
-    } catch (error) {
-      res.redirect(`${clientUrl}/auth/callback?error=github_oauth_failed`);
+      res.redirect(`${clientUrl}/auth/callback/${token}`);
+    } catch {
+      res.redirect(`${clientUrl}/auth/callback/`);
     }
   };
 
