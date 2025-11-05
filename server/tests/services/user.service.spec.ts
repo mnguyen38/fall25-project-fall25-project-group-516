@@ -8,7 +8,7 @@ import {
   saveUser,
   updateUser,
 } from '../../services/user.service';
-import { DatabaseUser, SafeDatabaseUser, User, UserCredentials } from '../../types/types';
+import { SafeDatabaseUser, User, UserCredentials } from '../../types/types';
 import { user, safeUser } from '../mockData.models';
 
 describe('User model', () => {
@@ -141,13 +141,28 @@ describe('loginUser', () => {
   });
 
   it('should return the user if authentication succeeds', async () => {
-    jest.spyOn(UserModel, 'findOne').mockImplementationOnce((filter?: any) => {
-      expect(filter.username).toBeDefined();
-      expect(filter.password).toBeDefined();
-      const query: any = {};
-      query.select = jest.fn().mockReturnValue(Promise.resolve(safeUser));
-      return query;
+    jest.spyOn(UserModel, 'findOne').mockImplementation((filter?: any) => {
+      if (filter.username && filter.password) {
+        return Promise.resolve({
+          username: user.username,
+          password: user.password,
+          dateJoined: user.dateJoined,
+          loginStreak: 5,
+          maxLoginStreak: 10,
+          lastLogin: new Date('2025-10-31'),
+        } as any);
+      } else if (filter.username && !filter.password) {
+        const query: any = {};
+        query.select = jest.fn().mockResolvedValue(safeUser);
+        return query;
+      }
+      return Promise.resolve(null);
     });
+
+    jest.spyOn(UserModel, 'updateOne').mockResolvedValue({
+      acknowledged: true,
+      modifiedCount: 1,
+    } as any);
 
     const credentials: UserCredentials = {
       username: user.username,
@@ -187,9 +202,14 @@ describe('loginUser', () => {
   });
 
   it('should return error when findOne returns null with select in loginUser', async () => {
-    jest.spyOn(UserModel, 'findOne').mockReturnValue({
-      select: jest.fn().mockResolvedValue(null),
-    } as unknown as Query<DatabaseUser, typeof UserModel>);
+    jest.spyOn(UserModel, 'findOne').mockImplementation((filter?: any) => {
+      if (filter.username && filter.password) {
+        return Promise.resolve(null);
+      }
+      const query: any = {};
+      query.select = jest.fn().mockResolvedValue(null);
+      return query;
+    });
 
     const credentials: UserCredentials = {
       username: user.username,
