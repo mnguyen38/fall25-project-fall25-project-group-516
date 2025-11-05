@@ -10,14 +10,13 @@ const useAuthCallback = () => {
   const navigate = useNavigate();
   const { setUser } = useLoginContext();
 
-  const { token } = useParams()
+  const { token } = useParams();
 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const handleAuth = async () => {
-
       if (!token) {
         setError('OAuth Failed');
         navigate('/');
@@ -48,7 +47,7 @@ const useAuthCallback = () => {
     };
 
     handleAuth();
-  }, [ navigate, setUser]);
+  }, [token, navigate, setUser]);
 
   return { isLoading, error };
 };
