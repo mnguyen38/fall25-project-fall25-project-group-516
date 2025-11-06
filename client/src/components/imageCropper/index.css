@@ -1,0 +1,116 @@
+.image-cropper-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+}
+
+.image-cropper-content {
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  width: 90%;
+  max-width: 600px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.cropper-container {
+  position: relative;
+  width: 100%;
+  height: 400px;
+  background: #f0f0f0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.cropper-container.banner {
+  height: 300px;
+}
+
+.cropper-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.zoom-control {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.zoom-control label {
+  font-weight: 600;
+  font-size: 14px;
+  color: #333;
+}
+
+.zoom-slider {
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  outline: none;
+  -webkit-appearance: none;
+  background: #ddd;
+}
+
+.zoom-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #007bff;
+  cursor: pointer;
+}
+
+.zoom-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #007bff;
+  cursor: pointer;
+  border: none;
+}
+
+.cropper-buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.cropper-buttons .button {
+  padding: 10px 20px;
+  border-radius: 4px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+}
+
+.cropper-buttons .button-primary {
+  background-color: #007bff;
+  color: white;
+}
+
+.cropper-buttons .button-primary:hover {
+  background-color: #0056b3;
+}
+
+.cropper-buttons .button-secondary {
+  background-color: #6c757d;
+  color: white;
+}
+
+.cropper-buttons .button-secondary:hover {
+  background-color: #5a6268;
+}
