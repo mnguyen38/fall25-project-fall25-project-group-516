@@ -28,9 +28,14 @@ const ProfileSettings: React.FC = () => {
     badges,
     displayedBadgeIds,
     uploadingImage,
-    handleProfilePictureUpload,
-    handleBannerImageUpload,
     handleToggleBadge,
+    profileImageUrl,
+    bannerImageUrl,
+    handleBannerImagePreview,
+    handleProfilePicturePreview,
+    handleCancelButton,
+    handleDoneButton,
+    handleEnteringEditMode,
   } = useProfileSettings();
 
   const [showResetPasswordModal, setShowResetPasswordModal] = React.useState(false);
@@ -141,7 +146,10 @@ const ProfileSettings: React.FC = () => {
                   <div className='profile-header-actions'>
                     <button
                       className='icon-button'
-                      onClick={() => setEditMode(true)}
+                      onClick={() => {
+                        setEditMode(true);
+                        handleEnteringEditMode();
+                      }}
                       title='Edit profile'
                       aria-label='Edit profile'>
                       <FontAwesomeIcon icon={faPencil} />
@@ -186,8 +194,8 @@ const ProfileSettings: React.FC = () => {
               {/* Edit Mode - Same Layout as View Mode */}
               {/* Banner - Editable */}
               <div className='profile-banner editable-banner'>
-                {userData.bannerImage ? (
-                  <img src={userData.bannerImage} alt='Profile banner' />
+                {bannerImageUrl ? (
+                  <img src={bannerImageUrl} alt='Profile banner' />
                 ) : (
                   <div className='empty-banner' />
                 )}
@@ -198,7 +206,7 @@ const ProfileSettings: React.FC = () => {
                   label=''
                   aspectRatio='banner'
                   currentImageUrl={userData.bannerImage}
-                  onUpload={handleBannerImageUpload}
+                  onUpload={handleBannerImagePreview}
                 />
               </div>
 
@@ -207,8 +215,8 @@ const ProfileSettings: React.FC = () => {
                 <div className='profile-picture-section'>
                   {/* Profile Picture - Editable */}
                   <div className='profile-picture-wrapper editable-picture'>
-                    {userData.profilePicture ? (
-                      <img src={userData.profilePicture} alt={userData.username} />
+                    {profileImageUrl ? (
+                      <img src={profileImageUrl} alt={userData.username} />
                     ) : (
                       <div className='profile-picture-placeholder'>
                         {userData.username.charAt(0).toUpperCase()}
@@ -221,7 +229,7 @@ const ProfileSettings: React.FC = () => {
                       label=''
                       aspectRatio='square'
                       currentImageUrl={userData.profilePicture}
-                      onUpload={handleProfilePictureUpload}
+                      onUpload={handleProfilePicturePreview}
                     />
                   </div>
                   <div className='profile-identity'>
@@ -250,9 +258,21 @@ const ProfileSettings: React.FC = () => {
                 <div className='profile-header-actions'>
                   <button
                     className='button button-primary'
-                    onClick={() => setEditMode(false)}
+                    onClick={() => {
+                      handleDoneButton();
+                      setEditMode(false);
+                    }}
                     aria-label='Done editing'>
                     Done
+                  </button>
+                  <button
+                    className='button button-secondary'
+                    onClick={() => {
+                      handleCancelButton();
+                      setEditMode(false);
+                    }}
+                    aria-label='Cancel changes'>
+                    Cancel
                   </button>
                 </div>
               </div>

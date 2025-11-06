@@ -27,6 +27,8 @@ export interface UserCredentials {
  * - `maxLoginStreak`: Maximum login streak ever achieved.
  * - `lastLogin`: The last date/time the user logged in.
  * - `showLoginStreak`: Whether to display the login streak on profile.
+ * - `email`: Email associated with user.
+ * - `lifeUpvotes`: Lifetime upvotes to user's posts (answers & questions)
  */
 export interface User extends UserCredentials {
   dateJoined: Date;
@@ -42,6 +44,7 @@ export interface User extends UserCredentials {
   lastLogin?: Date;
   showLoginStreak?: boolean;
   email?: string;
+  lifeUpvotes?: number;
 }
 
 /**
