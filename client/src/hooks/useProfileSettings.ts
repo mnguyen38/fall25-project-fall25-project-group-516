@@ -32,6 +32,10 @@ const useProfileSettings = () => {
   const [badges, setBadges] = useState<BadgeWithProgress[]>([]);
   const [displayedBadgeIds, setDisplayedBadgeIds] = useState<string[]>([]);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
+  const [bannerImageUrl, setBannerImageUrl] = useState<string | null>(null);
+  const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
+  const [bannerImageFile, setBannerImageFile] = useState<File | null>(null);
 
   const canEditProfile =
     currentUser.username && userData?.username ? currentUser.username === userData.username : false;
@@ -136,15 +140,61 @@ const useProfileSettings = () => {
     return;
   };
 
+  const handleEnteringEditMode = () => {
+    if (userData?.profilePicture) setProfileImageUrl(userData?.profilePicture);
+    if (userData?.bannerImage) setBannerImageUrl(userData?.bannerImage);
+  };
+
   /**
-   * Handler for uploading profile picture
+   * Handler for uploading profile picture for preview.
+   * @param file image
    */
-  const handleProfilePictureUpload = async (file: File) => {
+  const handleProfilePicturePreview = (file: File) => {
     if (!username) return;
+    const url = URL.createObjectURL(file);
+    if (url) {
+      setProfileImageUrl(url);
+      setProfileImageFile(file);
+      setSuccessMessage('Profile picture previewed!');
+    } else {
+      setErrorMessage('Failed to read file to url');
+    }
+  };
+
+  /**
+   * Handler for uploading banner picture for preview.
+   * @param file image
+   */
+  const handleBannerImagePreview = (file: File) => {
+    if (!username) return;
+    const url = URL.createObjectURL(file);
+    if (url) {
+      setBannerImageUrl(url);
+      setBannerImageFile(file);
+      setSuccessMessage('Banner image previewed!');
+    } else {
+      setErrorMessage('Failed to read file to url');
+    }
+  };
+
+  /**
+   * Handler for uploading profile picture to database
+   */
+  const handleProfilePictureUpload = async () => {
+    if (!username) return;
+    if (!profileImageFile) {
+      return;
+    }
     try {
       setUploadingImage(true);
-      const updatedUser = await uploadProfilePicture(username, file);
+      const updatedUser = await uploadProfilePicture(username, profileImageFile);
       setUserData(updatedUser);
+
+      // reset preview states
+      setProfileImageFile(null);
+      if (profileImageUrl) URL.revokeObjectURL(profileImageUrl);
+      setProfileImageUrl(null);
+
       setSuccessMessage('Profile picture updated!');
       setErrorMessage(null);
     } catch (error) {
@@ -156,14 +206,23 @@ const useProfileSettings = () => {
   };
 
   /**
-   * Handler for uploading banner image
+   * Handler for uploading banner image to database
    */
-  const handleBannerImageUpload = async (file: File) => {
+  const handleBannerImageUpload = async () => {
     if (!username) return;
+    if (!bannerImageFile) {
+      return;
+    }
     try {
       setUploadingImage(true);
-      const updatedUser = await uploadBannerImage(username, file);
+      const updatedUser = await uploadBannerImage(username, bannerImageFile);
       setUserData(updatedUser);
+
+      // reset preview states
+      setBannerImageFile(null);
+      if (bannerImageUrl) URL.revokeObjectURL(bannerImageUrl);
+      setBannerImageUrl(null);
+
       setSuccessMessage('Banner image updated!');
       setErrorMessage(null);
     } catch (error) {
@@ -197,6 +256,41 @@ const useProfileSettings = () => {
     }
   };
 
+  /**
+   * Handles done button for profile edit.
+   */
+  const handleDoneButton = () => {
+    handleProfilePictureUpload();
+    handleBannerImageUpload();
+  };
+
+  /**
+   * Handles cancel button for profile edit.
+   */
+  const handleCancelButton = () => {
+    if (!username) return;
+    let changed = false;
+    if (profileImageFile) {
+      setProfileImageFile(null);
+      changed = true;
+    }
+    if (bannerImageFile) {
+      setBannerImageFile(null);
+      changed = true;
+    }
+    if (profileImageUrl) {
+      URL.revokeObjectURL(profileImageUrl);
+      setProfileImageUrl(null);
+      changed = true;
+    }
+    if (bannerImageUrl) {
+      URL.revokeObjectURL(bannerImageUrl);
+      setBannerImageUrl(null);
+      changed = true;
+    }
+    if (changed) setSuccessMessage('All changes cancelled!');
+  };
+
   return {
     userData,
     loading,
@@ -217,6 +311,13 @@ const useProfileSettings = () => {
     handleProfilePictureUpload,
     handleBannerImageUpload,
     handleToggleBadge,
+    profileImageUrl,
+    bannerImageUrl,
+    handleBannerImagePreview,
+    handleProfilePicturePreview,
+    handleCancelButton,
+    handleDoneButton,
+    handleEnteringEditMode,
   };
 };
 
