@@ -17,7 +17,10 @@ const BadgeDisplay: React.FC<BadgeDisplayProps> = ({
   showProgress = true,
   editable = false,
 }) => {
-  const earnedBadges = badges.filter(b => b.earned);
+  // When not editable, only show badges in displayedBadgeIds
+  const earnedBadges = badges.filter(
+    b => b.earned && (editable || displayedBadgeIds.includes(b._id.toString())),
+  );
   const unearnedBadges = badges.filter(b => !b.earned);
 
   const renderBadge = (badge: BadgeWithProgress, isEarned: boolean) => {
@@ -75,7 +78,8 @@ const BadgeDisplay: React.FC<BadgeDisplayProps> = ({
         </div>
       )}
 
-      {unearnedBadges.length > 0 && (
+      {/* Only show unearned badges in edit mode (own profile) */}
+      {editable && unearnedBadges.length > 0 && (
         <div className='badge-section'>
           <h3>Available Badges</h3>
           <div className='badge-grid'>{unearnedBadges.map(badge => renderBadge(badge, false))}</div>

@@ -86,7 +86,8 @@ const userSchema: Schema = new Schema(
     email: {
       type: String,
       unique: true,
-      default: '',
+      sparse: true,
+      default: undefined,
     },
   },
   { collection: 'User' },

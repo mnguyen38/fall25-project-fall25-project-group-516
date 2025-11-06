@@ -85,8 +85,7 @@ export const processBannerImage = async (
   // Resize to standard banner size (1200x300)
   const processedBuffer = await image
     .resize(1200, 300, {
-      fit: 'cover',
-      position: 'center',
+      fit: 'fill',
     })
     .jpeg({ quality: 90 })
     .toBuffer();
