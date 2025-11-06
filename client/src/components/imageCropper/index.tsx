@@ -28,7 +28,7 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
     setZoom(newZoom);
   }, []);
 
-  const onCropCompleteInternal = useCallback((croppedArea: Area, croppedAreaPixels: Area) => {
+  const onCropCompleteInternal = useCallback((_croppedArea: Area, croppedAreaPixels: Area) => {
     setCroppedAreaPixels(croppedAreaPixels);
   }, []);
 
@@ -100,7 +100,7 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
             onCropChange={onCropChange}
             onZoomChange={onZoomChange}
             onCropComplete={onCropCompleteInternal}
-            objectFit="horizontal-cover"
+            objectFit='horizontal-cover'
           />
         </div>
         <div className='cropper-controls'>
