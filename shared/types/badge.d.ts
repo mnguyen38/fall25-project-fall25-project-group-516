@@ -21,6 +21,7 @@ export interface Badge {
   requirement: BadgeRequirement;
   hint: string;
   progress: boolean;
+  coinValue: number;
 }
 
 export interface DatabaseBadge extends Badge {

@@ -62,6 +62,10 @@ const badgeSchema: Schema = new Schema(
       type: Boolean,
       default: true,
     },
+    coinValue: {
+      type: Number,
+      default: 5,
+    },
   },
   { collection: 'Badge' },
 );

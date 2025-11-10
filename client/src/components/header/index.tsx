@@ -27,6 +27,18 @@ const Header = () => {
       <button onClick={handleSignOut} className='logout-button'>
         Log out
       </button>
+      <div className='container'>
+        <div id='image' className='image-with-text'>
+          <img
+            src='\coinPicture\stack-coin.PNG'
+            alt='Coin emblazoned stack of pancakes'
+            width='50'
+            height='50'
+            background-color='transparent'
+          />
+        </div>
+        <div>{currentUser.coins}</div>
+      </div>
       <button
         className='view-profile-button'
         onClick={() => navigate(`/user/${currentUser.username}`)}>

@@ -89,6 +89,14 @@ const userSchema: Schema = new Schema(
       sparse: true,
       default: undefined,
     },
+    lifeUpvotes: {
+      type: Number,
+      default: 0,
+    },
+    coins: {
+      type: Number,
+      default: 0,
+    },
   },
   { collection: 'User' },
 );

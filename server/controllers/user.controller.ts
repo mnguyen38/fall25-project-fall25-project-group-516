@@ -6,12 +6,14 @@ import {
   UserByUsernameRequest,
   FakeSOSocket,
   UpdateBiographyRequest,
+  TransactionRequest,
 } from '../types/types';
 import {
   deleteUserByUsername,
   getUserByUsername,
   getUsersList,
   loginUser,
+  makeTransaction,
   saveUser,
   updateUser,
 } from '../services/user.service';
@@ -339,6 +341,75 @@ const userController = (socket: FakeSOSocket) => {
     }
   };
 
+  /**
+   * Handles transactions where coins are added to a user's account.
+   * Request must contain the user's username and the cost of the transaction.
+   * Optionally it may also include a description of the transaction event.
+   * @param req The TransactionRequest object containing the username, cost, and description.
+   * @param res The response, containing either the updated user or an error.
+   */
+  const addCoinTransaction = async (req: TransactionRequest, res: Response): Promise<void> => {
+    coinTransaction(req, res, 'add');
+  };
+
+  /**
+   * Handles transactions where coins are reduced from a user's account.
+   * Request must contain the user's username and the cost of the transaction.
+   * Optionally it may also include a description of the transaction event.
+   * @param req The TransactionRequest object containing the username, cost, and description.
+   * @param res The response, containing either the updated user or an error.
+   */
+  const reduceCoinTransaction = async (req: TransactionRequest, res: Response): Promise<void> => {
+    coinTransaction(req, res, 'reduce');
+  };
+
+  /**
+   * Helper function to handle adding or reducing coins from user.
+   *
+  n* @param req The TransactionRequest object containing the username, cost, and description.
+   * @param res The response, containing either the updated user or an error.
+   * @param type The type of transaction to perform (add/ reduce).
+   */
+  const coinTransaction = async (
+    req: TransactionRequest,
+    res: Response,
+    type: 'add' | 'reduce',
+  ): Promise<void> => {
+    try {
+      const { username, cost, description } = req.body;
+
+      if (!username || !cost) {
+        res.status(400).send('Username and cost must be provided');
+      } else if (cost < 0) {
+        res.status(400).send('Invalid cost provided');
+      }
+
+      let status;
+
+      if (type == 'add') {
+        status = await makeTransaction(username, cost, type);
+      } else {
+        status = await makeTransaction(username, cost, type);
+      }
+
+      if ('error' in status) {
+        throw new Error(status.error);
+      }
+
+      const awarded = type == 'add';
+
+      socket.emit('transactionEvent', {
+        username,
+        cost,
+        description,
+        awarded,
+      });
+      res.status(200).json(status);
+    } catch (error) {
+      res.status(500).send(`Error making transaction: ${error}`);
+    }
+  };
+
   // Define routes for the user-related operations.
   router.post('/signup', createUser);
   router.post('/login', userLogin);
@@ -350,6 +421,9 @@ const userController = (socket: FakeSOSocket) => {
   router.patch('/updateBiography', updateBiography);
   router.post('/uploadProfilePicture', upload.single('profilePicture'), uploadProfilePicture);
   router.post('/uploadBannerImage', upload.single('bannerImage'), uploadBannerImage);
+  router.patch('/addCoins', addCoinTransaction);
+  router.patch('/reduceCoins', reduceCoinTransaction);
+
   return router;
 };
 

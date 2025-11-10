@@ -28,7 +28,8 @@ export interface UserCredentials {
  * - `lastLogin`: The last date/time the user logged in.
  * - `showLoginStreak`: Whether to display the login streak on profile.
  * - `email`: Email associated with user.
- * - `lifeUpvotes`: Lifetime upvotes to user's posts (answers & questions)
+ * - `lifeUpvotes`: Lifetime upvotes to user's posts (answers & questions).
+ * - `coins`: Amount of coins user currently has.
  */
 export interface User extends UserCredentials {
   dateJoined: Date;
@@ -45,6 +46,7 @@ export interface User extends UserCredentials {
   showLoginStreak?: boolean;
   email?: string;
   lifeUpvotes?: number;
+  coins?: number;
 }
 
 /**
@@ -111,5 +113,19 @@ export interface UpdateBiographyRequest extends Request {
   body: {
     username: string;
     biography: string;
+  };
+}
+
+/**
+ * Express request from user for making a transaction.
+ * - `username`: The username of user making transaction (body).
+ * - `cost`: cost of transaction (body).
+ * - `description`: description of event requiring transaction.
+ */
+export interface TransactionRequest extends Request {
+  body: {
+    username: string;
+    cost: number;
+    description?: string;
   };
 }
