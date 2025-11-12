@@ -5,6 +5,13 @@ import { SafeDatabaseUser } from '../types/types';
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 const JWT_EXPIRES_IN = '7d'; // Token expires in 7 days
 
+interface Payload {
+  _id: string;
+  username: string;
+  roles: Map<string, string>;
+  tokenVersion: number;
+}
+
 /**
  * Generates a JWT token for a user
  * @param user The user object to generate token for
@@ -14,6 +21,8 @@ export const generateToken = (user: SafeDatabaseUser): string => {
   const payload = {
     _id: user._id,
     username: user.username,
+    roles: Object.fromEntries(user.roles ?? new Map()),
+    tokenVersion: user.tokenVersion,
   };
 
   return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
@@ -24,9 +33,9 @@ export const generateToken = (user: SafeDatabaseUser): string => {
  * @param token The JWT token to verify
  * @returns The decoded token payload or null if invalid
  */
-export const verifyToken = (token: string): { _id: string; username: string } | null => {
+export const verifyToken = (token: string): Payload | null => {
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as { _id: string; username: string };
+    const decoded = jwt.verify(token, JWT_SECRET) as Payload;
     return decoded;
   } catch (error) {
     return null;

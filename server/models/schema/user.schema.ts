@@ -84,6 +84,14 @@ const userSchema: Schema = new Schema(
       unique: true,
       default: '',
     },
+    roles: {
+      type: Map,
+      of: String,
+    },
+    tokenVersion: {
+      type: Number,
+      default: 0,
+    },
   },
   { collection: 'User' },
 );

@@ -7,6 +7,7 @@ import {
   UserResponse,
   UsersResponse,
   OAuthUserProfile,
+  UserRolesResponse,
 } from '../types/types';
 
 /**
@@ -223,5 +224,20 @@ export const findOrCreateOAuthUser = async (
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     return { error: `Error during OAuth user processing: ${message}` };
+  }
+};
+
+/**
+ *
+ */
+export const getUserRolesById = async (id: string): Promise<UserRolesResponse> => {
+  try {
+    const roles = await UserModel.findById(id).select('roles tokenVersion');
+    if (!roles) {
+      throw new Error('User not found');
+    }
+    return roles;
+  } catch (error) {
+    return { error: `Error occured while the user's roles: ${error}` };
   }
 };
