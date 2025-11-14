@@ -117,6 +117,18 @@ export interface UpdateBiographyRequest extends Request {
 }
 
 /**
+ * Express request for updating user's login streak visibility.
+ * - `username`: The username whose biography is being updated (body).
+ * - `showLoginStreak`: The new visibility to be set (body).
+ */
+export interface UpdateShowLoginStreakRequest extends Request {
+  body: {
+    username: string;
+    showLoginStreak: boolean;
+  };
+}
+
+/**
  * Express request from user for making a transaction.
  * - `username`: The username of user making transaction (body).
  * - `cost`: cost of transaction (body).

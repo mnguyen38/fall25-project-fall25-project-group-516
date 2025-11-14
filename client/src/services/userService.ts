@@ -216,6 +216,27 @@ const updateBiography = async (
 };
 
 /**
+ * Updates the user's login streak visibility.
+ * @param username The unique username of the user
+ * @param newBiography The new login streak visibility to set for this user
+ * @returns A promise resolving to the updated user
+ * @throws Error if the request fails
+ */
+const updateShowLoginStreak = async (
+  username: string,
+  showLoginStreak: boolean,
+): Promise<SafeDatabaseUser> => {
+  const res = await api.patch(`${USER_API_URL}/updateShowLoginStreak`, {
+    username,
+    showLoginStreak,
+  });
+  if (res.status !== 200) {
+    throw new Error('Error when updating login streak visibility');
+  }
+  return res.data;
+};
+
+/**
  * Uploads a profile picture for a user.
  * @param username The unique username of the user
  * @param file The image file to upload
@@ -285,6 +306,7 @@ export {
   deleteUser,
   resetPassword,
   updateBiography,
+  updateShowLoginStreak,
   uploadProfilePicture,
   uploadBannerImage,
   verifyStoredToken,

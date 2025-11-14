@@ -7,6 +7,7 @@ import {
   FakeSOSocket,
   UpdateBiographyRequest,
   TransactionRequest,
+  UpdateShowLoginStreakRequest,
 } from '../types/types';
 import {
   deleteUserByUsername,
@@ -207,6 +208,39 @@ const userController = (socket: FakeSOSocket) => {
       res.status(200).json(updatedUser);
     } catch (error) {
       res.status(500).send(`Error when updating user biography: ${error}`);
+    }
+  };
+
+  /**
+   * Updates a user's loginStreak visibility
+   * @param req The request containing the username and showLoginStreak in the body.
+   * @param res The response, either confirming the update or returning an error.
+   * @returns a promise resolving to void.
+   */
+  const updateShowLoginStreak = async (
+    req: UpdateShowLoginStreakRequest,
+    res: Response,
+  ): Promise<void> => {
+    try {
+      // Validate that request has username and showLoginStreak
+      const { username, showLoginStreak } = req.body;
+
+      // Call the same updateUser(...) service used by resetPassword
+      const updatedUser = await updateUser(username, { showLoginStreak });
+
+      if ('error' in updatedUser) {
+        throw new Error(updatedUser.error);
+      }
+
+      // Emit socket event for real-time updates
+      socket.emit('userUpdate', {
+        user: updatedUser,
+        type: 'updated',
+      });
+
+      res.status(200).json(updatedUser);
+    } catch (error) {
+      res.status(500).send(`Error when updating user login streak visibility: ${error}`);
     }
   };
 
@@ -417,6 +451,7 @@ const userController = (socket: FakeSOSocket) => {
   router.get('/getUsers', getUsers);
   router.delete('/deleteUser/:username', deleteUser);
   router.patch('/updateBiography', updateBiography);
+  router.patch('/updateShowLoginStreak', updateShowLoginStreak);
   router.post('/uploadProfilePicture', upload.single('profilePicture'), uploadProfilePicture);
   router.post('/uploadBannerImage', upload.single('bannerImage'), uploadBannerImage);
   router.patch('/addCoins', addCoinTransaction);

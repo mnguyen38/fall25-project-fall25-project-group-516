@@ -7,6 +7,7 @@ import {
   updateBiography,
   uploadProfilePicture,
   uploadBannerImage,
+  updateShowLoginStreak,
 } from '../services/userService';
 import { getUserBadges, updateDisplayedBadges } from '../services/badgeService';
 import { SafeDatabaseUser, BadgeWithProgress } from '../types/types';
@@ -38,6 +39,7 @@ const useProfileSettings = () => {
   const [bannerImageUrl, setBannerImageUrl] = useState<string | null>(null);
   const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
   const [bannerImageFile, setBannerImageFile] = useState<File | null>(null);
+  const [showLoginStreak, setShowLoginStreak] = useState<boolean>(true);
 
   const canEditProfile =
     currentUser.username && userData?.username ? currentUser.username === userData.username : false;
@@ -82,6 +84,34 @@ const useProfileSettings = () => {
       return () => clearTimeout(timer);
     }
   }, [successMessage]);
+
+  /**
+   * Handler for updating login streak visibility in db
+   */
+  const handleToggleLoginStreak = async () => {
+    if (!username) return;
+    try {
+      // Await the async call to update the login streak vis
+      const updatedUser = await updateShowLoginStreak(username, showLoginStreak);
+
+      setUserData(updatedUser);
+
+      setSuccessMessage('Login streak visibility updated!');
+      setErrorMessage(null);
+    } catch (error) {
+      setErrorMessage('Failed to update biography.');
+      setSuccessMessage(null);
+    }
+  };
+
+  /**
+   * Handler for previewing toggled login streak visibility
+   */
+  const handleToggleLoginStreakPreview = async () => {
+    if (!username) return;
+    setShowLoginStreak(!showLoginStreak);
+    setSuccessMessage('Login streak toggle previewed!');
+  };
 
   /**
    * Handler for resetting the password
@@ -145,6 +175,7 @@ const useProfileSettings = () => {
   const handleEnteringEditMode = () => {
     if (userData?.profilePicture) setProfileImageUrl(userData?.profilePicture);
     if (userData?.bannerImage) setBannerImageUrl(userData?.bannerImage);
+    if (userData?.showLoginStreak) setShowLoginStreak(userData?.showLoginStreak);
   };
 
   /**
@@ -264,6 +295,7 @@ const useProfileSettings = () => {
   const handleDoneButton = () => {
     handleProfilePictureUpload();
     handleBannerImageUpload();
+    handleToggleLoginStreak();
   };
 
   /**
@@ -288,6 +320,10 @@ const useProfileSettings = () => {
       URL.revokeObjectURL(bannerImageUrl);
       setBannerImageUrl(null);
     }
+    if (showLoginStreak) {
+      setShowLoginStreak(true);
+      changed = true;
+    }
     if (changed) setSuccessMessage('All changes cancelled!');
   };
 
@@ -303,6 +339,9 @@ const useProfileSettings = () => {
     canEditProfile,
     handleResetPassword,
     handleUpdateBiography,
+    showLoginStreak,
+    handleToggleLoginStreak,
+    handleToggleLoginStreakPreview,
     handleDeleteUser,
     handleViewCollectionsPage,
     badges,

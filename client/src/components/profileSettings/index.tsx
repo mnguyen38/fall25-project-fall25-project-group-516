@@ -36,6 +36,8 @@ const ProfileSettings: React.FC = () => {
     handleCancelButton,
     handleDoneButton,
     handleEnteringEditMode,
+    showLoginStreak,
+    handleToggleLoginStreakPreview,
   } = useProfileSettings();
 
   const [showResetPasswordModal, setShowResetPasswordModal] = React.useState(false);
@@ -235,13 +237,21 @@ const ProfileSettings: React.FC = () => {
                   <div className='profile-identity'>
                     <h1 className='profile-name'>{userData.username}</h1>
                     <p className='profile-username'>@{userData.username}</p>
-                    {userData.showLoginStreak &&
+                    {showLoginStreak &&
                       userData.loginStreak !== undefined &&
                       userData.loginStreak > 0 && (
                         <p className='profile-login-streak'>
                           {userData.loginStreak} day login streak
                         </p>
                       )}
+                    <label className='profile-identity-checkbox'>
+                      <input
+                        type='checkbox'
+                        checked={showLoginStreak}
+                        onChange={handleToggleLoginStreakPreview}
+                      />
+                      Show Login Streak
+                    </label>
                     {userData.dateJoined && (
                       <p className='profile-date'>
                         Joined{' '}
