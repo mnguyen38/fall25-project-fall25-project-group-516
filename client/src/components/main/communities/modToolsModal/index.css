@@ -1,0 +1,194 @@
+/* --- Modal Background & Layout --- */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(3px);
+}
+
+.modal-content {
+  background: #fff;
+  padding: 24px;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  animation: modal-fade-in 0.3s ease-out;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 16px;
+  margin-bottom: 16px;
+}
+
+.modal-title {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.modal-close-btn {
+  background: none;
+  border: none;
+  font-size: 1.75rem;
+  font-weight: 300;
+  line-height: 1;
+  color: #888;
+  cursor: pointer;
+  padding: 0;
+}
+.modal-close-btn:hover {
+  color: #000;
+}
+
+.modal-body .mod-tools-subheading {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-top: 0;
+  margin-bottom: 12px;
+}
+
+/* --- Sleek Search Bar --- */
+.search-bar-wrapper {
+  position: relative;
+  margin-bottom: 12px;
+}
+
+.search-icon {
+  position: absolute;
+  top: 50%;
+  left: 14px;
+  transform: translateY(-50%);
+  color: #999;
+  pointer-events: none; /* Lets clicks pass through to the input */
+}
+
+.mod-search-input {
+  width: 100%;
+  font-size: 1rem;
+  padding: 10px 16px 10px 44px; /* Left padding for the icon */
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  box-sizing: border-box; /* Crucial for 100% width with padding */
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
+}
+
+.mod-search-input:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+}
+
+/* --- Results List --- */
+.mod-manage-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+
+  /* --- CHANGE THIS --- */
+  height: 250px; /* Use fixed height instead of max-height */
+  /* --- END CHANGE --- */
+
+  overflow-y: auto;
+  border: 1px solid #eee;
+  border-radius: 8px;
+
+  /* This helps the placeholder look better */
+  display: flex;
+  flex-direction: column;
+}
+.mod-manage-item,
+.mod-no-results {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  border-bottom: 1px solid #f0f0f0;
+}
+.mod-manage-list li:last-child {
+  border-bottom: none;
+}
+
+.mod-no-results {
+  justify-content: center;
+  font-style: italic;
+  color: #777;
+}
+
+/* --- Danger Zone --- */
+.danger-zone {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid #fdd;
+}
+
+.danger-zone .mod-tools-subheading {
+  color: #d93025;
+}
+
+.danger-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #fff8f8;
+  border: 1px solid #fdd;
+  border-radius: 8px;
+  padding: 12px 16px;
+}
+
+.danger-item p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #555;
+  margin-right: 16px;
+}
+
+/* (You can reuse your .delete-community-btn styles) */
+
+/* --- Modal Animation --- */
+@keyframes modal-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.mod-placeholder,
+.mod-no-results {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-grow: 1; /* Makes it fill the 250px height */
+  font-style: italic;
+  color: #888;
+  padding: 10px 14px;
+}
+
+/* This is the regular list item, don't let it grow */
+.mod-manage-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  border-bottom: 1px solid #f0f0f0;
+  flex-shrink: 0; /* Prevents item from shrinking */
+}
+
+.mod-manage-list li:last-child {
+  border-bottom: none;
+}

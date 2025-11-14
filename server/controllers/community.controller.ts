@@ -5,6 +5,7 @@ import {
   CreateCommunityRequest,
   ToggleMembershipRequest,
   DeleteCommunityRequest,
+  ToggleModeratorRequest,
 } from '../types/types';
 import {
   getCommunity,
@@ -12,7 +13,9 @@ import {
   toggleCommunityMembership,
   createCommunity,
   deleteCommunity,
+  toggleModerator,
 } from '../services/community.service';
+import { getUserRolesById } from '../services/user.service';
 
 /**
  * This controller handles community-related routes.
@@ -187,10 +190,40 @@ const communityController = (socket: FakeSOSocket) => {
     }
   };
 
+  const toggleModeratorRoute = async (req: ToggleModeratorRequest, res: Response) => {
+    const { communityId, adminUsername, username } = req.body;
+
+    try {
+      const savedCommunity = await toggleModerator(communityId, adminUsername, username);
+
+      if ('error' in savedCommunity) {
+        if (savedCommunity.error.includes('Unauthorized')) {
+          res.status(403).json({ error: savedCommunity.error });
+        } else if (savedCommunity.error.includes('not found')) {
+          res.status(404).json({ error: savedCommunity.error });
+        } else {
+          res.status(500).json({ error: savedCommunity.error });
+        }
+        return;
+      }
+
+      socket.emit('communityUpdate', {
+        type: 'updated',
+        community: savedCommunity,
+      });
+
+      res.json(savedCommunity);
+    } catch (err: unknown) {
+      res
+        .status(500)
+        .json({ error: `Error toggling moderator permissions: ${(err as Error).message}` });
+    }
+  };
   // Registering routes
   router.get('/getCommunity/:communityId', getCommunityRoute);
   router.get('/getAllCommunities', getAllCommunitiesRoute);
   router.post('/toggleMembership', toggleMembershipRoute);
+  router.post('/toggleModerator', toggleModeratorRoute);
   router.post('/create', createCommunityRoute);
   router.delete('/delete/:communityId', deleteCommunityRoute);
 

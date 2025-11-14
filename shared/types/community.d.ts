@@ -16,6 +16,7 @@ export interface Community {
   visibility: string;
   participants: string[];
   admin: string;
+  moderators?: string[];
 }
 
 /**
@@ -58,6 +59,14 @@ export interface CreateCommunityRequest extends Request {
 export interface ToggleMembershipRequest extends Request {
   body: {
     communityId: string;
+    username: string;
+  };
+}
+
+export interface ToggleModeratorRequest extends Request {
+  body: {
+    communityId: string;
+    adminUsername: string;
     username: string;
   };
 }

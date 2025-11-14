@@ -9,6 +9,7 @@ import {
   OAuthUserProfile,
   UserRolesResponse,
 } from '../types/types';
+import { getCache } from '../utils/cache.util';
 
 /**
  * Saves a new user to the database.
@@ -239,5 +240,47 @@ export const getUserRolesById = async (id: string): Promise<UserRolesResponse> =
     return roles;
   } catch (error) {
     return { error: `Error occured while the user's roles: ${error}` };
+  }
+};
+
+/**
+ * Sets a role for a user in a specific community context.
+ * This is the "source of truth" for writing a user's permission
+ * and handles all user-specific cache invalidation.
+ *
+ * @param username The user to update.
+ * @param communityId The context (community) for the role.
+ * @param role The role to set (e.g., 'moderator', 'participant').
+ * @returns The updated user.
+ */
+export const toggleUserModeratorStatus = async (
+  username: string,
+  communityId: string,
+): Promise<UserResponse> => {
+  try {
+    const userToUpdate = await UserModel.findOne({ username }).select('-password');
+    if (!userToUpdate) {
+      return { error: 'User not found' };
+    }
+
+    if (!userToUpdate.roles) {
+      userToUpdate.roles = new Map<string, string>();
+    }
+
+    const isModerator = userToUpdate.roles.delete(communityId);
+
+    if (!isModerator) {
+      userToUpdate.roles.set(communityId, 'moderator');
+    }
+
+    const updatedUserDoc = await userToUpdate.save();
+
+    const cache = await getCache();
+    await cache.del(`roles:${updatedUserDoc._id.toString()}`);
+
+    const safeUser: SafeDatabaseUser = updatedUserDoc.toObject();
+    return safeUser;
+  } catch (err) {
+    return { error: (err as Error).message };
   }
 };

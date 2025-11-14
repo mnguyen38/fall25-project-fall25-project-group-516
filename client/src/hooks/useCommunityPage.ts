@@ -6,7 +6,7 @@ import {
   PopulatedDatabaseQuestion,
 } from '../types/types';
 import useUserContext from './useUserContext';
-import { deleteCommunity, getCommunityById } from '../services/communityService';
+import { deleteCommunity, getCommunityById, toggleModerator } from '../services/communityService';
 import { getCommunityQuestionsById } from '../services/questionService';
 
 /**
@@ -44,6 +44,12 @@ const useCommunityPage = () => {
     }
   };
 
+  const handleToggleModerator = async (userToToggle: string) => {
+    if (community && community.admin === user.username) {
+      await toggleModerator(community._id.toString(), user.username, userToToggle)
+    }
+  }
+
   useEffect(() => {
     if (communityID) {
       fetchCommunity(communityID);
@@ -66,7 +72,6 @@ const useCommunityPage = () => {
         const questionExists = prevQuestions.some(q => q._id === questionUpdate._id);
 
         if (questionExists) {
-          // Update the existing question
           return prevQuestions.map(q => (q._id === questionUpdate._id ? questionUpdate : q));
         }
 
@@ -83,7 +88,7 @@ const useCommunityPage = () => {
     };
   }, [communityID, socket]);
 
-  return { community, communityQuestions, username: user.username, handleDeleteCommunity };
+  return { community, communityQuestions, username: user.username, handleDeleteCommunity, handleToggleModerator };
 };
 
 export default useCommunityPage;

@@ -91,10 +91,20 @@ const deleteCommunity = async (communityId: string, username: string): Promise<v
   return res.data;
 };
 
+const toggleModerator = async( communityId: string, adminUsername: string, username: string): Promise<DatabaseCommunity> => {
+  const res = await api.post(`${COMMUNITIES_API_URL}/toggleModerator`, { communityId, adminUsername, username})
+
+  if (res.status !== 200) {
+    throw new Error('Error while toggling moderator')
+  }
+
+  return res.data
+}
 export {
   changeCommunityMembership,
   getCommunities,
   createCommunity,
   getCommunityById,
   deleteCommunity,
+  toggleModerator
 };

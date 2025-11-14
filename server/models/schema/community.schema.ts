@@ -38,6 +38,11 @@ const communitySchema = new Schema(
       type: String,
       required: true,
     },
+    moderators: {
+      type: [String],
+      required: true,
+      default: [],
+    },
   },
   {
     collection: 'Community',

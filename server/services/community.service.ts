@@ -1,5 +1,6 @@
 import CommunityModel from '../models/community.model';
 import { Community, CommunityResponse, DatabaseCommunity } from '../types/types';
+import { toggleUserModeratorStatus } from './user.service';
 
 /**
  * Retrieves a community by its ID.
@@ -145,6 +146,53 @@ export const deleteCommunity = async (
     }
 
     return result;
+  } catch (err) {
+    return { error: (err as Error).message };
+  }
+};
+
+export const toggleModerator = async (
+  communityId: string,
+  adminUsername: string,
+  username: string,
+): Promise<CommunityResponse> => {
+  try {
+    const community = await CommunityModel.findById(communityId);
+
+    if (!community) {
+      return { error: 'Community not found' };
+    }
+
+    if (community.admin !== adminUsername) {
+      return { error: 'Unauthorized: Only the admin can change roles.' };
+    }
+
+    const isMember = community.participants.includes(username);
+    const isCurrentlyModerator = community.moderators?.includes(username);
+  
+    const communityUpdateOp =
+      isCurrentlyModerator && isMember
+        ? { $pull: { moderators: username } }
+        : { $addToSet: { moderators: username } };
+
+
+    const userUpdateResult = await toggleUserModeratorStatus(username, communityId);
+
+    if ('error' in userUpdateResult) {
+      throw new Error(`Failed to update user roles: ${userUpdateResult.error}`);
+    }
+
+    const updatedCommunity = await CommunityModel.findByIdAndUpdate(
+      communityId,
+      communityUpdateOp,
+      { new: true },
+    );
+
+    if (!updatedCommunity) {
+      return { error: 'Failed to update community document.' };
+    }
+
+    return updatedCommunity;
   } catch (err) {
     return { error: (err as Error).message };
   }

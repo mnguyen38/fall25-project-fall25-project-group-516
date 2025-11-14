@@ -99,3 +99,117 @@
 .delete-community-btn:active {
   background-color: #991b1b; /* Red-800 */
 }
+
+.role-badge {
+  font-size: 0.75rem;     
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 12px;
+  margin-right: 8px;
+  text-transform: uppercase;
+  line-height: 1;
+}
+
+.username {
+  font-weight: 500;
+}
+
+.member-item.admin-member {
+  background-color: #fffbeb; 
+  border-left: 3px solid #ffd700; 
+}
+
+.member-item.mod-member {
+  background-color: #f0f4f8; 
+  border-left: 3px solid #b0c4de; 
+}
+
+.admin-badge {
+  background-color: #ffd700;
+  color: #4a3a00;
+}
+
+.mod-badge {
+  background-color: #b0c4de;
+  color: #1c3d5a;
+}
+
+/* --- Mod Tools Section --- */
+.mod-tools {
+  background-color: #f7f7f7;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 16px;
+  margin-top: 20px;
+}
+
+.mod-tools .section-heading {
+  margin-top: 0;
+  color: #c00; /* Make "Mod Tools" red */
+}
+
+.mod-tools-subheading {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-top: 16px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 4px;
+}
+
+/* --- Moderator Management List --- */
+.mod-manage-list {
+  list-style: none;
+  padding-left: 0;
+  max-height: 200px; /* Add a scrollbar if list is long */
+  overflow-y: auto;
+}
+
+.mod-manage-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 4px;
+  border-bottom: 1px solid #eee;
+}
+
+.mod-manage-item:last-child {
+  border-bottom: none;
+}
+
+.mod-manage-item .username {
+  font-weight: 500;
+}
+
+/* --- Toggle Button Styling --- */
+.mod-toggle-btn {
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 16px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+/* Style for adding a mod */
+.mod-toggle-btn.not-mod {
+  background-color: #e0eefc;
+  color: #005ac7;
+  border-color: #005ac7;
+}
+.mod-toggle-btn.not-mod:hover {
+  background-color: #005ac7;
+  color: #fff;
+}
+
+/* Style for removing a mod */
+.mod-toggle-btn.is-mod {
+  background-color: #fce0e0;
+  color: #c00;
+  border-color: #c00;
+}
+.mod-toggle-btn.is-mod:hover {
+  background-color: #c00;
+  color: #fff;
+}

@@ -82,8 +82,7 @@ const userSchema: Schema = new Schema(
     email: {
       type: String,
       unique: true,
-      default: '',
-    },
+     },
     roles: {
       type: Map,
       of: String,
