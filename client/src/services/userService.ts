@@ -146,6 +146,7 @@ const addCoins = async (
     cost,
     description,
   });
+
   if (res.status !== 200) {
     throw new Error('Error when adding coins');
   }
@@ -170,7 +171,10 @@ const reduceCoins = async (
     cost,
     description,
   });
-  if (res.status !== 200) {
+
+  if (res.status == 402) {
+    throw new Error('Not enough coins to perform transaction');
+  } else if (res.status !== 200) {
     throw new Error('Error when reducing coins');
   }
   return res.data;
