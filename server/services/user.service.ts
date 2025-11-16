@@ -304,16 +304,22 @@ export const makeTransaction = async (
       return { error: 'Error finding user to make transaction' };
     }
 
-    let newCoinValue = cost;
-    if (type == 'add') {
-      if (user.coins) {
-        newCoinValue += user.coins;
+    let newCoinValue = 0;
+    if (user.coins) {
+      if (type == 'add') {
+        newCoinValue = cost + user.coins;
+      } else {
+        newCoinValue = user.coins - cost;
+        if (newCoinValue < 0) {
+          return { error: 'Not enough coins to make transaction' };
+        }
       }
     } else {
-      if (user.coins) {
-        newCoinValue -= user.coins;
+      if (type == 'add') {
+        newCoinValue = cost;
       } else {
         newCoinValue = 0;
+        return { error: 'Not enough coins to make transaction' };
       }
     }
 

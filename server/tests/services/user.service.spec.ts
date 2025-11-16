@@ -390,22 +390,22 @@ describe('makeTransaction', () => {
     coins: 0,
   };
 
+  const findOneUpdateSpy = jest.spyOn(UserModel, 'findOneAndUpdate');
+
   beforeEach(() => {
     jest.resetAllMocks();
   });
 
-  it('makeTransaction should add coins', async () => {
+  it('should add coins when user has coins', async () => {
     jest.spyOn(UserModel, 'findOne').mockImplementation((filter?: any) => {
       if (filter.username) {
-        const query: any = {};
-        query.select = jest.fn().mockResolvedValue(userWithCoins);
-        return query;
+        return Promise.resolve({ ...user, _id: new mongoose.Types.ObjectId(), coins: 10 }) as any;
       } else {
         return Promise.resolve(null);
       }
     });
 
-    jest.spyOn(UserModel, 'findOneAndUpdate').mockImplementation((filter?: any) => {
+    findOneUpdateSpy.mockImplementation((filter?: any) => {
       if (filter.username) {
         const query: any = {};
         query.select = jest.fn().mockResolvedValue(safeUpdatedUser);
@@ -415,23 +415,55 @@ describe('makeTransaction', () => {
       }
     });
 
-    const result = await makeTransaction(user.username, 10, 'add');
+    const result = await makeTransaction(user.username, 5, 'add');
 
     expect(result).toBeDefined();
+    expect(findOneUpdateSpy).toHaveBeenCalledWith(
+      { username: user.username },
+      { $set: { coins: 15 } },
+      { new: true },
+    );
   });
 
-  it('makeTransaction should reduce coins', async () => {
+  it('should add coins when user has no coins', async () => {
     jest.spyOn(UserModel, 'findOne').mockImplementation((filter?: any) => {
       if (filter.username) {
+        return Promise.resolve({ ...user, _id: new mongoose.Types.ObjectId() }) as any;
+      } else {
+        return Promise.resolve(null);
+      }
+    });
+
+    findOneUpdateSpy.mockImplementation((filter?: any) => {
+      if (filter.username) {
         const query: any = {};
-        query.select = jest.fn().mockResolvedValue(userWithCoins);
+        query.select = jest.fn().mockResolvedValue(safeUpdatedUser);
         return query;
       } else {
         return Promise.resolve(null);
       }
     });
 
-    jest.spyOn(UserModel, 'findOneAndUpdate').mockImplementation((filter?: any) => {
+    const result = await makeTransaction(user.username, 5, 'add');
+
+    expect(result).toBeDefined();
+    expect(findOneUpdateSpy).toHaveBeenCalledWith(
+      { username: user.username },
+      { $set: { coins: 5 } },
+      { new: true },
+    );
+  });
+
+  it('should reduce coins when user has enough', async () => {
+    jest.spyOn(UserModel, 'findOne').mockImplementation((filter?: any) => {
+      if (filter.username) {
+        return Promise.resolve({ ...user, _id: new mongoose.Types.ObjectId(), coins: 10 }) as any;
+      } else {
+        return Promise.resolve(null);
+      }
+    });
+
+    findOneUpdateSpy.mockImplementation((filter?: any) => {
       if (filter.username) {
         const query: any = {};
         query.select = jest.fn().mockResolvedValue(safeUpdatedUser2);
@@ -441,9 +473,47 @@ describe('makeTransaction', () => {
       }
     });
 
-    const result = await makeTransaction(user.username, 10, 'reduce');
+    const result = await makeTransaction(user.username, 5, 'reduce');
 
     expect(result).toBeDefined();
+    expect('error' in result).toBe(false);
+    expect(findOneUpdateSpy).toHaveBeenCalledWith(
+      { username: user.username },
+      { $set: { coins: 5 } },
+      { new: true },
+    );
+  });
+
+  it('should return not enough coins error if user does not have enough', async () => {
+    // user with 10 coins
+    jest.spyOn(UserModel, 'findOne').mockImplementation((filter?: any) => {
+      if (filter.username) {
+        return Promise.resolve({ ...user, _id: new mongoose.Types.ObjectId(), coins: 10 }) as any;
+      } else {
+        return Promise.resolve(null);
+      }
+    });
+
+    const err = await makeTransaction(user.username, 20, 'reduce');
+
+    expect('error' in err).toBe(true);
+    expect(err).toEqual({ error: 'Not enough coins to make transaction' });
+  });
+
+  it('should return not enough coins error if user has no coins', async () => {
+    // user with 10 coins
+    jest.spyOn(UserModel, 'findOne').mockImplementation((filter?: any) => {
+      if (filter.username) {
+        return Promise.resolve({ ...user, _id: new mongoose.Types.ObjectId() }) as any;
+      } else {
+        return Promise.resolve(null);
+      }
+    });
+
+    const err = await makeTransaction(user.username, 5, 'reduce');
+
+    expect('error' in err).toBe(true);
+    expect(err).toEqual({ error: 'Not enough coins to make transaction' });
   });
 
   it('should return error if findOne returns null', async () => {

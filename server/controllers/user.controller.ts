@@ -225,6 +225,11 @@ const userController = (socket: FakeSOSocket) => {
       // Validate that request has username and showLoginStreak
       const { username, showLoginStreak } = req.body;
 
+      if (!username || showLoginStreak == null) {
+        res.status(400).send('No username or login streak visibility provided');
+        return;
+      }
+
       // Call the same updateUser(...) service used by resetPassword
       const updatedUser = await updateUser(username, { showLoginStreak });
 
@@ -414,8 +419,10 @@ const userController = (socket: FakeSOSocket) => {
 
       if (!username || !cost) {
         res.status(400).send('Username and cost must be provided');
+        return;
       } else if (cost < 0) {
         res.status(400).send('Invalid cost provided');
+        return;
       }
 
       let status;
@@ -427,6 +434,10 @@ const userController = (socket: FakeSOSocket) => {
       }
 
       if ('error' in status) {
+        if (status.error.includes('Not enough coins to make transaction')) {
+          res.status(402).send(status.error);
+          return;
+        }
         throw new Error(status.error);
       }
 
@@ -437,8 +448,8 @@ const userController = (socket: FakeSOSocket) => {
         amount,
       });
       res.status(200).json(status);
-    } catch (error) {
-      res.status(500).send(`Error making transaction: ${error}`);
+    } catch (err: unknown) {
+      res.status(500).json({ error: `Error making transaction: ${(err as Error).message}` });
     }
   };
 
