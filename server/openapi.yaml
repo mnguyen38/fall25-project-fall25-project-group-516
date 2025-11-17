@@ -628,7 +628,8 @@ paths:
               $ref: '#/components/schemas/ToggleSaveQuestionBody'
       responses:
         '200':
-          description: Collection successfully updated. Returns the updated populated collection object.
+          description:
+            Collection successfully updated. Returns the updated populated collection object.
           content:
             application/json:
               schema:
@@ -835,6 +836,12 @@ paths:
                     type: string
         '400':
           $ref: '#/components/responses/ValidationError'
+        '401':
+          description: Unauthorized - Invalid or missing token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SimpleErrorBody'
         '403':
           description: Forbidden
           content:

@@ -10,10 +10,8 @@ import ModToolsModal from '../modToolsModal';
  * members, and questions.
  */
 const CommunityPage = () => {
-  const { community, communityQuestions, username, handleDeleteCommunity, handleToggleModerator } =
+  const { community, communityQuestions, isModalOpen, setIsModalOpen, username } =
     useCommunityPage();
-
-  const [isModModalOpen, setIsModModalOpen] = useState(false);
 
   if (!community) {
     return <div className='loading'>Loading...</div>;
@@ -36,7 +34,7 @@ const CommunityPage = () => {
           {community.admin !== username && <CommunityMembershipButton community={community} />}
 
           {community.admin === username && (
-            <button className='mod-tools-trigger-btn' onClick={() => setIsModModalOpen(true)}>
+            <button className='mod-tools-trigger-btn' onClick={() => setIsModalOpen(true)}>
               🛠️ Mod Tools
             </button>
           )}
@@ -63,14 +61,7 @@ const CommunityPage = () => {
           </div>
         </div>
       </div>
-
-      <ModToolsModal
-        isOpen={isModModalOpen}
-        onClose={() => setIsModModalOpen(false)}
-        community={community}
-        onToggleModerator={handleToggleModerator}
-        onDeleteCommunity={handleDeleteCommunity}
-      />
+      {isModalOpen && <ModToolsModal community={community} onClose={() => setIsModalOpen(false)} />}
     </>
   );
 };

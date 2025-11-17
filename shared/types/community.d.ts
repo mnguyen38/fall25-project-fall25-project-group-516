@@ -17,6 +17,7 @@ export interface Community {
   participants: string[];
   admin: string;
   moderators?: string[];
+  banned?: string[];
 }
 
 /**
@@ -70,6 +71,7 @@ export interface ToggleModeratorRequest extends Request {
     username: string;
   };
 }
+
 
 /**
  * Type definition for delete community request

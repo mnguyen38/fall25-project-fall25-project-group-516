@@ -303,18 +303,19 @@ export const getUserRolesById = async (id: string): Promise<UserRolesResponse> =
 };
 
 /**
- * Sets a role for a user in a specific community context.
- * This is the "source of truth" for writing a user's permission
- * and handles all user-specific cache invalidation.
+ * Toggles a specific role for a user in a community.
+ * - If the user has the role, it's removed.
+ * - If the user has a different role or no role, it's set.
  *
  * @param username The user to update.
  * @param communityId The context (community) for the role.
- * @param role The role to set (e.g., 'moderator', 'participant').
+ * @param role The role to toggle (e.g., 'moderator', 'participant').
  * @returns The updated user.
  */
-export const toggleUserModeratorStatus = async (
+export const toggleUserRole = async (
   username: string,
   communityId: string,
+  role: 'participant' | 'moderator' | 'admin',
 ): Promise<UserResponse> => {
   try {
     const userToUpdate = await UserModel.findOne({ username }).select('-password');
@@ -326,12 +327,15 @@ export const toggleUserModeratorStatus = async (
       userToUpdate.roles = new Map<string, string>();
     }
 
-    const isModerator = userToUpdate.roles.delete(communityId);
+    const currentRole = userToUpdate.roles.get(communityId);
 
-    if (!isModerator) {
-      userToUpdate.roles.set(communityId, 'moderator');
+    if (currentRole === role) {
+      userToUpdate.roles.delete(communityId);
+    } else {
+      userToUpdate.roles.set(communityId, role);
     }
 
+    console.log(userToUpdate.roles);
     const updatedUserDoc = await userToUpdate.save();
 
     const cache = await getCache();
@@ -344,7 +348,7 @@ export const toggleUserModeratorStatus = async (
   }
 };
 
- * Adds or removes coins from specified account.
+/** Adds or removes coins from specified account.
  * @param username User to whom coins will be allocated/ redacted
  * @param cost amount of coins
  * @param type whether the transaction is + or -

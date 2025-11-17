@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import {
   CommunityUpdatePayload,
   DatabaseCommunity,
   PopulatedDatabaseQuestion,
 } from '../types/types';
 import useUserContext from './useUserContext';
-import { deleteCommunity, getCommunityById, toggleModerator } from '../services/communityService';
+import { getCommunityById } from '../services/communityService';
 import { getCommunityQuestionsById } from '../services/questionService';
 
 /**
@@ -23,8 +23,7 @@ const useCommunityPage = () => {
   const { user, socket } = useUserContext();
   const [community, setCommunity] = useState<DatabaseCommunity | null>(null);
   const [communityQuestions, setCommunityQuestions] = useState<PopulatedDatabaseQuestion[]>([]);
-
-  const navigate = useNavigate();
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 
   const { communityID } = useParams();
 
@@ -36,19 +35,6 @@ const useCommunityPage = () => {
     const questions = await getCommunityQuestionsById(communityId);
     setCommunityQuestions(questions);
   };
-
-  const handleDeleteCommunity = async () => {
-    if (community && community.admin === user.username) {
-      await deleteCommunity(community._id.toString(), user.username);
-      navigate('/communities');
-    }
-  };
-
-  const handleToggleModerator = async (userToToggle: string) => {
-    if (community && community.admin === user.username) {
-      await toggleModerator(community._id.toString(), user.username, userToToggle)
-    }
-  }
 
   useEffect(() => {
     if (communityID) {
@@ -88,7 +74,13 @@ const useCommunityPage = () => {
     };
   }, [communityID, socket]);
 
-  return { community, communityQuestions, username: user.username, handleDeleteCommunity, handleToggleModerator };
+  return {
+    community,
+    communityQuestions,
+    isModalOpen,
+    setIsModalOpen,
+    username: user.username,
+  };
 };
 
 export default useCommunityPage;

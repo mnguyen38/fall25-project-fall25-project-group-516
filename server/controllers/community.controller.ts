@@ -1,4 +1,4 @@
-import express, { Response } from 'express';
+import express, { Request, Response } from 'express';
 import {
   FakeSOSocket,
   CommunityIdRequest,
@@ -14,9 +14,16 @@ import {
   createCommunity,
   deleteCommunity,
   toggleModerator,
+  toggleBanUser,
 } from '../services/community.service';
-import { getUserRolesById } from '../services/user.service';
+import { toggleUserRole } from '../services/user.service';
+import { permissions } from '../middleware/permissions.middleware';
 
+const ADMIN = 'admin';
+const MODERATOR = 'moderator';
+const PARTICIPANT = 'participant';
+
+const ALL_ROLES = [ADMIN, MODERATOR, PARTICIPANT];
 /**
  * This controller handles community-related routes.
  * @param socket The socket instance to emit events.
@@ -43,6 +50,10 @@ const communityController = (socket: FakeSOSocket) => {
         throw new Error(foundCommunity.error);
       }
 
+      if (foundCommunity.banned?.includes(req.user.username)) {
+        res.status(403).send('Access denied');
+      }
+
       res.json(foundCommunity);
     } catch (err: unknown) {
       res.status(500).send(`Error retrieving community: ${(err as Error).message}`);
@@ -52,11 +63,11 @@ const communityController = (socket: FakeSOSocket) => {
   /**
    * Retrieves all communities.
    *
-   * @param _req - The express request object (unused, hence the underscore prefix)
+   * @param req - The express request object
    * @param res - The response object used to send back the result
    * @returns {Promise<void>} - A promise that resolves when the response has been sent
    */
-  const getAllCommunitiesRoute = async (_req: express.Request, res: Response): Promise<void> => {
+  const getAllCommunitiesRoute = async (req: Request, res: Response): Promise<void> => {
     try {
       const communities = await getAllCommunities();
 
@@ -64,7 +75,9 @@ const communityController = (socket: FakeSOSocket) => {
         throw new Error(communities.error);
       }
 
-      res.json(communities);
+      const allowedCommunities = communities.filter(c => !c.banned?.includes(req.user.username));
+
+      res.json(allowedCommunities);
     } catch (err: unknown) {
       res.status(500).send(`Error retrieving communities: ${(err as Error).message}`);
     }
@@ -139,6 +152,12 @@ const communityController = (socket: FakeSOSocket) => {
         throw new Error(savedCommunity.error);
       }
 
+      const userUpdateResult = await toggleUserRole(admin, savedCommunity._id.toString(), 'admin');
+
+      if ('error' in userUpdateResult) {
+        throw new Error(`${userUpdateResult.error}`);
+      }
+
       socket.emit('communityUpdate', {
         type: 'created',
         community: savedCommunity,
@@ -163,7 +182,7 @@ const communityController = (socket: FakeSOSocket) => {
   ): Promise<void> => {
     const { communityId } = req.params;
     const { username } = req.body;
-
+    console.log('deleting');
     try {
       const result = await deleteCommunity(communityId, username);
 
@@ -187,6 +206,30 @@ const communityController = (socket: FakeSOSocket) => {
       res.json({ community: result, message: 'Community deleted successfully' });
     } catch (err: unknown) {
       res.status(500).json({ error: `Error deleting community: ${(err as Error).message}` });
+    }
+  };
+
+  const toggleBanUserRoute = async (req: ToggleMembershipRequest, res: Response) => {
+    const { communityId, username } = req.body;
+
+    try {
+      const result = await toggleBanUser(communityId, username);
+
+      if ('error' in result) {
+        if (result.error.includes('admins or moderators cannot be banned')) {
+          res.status(403).json({ error: result.error });
+        } else if (result.error.includes('not found')) {
+          res.status(404).json({ error: result.error });
+        } else {
+          res.status(500).json({ error: result.error });
+        }
+        return;
+      }
+
+      socket.emit('communityUpdate', { type: 'updated', community: result });
+      res.json(result);
+    } catch (err: unknown) {
+      return res.status(500).json({ error: `Error banning user: ${(err as Error).message}` });
     }
   };
 
@@ -224,8 +267,13 @@ const communityController = (socket: FakeSOSocket) => {
   router.get('/getAllCommunities', getAllCommunitiesRoute);
   router.post('/toggleMembership', toggleMembershipRoute);
   router.post('/toggleModerator', toggleModeratorRoute);
+  router.post('/toggleBanUser', toggleBanUserRoute);
   router.post('/create', createCommunityRoute);
-  router.delete('/delete/:communityId', deleteCommunityRoute);
+  router.delete(
+    '/delete/:communityId',
+    permissions([ADMIN], req => req.params.communityId),
+    deleteCommunityRoute,
+  );
 
   return router;
 };

@@ -19,11 +19,11 @@ import {
   updateUser,
 } from '../services/user.service';
 import { upload, processProfilePicture, processBannerImage } from '../utils/upload';
-import { generateToken, verifyToken } from '../utils/jwt.util';
-import { protect } from '../middleware/token.middleware';
+import { generateToken } from '../utils/jwt.util';
+import protect from '../middleware/token.middleware';
 import { getCachedUser } from '../utils/cache.util';
-import { cache, invalidate } from '../middleware/invalidateCache.middleware';
 import { checkAndAwardBadges } from '../services/badge.service';
+import { cache, invalidate } from '../middleware/cache.middleware';
 
 const userController = (socket: FakeSOSocket) => {
   const router: Router = express.Router();
@@ -349,17 +349,10 @@ const userController = (socket: FakeSOSocket) => {
    */
   const verifyTokenRoute = async (req: Request, res: Response): Promise<void> => {
     try {
-      console.log(req.user);
       const { _id: userId } = req.user;
 
       // Get user data from database using the decoded username
-      const start = performance.now();
       const user = await getCachedUser(userId);
-      const end = performance.now();
-
-      const duration = end - start;
-
-      console.log(`Duration: ${duration}`);
 
       if ('error' in user) {
         res.status(404).json({ error: 'User not found' });
@@ -442,9 +435,19 @@ const userController = (socket: FakeSOSocket) => {
   // Define routes for the user-related operations.
   router.post('/signup', createUser);
   router.post('/login', userLogin);
-  router.get('/verify-token', protect, cache(15*60, req => `user:${req.user.username}`), verifyTokenRoute);
+  router.get(
+    '/verify-token',
+    protect,
+    cache(15 * 60, req => `user:${req.user.username}`),
+    verifyTokenRoute,
+  );
   router.patch('/resetPassword', protect, resetPassword);
-  router.get('/getUser/:username', protect, cache(15*60, req => `user:${req.params.username}`), getUser);
+  router.get(
+    '/getUser/:username',
+    protect,
+    cache(15 * 60, req => `user:${req.params.username}`),
+    getUser,
+  );
   router.get('/getUsers', protect, getUsers);
   router.delete(
     '/deleteUser/:username',

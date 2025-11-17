@@ -43,6 +43,11 @@ const communitySchema = new Schema(
       required: true,
       default: [],
     },
+    banned: {
+      type: [String],
+      required: true,
+      default: []
+    }
   },
   {
     collection: 'Community',

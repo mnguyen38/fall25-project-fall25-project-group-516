@@ -7,7 +7,6 @@ import { getUserRolesById } from '../services/user.service';
 type Cache = RedisClientType | null;
 
 const DEFAULT_ROLE_EXPIRATION = 3600;
-const DEFAULT_USER_EXPIRATION = 900;
 
 let cacheClient: Cache = null;
 
@@ -83,7 +82,6 @@ export const getCachedUserRoles = async (userId: string): Promise<Map<string, st
   const cachedUserRoles = await cache.get(`roles:${userId}`);
 
   if (cachedUserRoles !== null) {
-    // Cache hit: Already a plain object, just parse
     console.log('role cache hit');
     const parsedRoles = JSON.parse(cachedUserRoles);
     const roleMap: Map<string, string> = new Map(Object.entries(parsedRoles));
@@ -100,14 +98,8 @@ export const getCachedUserRoles = async (userId: string): Promise<Map<string, st
     throw new Error(`Roles not found`);
   }
 
-  // 2. Cache the plain object
-  await cache.setEx(
-    `roles:${userId}`,
-    DEFAULT_ROLE_EXPIRATION,
-    JSON.stringify(result.roles), // Stringify the plain object
-  );
+  await cache.setEx(`roles:${userId}`, DEFAULT_ROLE_EXPIRATION, JSON.stringify(result.roles));
 
-  // 3. Return the plain object
   return result.roles;
 };
 
@@ -117,31 +109,22 @@ export const getCachedUser = async (userId: string): Promise<UserResponse> => {
   const cachedUser = await cache.get(`user:${userId}`);
 
   if (cachedUser !== null) {
-    // Cache hit: Already a plain object, just parse
     console.log('user cache hit');
     const parsedUser: SafeDatabaseUser = JSON.parse(cachedUser);
-    console.log(parsedUser)
+    console.log(parsedUser);
     return parsedUser;
   }
 
-  // Cache miss:
-  console.log('cache miss')
+  console.log('cache miss');
   const user = await UserModel.findById(userId).select('-password');
 
   if (!user) {
     throw new Error('User not found');
   }
 
-  // 1. Convert the Mongoose document to a plain object
   const userObject = user.toObject() as SafeDatabaseUser;
 
-  // 2. Cache the plain object
-  await cache.setEx(
-    `user:${userId}`,
-    DEFAULT_ROLE_EXPIRATION,
-    JSON.stringify(userObject), // Stringify the plain object
-  );
+  await cache.setEx(`user:${userId}`, DEFAULT_ROLE_EXPIRATION, JSON.stringify(userObject));
 
-  // 3. Return the plain object
   return userObject;
 };

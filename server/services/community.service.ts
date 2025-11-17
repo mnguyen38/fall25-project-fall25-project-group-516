@@ -1,6 +1,6 @@
 import CommunityModel from '../models/community.model';
 import { Community, CommunityResponse, DatabaseCommunity } from '../types/types';
-import { toggleUserModeratorStatus } from './user.service';
+import { toggleUserRole } from './user.service';
 
 /**
  * Retrieves a community by its ID.
@@ -82,6 +82,13 @@ export const toggleCommunityMembership = async (
       );
     }
 
+    const userUpdateResult = await toggleUserRole(username, communityId, 'participant');
+
+    if ('error' in userUpdateResult) {
+      throw new Error(`Failed to update user roles: ${userUpdateResult.error}`);
+    }
+
+    console.log(userUpdateResult.roles);
     return updatedCommunity || { error: 'Failed to update community' };
   } catch (err) {
     return { error: (err as Error).message };
@@ -151,6 +158,50 @@ export const deleteCommunity = async (
   }
 };
 
+export const toggleBanUser = async (communityId: string, username: string) => {
+  try {
+    const community = await CommunityModel.findById(communityId);
+
+    if (!community) {
+      return { error: 'Community not found' };
+    }
+
+    if (community.admin === username || community.moderators?.includes(username)) {
+      return {
+        error:
+          'Community admins or moderators cannot be banned. Please transfer ownership or delete the community instead.',
+      };
+    }
+
+    if (!community.banned) {
+      community.banned = [];
+    }
+
+    const isMember = community.participants.includes(username);
+    const isBanned = community.banned?.includes(username);
+
+    const communityUpdateOp = isBanned
+      ? { $pull: { banned: username } }
+      : isMember
+        ? { $addToSet: { banned: username }, $pull: { participants: username } }
+        : { $addToSet: { banned: username } };
+
+    const updatedCommunity = await CommunityModel.findByIdAndUpdate(
+      communityId,
+      communityUpdateOp,
+      { new: true },
+    );
+
+    if (!updatedCommunity) {
+      return { error: 'Failed to update community document' };
+    }
+
+    return updatedCommunity;
+  } catch (err) {
+    return { error: (err as Error).message };
+  }
+};
+
 export const toggleModerator = async (
   communityId: string,
   adminUsername: string,
@@ -164,19 +215,22 @@ export const toggleModerator = async (
     }
 
     if (community.admin !== adminUsername) {
-      return { error: 'Unauthorized: Only the admin can change roles.' };
+      return { error: 'Unauthorized: Only the admin can change roles' };
     }
 
     const isMember = community.participants.includes(username);
     const isCurrentlyModerator = community.moderators?.includes(username);
-  
+
+    if (!isMember) {
+      return { error: 'User is not a member of the community' };
+    }
+
     const communityUpdateOp =
       isCurrentlyModerator && isMember
         ? { $pull: { moderators: username } }
         : { $addToSet: { moderators: username } };
 
-
-    const userUpdateResult = await toggleUserModeratorStatus(username, communityId);
+    const userUpdateResult = await toggleUserRole(username, communityId, 'moderator');
 
     if ('error' in userUpdateResult) {
       throw new Error(`Failed to update user roles: ${userUpdateResult.error}`);
@@ -189,7 +243,7 @@ export const toggleModerator = async (
     );
 
     if (!updatedCommunity) {
-      return { error: 'Failed to update community document.' };
+      return { error: 'Failed to update community document' };
     }
 
     return updatedCommunity;

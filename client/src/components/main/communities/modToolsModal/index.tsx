@@ -1,106 +1,257 @@
-import { useState, useMemo, ChangeEvent } from 'react';
 import './index.css';
 import { DatabaseCommunity } from '@fake-stack-overflow/shared';
+import useModToolsModal from '../../../../hooks/useModToolsModal';
 
 const ModToolsModal = ({
-  isOpen,
-  onClose,
   community,
-  onToggleModerator,
-  onDeleteCommunity,
+  onClose,
 }: {
-  isOpen: boolean;
-  onClose: () => void;
   community: DatabaseCommunity;
-  onToggleModerator: (username: string) => void;
-  onDeleteCommunity: () => void;
+  onClose: () => void;
 }) => {
-  const [modSearchQuery, setModSearchQuery] = useState<string>('');
-
-  const foundUsers = useMemo(() => {
-    const query = modSearchQuery.trim().toLowerCase();
-    if (query === '') return [];
-
-    return community.participants.filter(
-      participant => participant !== community.admin && participant.toLowerCase().includes(query),
-    );
-  }, [modSearchQuery, community.participants, community.admin]);
-
-  if (!isOpen) {
-    return null;
-  }
+  const {
+    userSearchQuery,
+    confirmAction,
+    setConfirmAction,
+    expandedSection,
+    setExpandedSection,
+    expandedUser,
+    setExpandedUser,
+    foundUsers,
+    handleQueryChange,
+    handleDeleteCommunity,
+    handleToggleModerator,
+    handleToggleBan,
+  } = useModToolsModal(community);
 
   const handleContentClick = (e: React.MouseEvent<HTMLDivElement>) => {
     e.stopPropagation();
   };
 
-  const handleSearchChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setModSearchQuery(e.target.value);
+  const handleConfirmAction = (action: 'mod' | 'ban', username: string) => {
+    if (action === 'ban') {
+      handleToggleBan(username);
+    } else if (action === 'mod') {
+      handleToggleModerator(username);
+    }
+    setConfirmAction(null);
+  };
+
+  const toggleSection = (section: 'users' | 'danger') => {
+    setExpandedSection(expandedSection === section ? null : section);
+  };
+
+  const toggleUser = (username: string) => {
+    setExpandedUser(expandedUser === username ? null : username);
   };
 
   return (
-    <>
-      <div className='modal-overlay' onClick={onClose}>
-        <div className='modal-content' onClick={handleContentClick}>
-          <div className='modal-header'>
-            <h3 className='modal-title'>Moderation Tools</h3>
-            <button className='modal-close-btn' onClick={onClose}>
-              &times;
+    <div className='modal-overlay' onClick={onClose}>
+      <div className='modal-content' onClick={handleContentClick}>
+        {/* Header */}
+        <div className='modal-header'>
+          <h3 className='modal-title'>Moderation Tools</h3>
+          <button className='modal-close-btn' onClick={onClose}>
+            &times;
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className='modal-body'>
+          {/* Manage Users Section */}
+          <div className='collapsible-section'>
+            <button className='section-header' onClick={() => toggleSection('users')} type='button'>
+              <div className='section-header-content'>
+                <span className='section-icon'>👥</span>
+                <h4 className='section-title'>Manage Users</h4>
+              </div>
+              <span className={`chevron ${expandedSection === 'users' ? 'expanded' : ''}`}>▼</span>
             </button>
+
+            {expandedSection === 'users' && (
+              <div className='section-content'>
+                {/* Search Bar */}
+                <div className='search-bar-wrapper'>
+                  <span className='search-icon'>🔍</span>
+                  <input
+                    type='text'
+                    className='mod-search-input'
+                    placeholder='Search users by username...'
+                    value={userSearchQuery}
+                    onChange={handleQueryChange}
+                    autoFocus
+                  />
+                </div>
+
+                {/* User List */}
+                <div className='user-list-container'>
+                  {userSearchQuery.trim() === '' && (
+                    <div className='empty-state'>
+                      <div className='empty-state-icon'>👥</div>
+                      <div className='empty-state-text'>Type in the search bar to find users</div>
+                    </div>
+                  )}
+
+                  {userSearchQuery.trim() !== '' && foundUsers.length === 0 && (
+                    <div className='empty-state'>
+                      <div className='empty-state-icon'>🔍</div>
+                      <div className='empty-state-text'>
+                        No users found matching "{userSearchQuery}"
+                      </div>
+                    </div>
+                  )}
+
+                  {foundUsers.map(user => {
+                    const isModerator = community.moderators?.includes(user.username);
+                    const isParticipant = community.participants.includes(user.username);
+                    const isBanned = community.banned?.includes(user.username);
+                    const isUserExpanded = expandedUser === user.username;
+
+                    return (
+                      <div key={user.username} className='user-card'>
+                        <button
+                          className='user-card-header'
+                          onClick={() => toggleUser(user.username)}
+                          type='button'>
+                          <div className='user-header'>
+                            <span className='username-display'>{user.username}</span>
+                            {isModerator && (
+                              <span className='badge badge-moderator'>MODERATOR</span>
+                            )}
+                            {isBanned && <span className='badge badge-banned'>BANNED</span>}
+                            {!isParticipant && (
+                              <span className='badge badge-non-member'>NOT A MEMBER</span>
+                            )}
+                          </div>
+                          <span className={`chevron ${isUserExpanded ? 'expanded' : ''}`}>▼</span>
+                        </button>
+
+                        {isUserExpanded && (
+                          <div className='user-card-content'>
+                            {/* Moderator Controls */}
+                            {isParticipant && !isBanned && (
+                              <div className='action-section action-section-moderator'>
+                                <div className='action-content'>
+                                  <div>
+                                    <div className='action-title'>
+                                      {isModerator
+                                        ? '🛡️ Moderator Privileges'
+                                        : '👤 Community Member'}
+                                    </div>
+                                    <div className='action-description'>
+                                      {isModerator
+                                        ? 'Can moderate posts, comments, and manage users'
+                                        : 'Grant moderator access to manage community'}
+                                    </div>
+                                  </div>
+                                  {confirmAction?.action === 'mod' &&
+                                  confirmAction?.username === user.username ? (
+                                    <div className='confirm-actions'>
+                                      <span className='confirm-text'>Sure?</span>
+                                      <button
+                                        onClick={() => handleConfirmAction('mod', user.username)}
+                                        className='btn btn-confirm-mod'>
+                                        Yes
+                                      </button>
+                                      <button
+                                        onClick={() => setConfirmAction(null)}
+                                        className='btn btn-cancel-mod'>
+                                        No
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <button
+                                      onClick={() =>
+                                        setConfirmAction({ action: 'mod', username: user.username })
+                                      }
+                                      className={`btn ${isModerator ? 'btn-remove-mod' : 'btn-add-mod'}`}>
+                                      {isModerator ? '↓ Remove Moderator' : '↑ Make Moderator'}
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Ban Controls */}
+                            <div
+                              className={`action-section ${isBanned ? 'action-section-banned' : 'action-section-ban'}`}>
+                              <div className='action-content'>
+                                <div>
+                                  <div className='action-title'>
+                                    {isBanned ? '🚫 User Banned' : '⚠️ Ban User'}
+                                  </div>
+                                  <div className='action-description'>
+                                    {isBanned
+                                      ? 'Cannot access community or post content'
+                                      : 'Prevent user from accessing this community'}
+                                  </div>
+                                </div>
+                                {confirmAction?.action === 'ban' &&
+                                confirmAction?.username === user.username ? (
+                                  <div className='confirm-actions'>
+                                    <span className='confirm-text'>Sure?</span>
+                                    <button
+                                      onClick={() => handleConfirmAction('ban', user.username)}
+                                      className={`btn ${isBanned ? 'btn-confirm-unban' : 'btn-confirm-ban'}`}>
+                                      Yes
+                                    </button>
+                                    <button
+                                      onClick={() => setConfirmAction(null)}
+                                      className={`btn ${isBanned ? 'btn-cancel-banned' : 'btn-cancel-ban'}`}>
+                                      No
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <button
+                                    onClick={() =>
+                                      setConfirmAction({ action: 'ban', username: user.username })
+                                    }
+                                    className={`btn ${isBanned ? 'btn-unban' : 'btn-ban'}`}>
+                                    {isBanned ? '✓ Unban User' : '⚠️ Ban User'}
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
 
-          <div className='modal-body'>
-            <h4 className='mod-tools-subheading'>Manage Moderators</h4>
-
-            <div className='search-bar-wrapper'>
-              <span className='search-icon'>🔍</span>
-              <input
-                type='text'
-                className='mod-search-input'
-                placeholder='Find user to moderate...'
-                value={modSearchQuery}
-                onChange={handleSearchChange} // Use the typed handler
-                autoFocus
-              />
-            </div>
-
-            <ul className='mod-manage-list'>
-              {modSearchQuery.trim() === '' && (
-                <li className='mod-placeholder'>Type in the search bar to find users.</li>
-              )}
-
-              {modSearchQuery.trim() !== '' && foundUsers.length === 0 && (
-                <li className='mod-no-results'>No matching users found.</li>
-              )}
-
-              {foundUsers.map(username => {
-                const isModerator = community.moderators?.includes(username);
-                return (
-                  <li key={username} className='mod-manage-item'>
-                    <span className='username'>{username}</span>
-                    <button
-                      className={`mod-toggle-btn ${isModerator ? 'is-mod' : 'not-mod'}`}
-                      onClick={() => onToggleModerator(username)}>
-                      {isModerator ? 'Remove Mod' : 'Add Mod'}
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-
-            <div className='danger-zone'>
-              <h4 className='mod-tools-subheading'>Danger Zone</h4>
-              <div className='danger-item'>
-                <p>Permanently delete this community. This action cannot be undone.</p>
-                <button className='delete-community-btn' onClick={onDeleteCommunity}>
-                  Delete Community
-                </button>
+          {/* Danger Zone Section */}
+          <div className='collapsible-section'>
+            <button
+              className='section-header section-header-danger'
+              onClick={() => toggleSection('danger')}
+              type='button'>
+              <div className='section-header-content'>
+                <span className='section-icon'>⚠️</span>
+                <h4 className='section-title'>Danger Zone</h4>
               </div>
-            </div>
+              <span className={`chevron ${expandedSection === 'danger' ? 'expanded' : ''}`}>▼</span>
+            </button>
+
+            {expandedSection === 'danger' && (
+              <div className='section-content'>
+                <div className='danger-zone-content'>
+                  <p className='danger-zone-text'>
+                    Permanently delete this community. This action cannot be undone and will remove
+                    all posts, comments, and data.
+                  </p>
+                  <button className='btn btn-delete-community' onClick={handleDeleteCommunity}>
+                    Delete Community
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 

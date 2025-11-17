@@ -54,7 +54,6 @@ export const invalidate = (keyGen: (req: Request) => string | string[]) => {
             const keys = Array.isArray(keysToDelete) ? keysToDelete : [keysToDelete];
 
             if (keys.length > 0) {
-              console.log(`INVALIDATING CACHE: ${keys.join(', ')}`);
               await cache.del(keys);
             }
           } catch (err) {
