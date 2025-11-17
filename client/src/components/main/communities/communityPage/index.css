@@ -1,12 +1,41 @@
+/* Import root variables if not already available */
+:root {
+  --pancake-brown-dark: #6B4423;
+  --pancake-brown-medium: #8B5A3C;
+  --pancake-brown-light: #C4886B;
+  --pancake-cream: #F5E6D3;
+  --pancake-white: #FFFFFF;
+  --pancake-text-dark: #3D2817;
+  --pancake-text-medium: #6B4423;
+  --pancake-accent: #D4A574;
+  --pancake-border: #E8D4C0;
+  --pancake-shadow: rgba(107, 68, 35, 0.12);
+  --pancake-bg-light: #F8F9FA;
+
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+
+  --shadow-sm: 0 1px 3px var(--pancake-shadow);
+  --shadow-md: 0 2px 8px var(--pancake-shadow);
+  --shadow-lg: 0 4px 12px var(--pancake-shadow);
+}
+
 .community-page-layout {
   display: flex;
-  gap: 2rem;
-  padding: 2rem;
+  gap: var(--spacing-xl);
+  padding: var(--spacing-xl);
   width: 100%;
   height: 100%;
   box-sizing: border-box;
   font-family: Arial, sans-serif;
-  background-color: #ffffff;
+  background-color: var(--pancake-bg-light);
 }
 
 /* Main questions section */
@@ -17,36 +46,65 @@
 
 .section-heading {
   font-size: 1.5rem;
-  margin-bottom: 1rem;
-  color: #111827;
+  margin-bottom: var(--spacing-md);
+  color: var(--pancake-text-dark);
+  font-weight: 700;
 }
 
 /* Sidebar */
 .community-sidebar {
   width: 300px;
   flex-shrink: 0;
-  background-color: #f9fafb;
-  border-left: 1px solid #e5e7eb;
-  padding-left: 1.5rem;
-  padding-right: 1.5rem;
+  background-color: var(--pancake-white);
+  border: 1px solid var(--pancake-border);
+  padding: var(--spacing-lg);
   display: flex;
   flex-direction: column;
   overflow-y: auto;
   position: sticky;
-  top: 2rem;
-  border-radius: 8px;
+  top: var(--spacing-xl);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
 }
 
 .community-title {
   font-size: 1.75rem;
-  margin-bottom: 1rem;
-  color: #1f2937;
+  margin-bottom: var(--spacing-md);
+  color: var(--pancake-text-dark);
+  font-weight: 700;
 }
 
 .community-description {
   font-size: 1rem;
-  color: #4b5563;
-  margin-bottom: 2rem;
+  color: var(--pancake-text-medium);
+  margin-bottom: var(--spacing-xl);
+  line-height: 1.5;
+}
+
+/* Mod Tools Trigger Button */
+.mod-tools-trigger-btn {
+  padding: 10px 20px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+  box-shadow: var(--shadow-sm);
+  background: var(--pancake-brown-dark);
+  color: var(--pancake-white);
+  border-color: var(--pancake-brown-dark);
+  margin-bottom: var(--spacing-md);
+}
+
+.mod-tools-trigger-btn:hover {
+  background: var(--pancake-brown-medium);
+  border-color: var(--pancake-brown-medium);
+  box-shadow: var(--shadow-md);
+}
+
+.mod-tools-trigger-btn:active {
+  transform: scale(0.98);
 }
 
 /* Members list */
@@ -64,104 +122,117 @@
   margin: 0;
   overflow-y: auto;
   max-height: 200px;
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  background-color: #ffffff;
+  border: 1px solid var(--pancake-border);
+  border-radius: var(--radius-md);
+  background-color: var(--pancake-white);
+  box-shadow: var(--shadow-sm);
 }
 
 .member-item {
-  padding: 0.5rem 1rem;
-  border-bottom: 1px solid #f3f4f6;
+  padding: var(--spacing-md) var(--spacing-md);
+  border-bottom: 1px solid var(--pancake-border);
   font-size: 0.95rem;
+  transition: background-color 0.2s ease;
 }
 
 .member-item:last-child {
   border-bottom: none;
 }
 
+.member-item:hover {
+  background-color: var(--pancake-cream);
+}
+
 .delete-community-btn {
-  background-color: #dc2626; /* Red-600 */
-  color: #fff;
-  padding: 0.5rem 1rem;
-  font-weight: bold;
-  border: none;
-  border-radius: 8px;
+  padding: 10px 20px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
-  transition:
-    background-color 0.2s ease,
-    transform 0.1s ease;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+  box-shadow: var(--shadow-sm);
+  background-color: #dc2626;
+  color: var(--pancake-white);
+  border-color: #dc2626;
 }
 
 .delete-community-btn:hover {
-  background-color: #b91c1c; /* Red-700 */
+  background-color: #991b1b;
+  border-color: #991b1b;
+  box-shadow: var(--shadow-md);
 }
 
 .delete-community-btn:active {
-  background-color: #991b1b; /* Red-800 */
+  transform: scale(0.98);
 }
 
 .role-badge {
-  font-size: 0.75rem;     
+  font-size: 0.75rem;
   font-weight: 700;
   padding: 3px 8px;
-  border-radius: 12px;
-  margin-right: 8px;
+  border-radius: var(--radius-sm);
+  margin-right: var(--spacing-sm);
   text-transform: uppercase;
   line-height: 1;
+  display: inline-block;
 }
 
 .username {
   font-weight: 500;
+  color: var(--pancake-text-dark);
 }
 
 .member-item.admin-member {
-  background-color: #fffbeb; 
-  border-left: 3px solid #ffd700; 
+  background-color: var(--pancake-cream);
+  border-left: 3px solid var(--pancake-accent);
 }
 
 .member-item.mod-member {
-  background-color: #f0f4f8; 
-  border-left: 3px solid #b0c4de; 
+  background-color: var(--pancake-bg-light);
+  border-left: 3px solid var(--pancake-brown-light);
 }
 
 .admin-badge {
-  background-color: #ffd700;
-  color: #4a3a00;
+  background-color: var(--pancake-accent);
+  color: var(--pancake-text-dark);
 }
 
 .mod-badge {
-  background-color: #b0c4de;
-  color: #1c3d5a;
+  background-color: var(--pancake-brown-dark);
+  color: var(--pancake-white);
 }
 
 /* --- Mod Tools Section --- */
 .mod-tools {
-  background-color: #f7f7f7;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  padding: 16px;
-  margin-top: 20px;
+  background-color: var(--pancake-cream);
+  border: 1px solid var(--pancake-border);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-md);
+  margin-top: var(--spacing-lg);
+  box-shadow: var(--shadow-sm);
 }
 
 .mod-tools .section-heading {
   margin-top: 0;
-  color: #c00; /* Make "Mod Tools" red */
+  color: #dc2626;
 }
 
 .mod-tools-subheading {
   font-size: 1rem;
   font-weight: 600;
-  margin-top: 16px;
-  margin-bottom: 8px;
-  border-bottom: 1px solid #eee;
-  padding-bottom: 4px;
+  margin-top: var(--spacing-md);
+  margin-bottom: var(--spacing-sm);
+  border-bottom: 1px solid var(--pancake-border);
+  padding-bottom: var(--spacing-xs);
+  color: var(--pancake-text-dark);
 }
 
 /* --- Moderator Management List --- */
 .mod-manage-list {
   list-style: none;
   padding-left: 0;
-  max-height: 200px; /* Add a scrollbar if list is long */
+  max-height: 200px;
   overflow-y: auto;
 }
 
@@ -169,8 +240,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 4px;
-  border-bottom: 1px solid #eee;
+  padding: var(--spacing-sm) var(--spacing-xs);
+  border-bottom: 1px solid var(--pancake-border);
 }
 
 .mod-manage-item:last-child {
@@ -186,30 +257,91 @@
   font-size: 0.8rem;
   font-weight: 600;
   padding: 4px 10px;
-  border-radius: 16px;
+  border-radius: var(--radius-sm);
   border: 1px solid transparent;
   cursor: pointer;
   transition: all 0.2s ease;
+  box-shadow: var(--shadow-sm);
+}
+
+.mod-toggle-btn:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.mod-toggle-btn:active {
+  transform: scale(0.98);
 }
 
 /* Style for adding a mod */
 .mod-toggle-btn.not-mod {
-  background-color: #e0eefc;
-  color: #005ac7;
-  border-color: #005ac7;
+  background-color: var(--pancake-cream);
+  color: var(--pancake-brown-dark);
+  border-color: var(--pancake-brown-dark);
 }
+
 .mod-toggle-btn.not-mod:hover {
-  background-color: #005ac7;
-  color: #fff;
+  background-color: var(--pancake-brown-dark);
+  color: var(--pancake-white);
 }
 
 /* Style for removing a mod */
 .mod-toggle-btn.is-mod {
-  background-color: #fce0e0;
-  color: #c00;
-  border-color: #c00;
+  background-color: #fde8e8;
+  color: #dc2626;
+  border-color: #dc2626;
 }
+
 .mod-toggle-btn.is-mod:hover {
-  background-color: #c00;
-  color: #fff;
+  background-color: #dc2626;
+  color: var(--pancake-white);
+}
+
+/* Custom scrollbar for members list */
+.members-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.members-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.members-list::-webkit-scrollbar-thumb {
+  background-color: var(--pancake-border);
+  border-radius: var(--radius-sm);
+}
+
+.members-list::-webkit-scrollbar-thumb:hover {
+  background-color: var(--pancake-brown-light);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .community-page-layout {
+    flex-direction: column;
+    gap: var(--spacing-lg);
+  }
+
+  .community-sidebar {
+    width: 100%;
+    position: relative;
+    top: 0;
+  }
+}
+
+/* Focus styles for accessibility */
+.mod-tools-trigger-btn:focus-visible,
+.delete-community-btn:focus-visible,
+.mod-toggle-btn:focus-visible {
+  outline: 2px solid var(--pancake-brown-medium);
+  outline-offset: 2px;
+}
+
+/* Loading state */
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+  color: var(--pancake-text-medium);
+  font-size: 16px;
 }
