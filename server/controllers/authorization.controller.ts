@@ -1,7 +1,7 @@
 import express, { Router, Request, Response } from 'express';
 import axios from 'axios';
 import { findOrCreateOAuthUser } from '../services/user.service'; //
-import { generateToken } from '../utils/jwt'; //
+import { generateToken } from '../utils/jwt.util'; //
 import { UserResponse, OAuthUserProfile, GitHubEmail } from '../types/types'; //
 
 /**

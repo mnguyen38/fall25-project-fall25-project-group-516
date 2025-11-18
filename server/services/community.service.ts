@@ -81,7 +81,11 @@ export const toggleCommunityMembership = async (
       );
     }
 
-    return updatedCommunity || { error: 'Failed to update community' };
+    if (!updatedCommunity) {
+      return { error: 'Failed to update community' };
+    }
+
+    return updatedCommunity;
   } catch (err) {
     return { error: (err as Error).message };
   }
@@ -107,6 +111,7 @@ export const createCommunity = async (communityData: Community): Promise<Communi
     });
 
     const savedCommunity = await newCommunity.save();
+
     return savedCommunity;
   } catch (err) {
     return { error: (err as Error).message };
@@ -145,6 +150,94 @@ export const deleteCommunity = async (
     }
 
     return result;
+  } catch (err) {
+    return { error: (err as Error).message };
+  }
+};
+
+export const toggleBanUser = async (communityId: string, username: string) => {
+  try {
+    const community = await CommunityModel.findById(communityId);
+
+    if (!community) {
+      return { error: 'Community not found' };
+    }
+
+    if (community.admin === username || community.moderators?.includes(username)) {
+      return {
+        error:
+          'Community admins or moderators cannot be banned. Please transfer ownership or delete the community instead.',
+      };
+    }
+
+    if (!community.banned) {
+      community.banned = [];
+    }
+
+    const isMember = community.participants.includes(username);
+    const isBanned = community.banned?.includes(username);
+
+    const communityUpdateOp = isBanned
+      ? { $pull: { banned: username } }
+      : isMember
+        ? { $addToSet: { banned: username }, $pull: { participants: username } }
+        : { $addToSet: { banned: username } };
+
+    const updatedCommunity = await CommunityModel.findByIdAndUpdate(
+      communityId,
+      communityUpdateOp,
+      { new: true },
+    );
+
+    if (!updatedCommunity) {
+      return { error: 'Failed to update community document' };
+    }
+
+    return updatedCommunity;
+  } catch (err) {
+    return { error: (err as Error).message };
+  }
+};
+
+export const toggleModerator = async (
+  communityId: string,
+  adminUsername: string,
+  username: string,
+): Promise<CommunityResponse> => {
+  try {
+    const community = await CommunityModel.findById(communityId);
+
+    if (!community) {
+      return { error: 'Community not found' };
+    }
+
+    if (community.admin !== adminUsername) {
+      return { error: 'Unauthorized: Only the admin can change roles' };
+    }
+
+    const isMember = community.participants.includes(username);
+    const isCurrentlyModerator = community.moderators?.includes(username);
+
+    if (!isMember) {
+      return { error: 'User is not a member of the community' };
+    }
+
+    const communityUpdateOp =
+      isCurrentlyModerator && isMember
+        ? { $pull: { moderators: username } }
+        : { $addToSet: { moderators: username } };
+
+    const updatedCommunity = await CommunityModel.findByIdAndUpdate(
+      communityId,
+      communityUpdateOp,
+      { new: true },
+    );
+
+    if (!updatedCommunity) {
+      return { error: 'Failed to update community document' };
+    }
+
+    return updatedCommunity;
   } catch (err) {
     return { error: (err as Error).message };
   }

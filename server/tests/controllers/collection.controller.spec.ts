@@ -4,6 +4,9 @@ import { app } from '../../app';
 import * as collectionService from '../../services/collection.service';
 import * as databaseUtil from '../../utils/database.util';
 import { DatabaseCollection, PopulatedDatabaseCollection } from '../../types/types';
+import { setupMockAuth } from '../../utils/mocks.util';
+
+jest.mock('../../middleware/token.middleware');
 
 // Mock question IDs for testing
 const mockQuestionId1 = new mongoose.Types.ObjectId('65e9b58910afe6e94fc6e6aa');
@@ -48,6 +51,7 @@ const populateDocumentSpy = jest.spyOn(databaseUtil, 'populateDocument');
 describe('Collection Controller', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    setupMockAuth();
   });
 
   describe('POST /create', () => {

@@ -7,6 +7,7 @@ import {
   UserResponse,
   UsersResponse,
   OAuthUserProfile,
+  UserRolesResponse,
 } from '../types/types';
 
 /**
@@ -286,7 +287,21 @@ export const findOrCreateOAuthUser = async (
 };
 
 /**
- * Adds or removes coins from specified account.
+ *
+ */
+export const getUserRolesById = async (id: string): Promise<UserRolesResponse> => {
+  try {
+    const roles = await UserModel.findById(id).select('roles');
+    if (!roles) {
+      throw new Error('User not found');
+    }
+    return roles;
+  } catch (error) {
+    return { error: `Error occured while the user's roles: ${error}` };
+  }
+};
+
+/** Adds or removes coins from specified account.
  * @param username User to whom coins will be allocated/ redacted
  * @param cost amount of coins
  * @param type whether the transaction is + or -

@@ -4,12 +4,19 @@ import { app } from '../../app';
 import * as tagUtil from '../../services/tag.service';
 import TagModel from '../../models/tags.model';
 import { DatabaseTag, Tag } from '../../types/types';
+import { setupMockAuth } from '../../utils/mocks.util';
 
+jest.mock('../../middleware/token.middleware');
 const getTagCountMapSpy: jest.SpyInstance = jest.spyOn(tagUtil, 'getTagCountMap');
 // Spy on the TagModel.findOne method
 const findOneSpy = jest.spyOn(TagModel, 'findOne');
 
 describe('Test tagController', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    setupMockAuth();
+  });
+
   describe('GET /getTagByName/:name', () => {
     it('should return the tag when found', async () => {
       // Mock a tag object to be returned by the findOne method

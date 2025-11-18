@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import {
   CommunityUpdatePayload,
   DatabaseCommunity,
   PopulatedDatabaseQuestion,
 } from '../types/types';
 import useUserContext from './useUserContext';
-import { deleteCommunity, getCommunityById } from '../services/communityService';
+import { getCommunityById } from '../services/communityService';
 import { getCommunityQuestionsById } from '../services/questionService';
 
 /**
@@ -23,8 +23,7 @@ const useCommunityPage = () => {
   const { user, socket } = useUserContext();
   const [community, setCommunity] = useState<DatabaseCommunity | null>(null);
   const [communityQuestions, setCommunityQuestions] = useState<PopulatedDatabaseQuestion[]>([]);
-
-  const navigate = useNavigate();
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 
   const { communityID } = useParams();
 
@@ -35,13 +34,6 @@ const useCommunityPage = () => {
   const fetchCommunityQuestions = async (communityId: string) => {
     const questions = await getCommunityQuestionsById(communityId);
     setCommunityQuestions(questions);
-  };
-
-  const handleDeleteCommunity = async () => {
-    if (community && community.admin === user.username) {
-      await deleteCommunity(community._id.toString(), user.username);
-      navigate('/communities');
-    }
   };
 
   useEffect(() => {
@@ -66,7 +58,6 @@ const useCommunityPage = () => {
         const questionExists = prevQuestions.some(q => q._id === questionUpdate._id);
 
         if (questionExists) {
-          // Update the existing question
           return prevQuestions.map(q => (q._id === questionUpdate._id ? questionUpdate : q));
         }
 
@@ -83,7 +74,13 @@ const useCommunityPage = () => {
     };
   }, [communityID, socket]);
 
-  return { community, communityQuestions, username: user.username, handleDeleteCommunity };
+  return {
+    community,
+    communityQuestions,
+    isModalOpen,
+    setIsModalOpen,
+    username: user.username,
+  };
 };
 
 export default useCommunityPage;

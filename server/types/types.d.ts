@@ -25,3 +25,13 @@ export interface OAuthUserProfile {
   avatar_url?: string;
   bio?: string;
 }
+
+declare module 'express-serve-static-core' {
+  interface Request {
+    user?: {
+      _id: string;
+      username: string;
+      email?: string;
+    };
+  }
+}

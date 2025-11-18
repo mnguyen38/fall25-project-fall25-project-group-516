@@ -16,6 +16,7 @@ import {
   VoteResponse,
 } from '../../types/types';
 import QuestionModel from '../../models/questions.model';
+import { setupMockAuth } from '../../utils/mocks.util';
 
 const addVoteToQuestionSpy = jest.spyOn(questionUtil, 'addVoteToQuestion');
 const getQuestionsByOrderSpy: jest.SpyInstance = jest.spyOn(questionUtil, 'getQuestionsByOrder');
@@ -209,10 +210,13 @@ const simplifyQuestion = (question: PopulatedDatabaseQuestion) => ({
 
 const EXPECTED_QUESTIONS = MOCK_POPULATED_QUESTIONS.map(question => simplifyQuestion(question));
 
+jest.mock('../../middleware/token.middleware');
 describe('Test questionController', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    setupMockAuth();
   });
+
   describe('POST /addQuestion', () => {
     it('should add a new question', async () => {
       jest.spyOn(tagUtil, 'processTags').mockResolvedValue([dbTag1, dbTag2]);

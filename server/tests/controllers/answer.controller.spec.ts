@@ -5,12 +5,20 @@ import { app } from '../../app';
 import * as answerUtil from '../../services/answer.service';
 import * as databaseUtil from '../../utils/database.util';
 import * as badgeUtil from '../../services/badge.service';
+import { setupMockAuth } from '../../utils/mocks.util';
+
+jest.mock('../../middleware/token.middleware');
 
 const saveAnswerSpy = jest.spyOn(answerUtil, 'saveAnswer');
 const addAnswerToQuestionSpy = jest.spyOn(answerUtil, 'addAnswerToQuestion');
 const popDocSpy = jest.spyOn(databaseUtil, 'populateDocument');
 
 describe('POST /addAnswer', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    setupMockAuth();
+  });
+
   it('should add a new answer to the question', async () => {
     const validQid = new mongoose.Types.ObjectId();
     const validAid = new mongoose.Types.ObjectId();

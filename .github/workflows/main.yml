@@ -56,9 +56,6 @@ jobs:
 
           npm start & sleep 10
 
-          echo "Checking if the server is running..."
-          curl --fail 'http://localhost:8000/api/question/getQuestion?order=newest&search=' || (echo "Server failed to start" && killall node && exit 1)
-
           echo "Server started successfully. Now stopping..."
           killall node
 

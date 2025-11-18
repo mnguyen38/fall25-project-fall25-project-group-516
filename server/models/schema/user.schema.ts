@@ -86,8 +86,11 @@ const userSchema: Schema = new Schema(
     email: {
       type: String,
       unique: true,
-      sparse: true,
-      default: undefined,
+    },
+    roles: {
+      type: Map,
+      of: String,
+      default: {},
     },
     lifeUpvotes: {
       type: Number,

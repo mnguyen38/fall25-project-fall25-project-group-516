@@ -19,7 +19,9 @@ import {
   updateUser,
 } from '../services/user.service';
 import { upload, processProfilePicture, processBannerImage } from '../utils/upload';
-import { generateToken, verifyToken } from '../utils/jwt';
+import { generateToken } from '../utils/jwt.util';
+import protect from '../middleware/token.middleware';
+import { getCachedUser } from '../utils/cache.util';
 import { checkAndAwardBadges } from '../services/badge.service';
 
 const userController = (socket: FakeSOSocket) => {
@@ -388,23 +390,15 @@ const userController = (socket: FakeSOSocket) => {
    */
   const verifyTokenRoute = async (req: Request, res: Response): Promise<void> => {
     try {
-      const authHeader = req.headers.authorization;
-
-      if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        res.status(401).json({ error: 'No token provided' });
+      if (!req.user) {
+        res.status(401).json({ error: 'Unauthorized' });
         return;
       }
 
-      const token = authHeader.substring(7); // Remove 'Bearer ' prefix
-      const decoded = verifyToken(token);
-
-      if (!decoded) {
-        res.status(401).json({ error: 'Invalid or expired token' });
-        return;
-      }
+      const { _id: userId } = req.user;
 
       // Get user data from database using the decoded username
-      const user = await getUserByUsername(decoded.username);
+      const user = await getCachedUser(userId);
 
       if ('error' in user) {
         res.status(404).json({ error: 'User not found' });
@@ -487,18 +481,23 @@ const userController = (socket: FakeSOSocket) => {
   // Define routes for the user-related operations.
   router.post('/signup', createUser);
   router.post('/login', userLogin);
-  router.get('/verify-token', verifyTokenRoute);
-  router.patch('/resetPassword', resetPassword);
-  router.get('/getUser/:username', getUser);
-  router.get('/getUsers', getUsers);
-  router.delete('/deleteUser/:username', deleteUser);
-  router.patch('/updateBiography', updateBiography);
-  router.patch('/toggleProfilePrivacy', toggleProfilePrivacy);
-  router.patch('/updateShowLoginStreak', updateShowLoginStreak);
-  router.post('/uploadProfilePicture', upload.single('profilePicture'), uploadProfilePicture);
-  router.post('/uploadBannerImage', upload.single('bannerImage'), uploadBannerImage);
-  router.patch('/addCoins', addCoinTransaction);
-  router.patch('/reduceCoins', reduceCoinTransaction);
+  router.get('/verify-token', protect, verifyTokenRoute);
+  router.patch('/resetPassword', protect, resetPassword);
+  router.get('/getUser/:username', protect, getUser);
+  router.get('/getUsers', protect, getUsers);
+  router.delete('/deleteUser/:username', protect, deleteUser);
+  router.patch('/updateBiography', protect, updateBiography);
+  router.post(
+    '/uploadProfilePicture',
+    protect,
+    upload.single('profilePicture'),
+    uploadProfilePicture,
+  );
+  router.post('/uploadBannerImage', protect, upload.single('bannerImage'), uploadBannerImage);
+  router.patch('/toggleProfilePrivacy', protect, toggleProfilePrivacy);
+  router.patch('/updateShowLoginStreak', protect, updateShowLoginStreak);
+  router.patch('/addCoins', protect, addCoinTransaction);
+  router.patch('/reduceCoins', protect, reduceCoinTransaction);
 
   return router;
 };

@@ -3,11 +3,18 @@ import supertest from 'supertest';
 import { app } from '../../app';
 import * as util from '../../services/message.service';
 import { DatabaseMessage, Message } from '../../types/types';
+import { setupMockAuth } from '../../utils/mocks.util';
 
 const saveMessageSpy = jest.spyOn(util, 'saveMessage');
 const getMessagesSpy = jest.spyOn(util, 'getMessages');
 
+jest.mock('../../middleware/token.middleware');
 describe('POST /addMessage', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    setupMockAuth();
+  });
+
   it('should add a new message', async () => {
     const validId = new mongoose.Types.ObjectId();
 

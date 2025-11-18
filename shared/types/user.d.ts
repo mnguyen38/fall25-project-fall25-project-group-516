@@ -46,6 +46,7 @@ export interface User extends UserCredentials {
   lastLogin?: Date;
   showLoginStreak?: boolean;
   email?: string;
+  roles?: Map<string, string>;
   lifeUpvotes?: number;
   coins?: number;
   profilePrivate?: boolean;
@@ -93,11 +94,22 @@ export interface UserByUsernameRequest extends Request {
 export type SafeDatabaseUser = Omit<DatabaseUser, 'password'>;
 
 /**
+ * Represents the a user object that only includes roles and tokenVersion.
+ */
+export type UserRoles = Pick<DatabaseUser, 'roles'>;
+/**
  * Represents the response for user-related operations.
  * - `SafeDatabaseUser`: A user object without sensitive data if the operation is successful.
  * - `error`: An error message if the operation fails.
  */
 export type UserResponse = SafeDatabaseUser | { error: string };
+
+/**
+ * Represents the response for role-related operations.
+ * - `UserRoles` a user object that only includes roles and tokenVersion.
+ * - `error`: An error message if the operation fails.
+ */
+export type UserRolesResponse = UserRoles | { error: string };
 
 /**
  * Represents the response for multiple user-related operations.

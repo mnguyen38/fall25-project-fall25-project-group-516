@@ -1,3 +1,32 @@
+/* Import root variables if not already available */
+:root {
+  --pancake-brown-dark: #6B4423;
+  --pancake-brown-medium: #8B5A3C;
+  --pancake-brown-light: #C4886B;
+  --pancake-cream: #F5E6D3;
+  --pancake-white: #FFFFFF;
+  --pancake-text-dark: #3D2817;
+  --pancake-text-medium: #6B4423;
+  --pancake-accent: #D4A574;
+  --pancake-border: #E8D4C0;
+  --pancake-shadow: rgba(107, 68, 35, 0.12);
+  --pancake-bg-light: #F8F9FA;
+
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+
+  --shadow-sm: 0 1px 3px var(--pancake-shadow);
+  --shadow-md: 0 2px 8px var(--pancake-shadow);
+  --shadow-lg: 0 4px 12px var(--pancake-shadow);
+}
+
 .community-page-layout {
   display: flex;
   gap: var(--spacing-lg);
@@ -39,6 +68,43 @@
 }
 
 .community-title {
+  font-size: 1.75rem;
+  margin-bottom: var(--spacing-md);
+  color: var(--pancake-text-dark);
+  font-weight: 700;
+}
+
+.community-description {
+  font-size: 1rem;
+  color: var(--pancake-text-medium);
+  margin-bottom: var(--spacing-xl);
+  line-height: 1.5;
+}
+
+/* Mod Tools Trigger Button */
+.mod-tools-trigger-btn {
+  padding: 10px 20px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+  box-shadow: var(--shadow-sm);
+  background: var(--pancake-brown-dark);
+  color: var(--pancake-white);
+  border-color: var(--pancake-brown-dark);
+  margin-bottom: var(--spacing-md);
+}
+
+.mod-tools-trigger-btn:hover {
+  background: var(--pancake-brown-medium);
+  border-color: var(--pancake-brown-medium);
+  box-shadow: var(--shadow-md);
+}
+
+.mod-tools-trigger-btn:active {
+  transform: scale(0.98);
   font-size: 24px;
   font-weight: 700;
   margin-bottom: var(--spacing-md);
@@ -68,41 +134,227 @@
   overflow-y: auto;
   max-height: 200px;
   border: 1px solid var(--pancake-border);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   background-color: var(--pancake-white);
+  box-shadow: var(--shadow-sm);
 }
 
 .member-item {
-  padding: var(--spacing-sm) var(--spacing-md);
+  padding: var(--spacing-md) var(--spacing-md);
   border-bottom: 1px solid var(--pancake-border);
   font-size: 14px;
-  color: var(--pancake-text-dark);
+  transition: background-color 0.2s ease;
+  border-radius: var(--radius-sm);
+  background-color: var(--pancake-white);
 }
 
 .member-item:last-child {
   border-bottom: none;
 }
 
+.member-item:hover {
+  background-color: var(--pancake-cream);
+}
+
 .delete-community-btn {
+  padding: 10px 20px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+  box-shadow: var(--shadow-sm);
   background-color: #dc2626;
   color: var(--pancake-white);
-  padding: 8px 16px;
-  font-weight: 600;
-  border: 1px solid #dc2626;
+  border-color: #dc2626;
+}
+
+.delete-community-btn:hover {
+  background-color: #991b1b;
+  border-color: #991b1b;
+  box-shadow: var(--shadow-md);
+}
+
+.delete-community-btn:active {
+  transform: scale(0.98);
+}
+
+.role-badge {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 3px 8px;
   border-radius: var(--radius-sm);
+  margin-right: var(--spacing-sm);
+  text-transform: uppercase;
+  line-height: 1;
+  display: inline-block;
+}
+
+.username {
+  font-weight: 500;
+  color: var(--pancake-text-dark);
+}
+
+.member-item.admin-member {
+  background-color: var(--pancake-cream);
+  border-left: 3px solid var(--pancake-accent);
+}
+
+.member-item.mod-member {
+  background-color: var(--pancake-bg-light);
+  border-left: 3px solid var(--pancake-brown-light);
+}
+
+.admin-badge {
+  background-color: var(--pancake-accent);
+  color: var(--pancake-text-dark);
+}
+
+.mod-badge {
+  background-color: var(--pancake-brown-dark);
+  color: var(--pancake-white);
+}
+
+/* --- Mod Tools Section --- */
+.mod-tools {
+  background-color: var(--pancake-cream);
+  border: 1px solid var(--pancake-border);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-md);
+  margin-top: var(--spacing-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.mod-tools .section-heading {
+  margin-top: 0;
+  color: #dc2626;
+}
+
+.mod-tools-subheading {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-top: var(--spacing-md);
+  margin-bottom: var(--spacing-sm);
+  border-bottom: 1px solid var(--pancake-border);
+  padding-bottom: var(--spacing-xs);
+  color: var(--pancake-text-dark);
+}
+
+/* --- Moderator Management List --- */
+.mod-manage-list {
+  list-style: none;
+  padding-left: 0;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.mod-manage-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-sm) var(--spacing-xs);
+  border-bottom: 1px solid var(--pancake-border);
+}
+
+.mod-manage-item:last-child {
+  border-bottom: none;
+}
+
+.mod-manage-item .username {
+  font-weight: 500;
+}
+
+/* --- Toggle Button Styling --- */
+.mod-toggle-btn {
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
   cursor: pointer;
   transition: all 0.2s ease;
   box-shadow: var(--shadow-sm);
 }
 
-.delete-community-btn:hover {
-  background-color: #b91c1c;
-  border-color: #b91c1c;
+.mod-toggle-btn:hover {
   box-shadow: var(--shadow-md);
 }
 
-.delete-community-btn:active {
-  background-color: #991b1b;
-  border-color: #991b1b;
+.mod-toggle-btn:active {
   transform: scale(0.98);
+}
+
+/* Style for adding a mod */
+.mod-toggle-btn.not-mod {
+  background-color: var(--pancake-cream);
+  color: var(--pancake-brown-dark);
+  border-color: var(--pancake-brown-dark);
+}
+
+.mod-toggle-btn.not-mod:hover {
+  background-color: var(--pancake-brown-dark);
+  color: var(--pancake-white);
+}
+
+/* Style for removing a mod */
+.mod-toggle-btn.is-mod {
+  background-color: #fde8e8;
+  color: #dc2626;
+  border-color: #dc2626;
+}
+
+.mod-toggle-btn.is-mod:hover {
+  background-color: #dc2626;
+  color: var(--pancake-white);
+}
+
+/* Custom scrollbar for members list */
+.members-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.members-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.members-list::-webkit-scrollbar-thumb {
+  background-color: var(--pancake-border);
+  border-radius: var(--radius-sm);
+}
+
+.members-list::-webkit-scrollbar-thumb:hover {
+  background-color: var(--pancake-brown-light);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .community-page-layout {
+    flex-direction: column;
+    gap: var(--spacing-lg);
+  }
+
+  .community-sidebar {
+    width: 100%;
+    position: relative;
+    top: 0;
+  }
+}
+
+/* Focus styles for accessibility */
+.mod-tools-trigger-btn:focus-visible,
+.delete-community-btn:focus-visible,
+.mod-toggle-btn:focus-visible {
+  outline: 2px solid var(--pancake-brown-medium);
+  outline-offset: 2px;
+}
+
+/* Loading state */
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+  color: var(--pancake-text-medium);
+  font-size: 16px;
 }
