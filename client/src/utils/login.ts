@@ -8,8 +8,8 @@ export const setLoginStatus = (username: string): void => {
 };
 
 /**
- * Retrieves the authentication token from sessionStorage
- * @returns The stored token or null if not found
+ * Retrieves the daily login status from sessionStorage
+ * @returns The stored status or null if not found
  */
 export const getLoginStatus = (username: string): string | null => {
   return sessionStorage.getItem(`${TOKEN_KEY}_${username}`);
