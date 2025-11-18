@@ -97,6 +97,10 @@ const userSchema: Schema = new Schema(
       type: Number,
       default: 0,
     },
+    profilePrivate: {
+      type: Boolean,
+      default: false,
+    },
   },
   { collection: 'User' },
 );

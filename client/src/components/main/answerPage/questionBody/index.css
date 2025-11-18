@@ -1,17 +1,22 @@
 .questionBody {
   display: flex;
   flex-direction: row;
-  /* justify-content: space-between;  */
-  margin-top: 5%;
-  border-bottom: #000000 1px dashed;
+  margin-top: var(--spacing-lg);
+  padding-bottom: var(--spacing-lg);
+  border-bottom: 2px solid var(--pancake-border);
+  background: var(--pancake-white);
 }
 
 .answer_question_view {
   width: 15%;
+  color: var(--pancake-text-medium);
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .answer_question_text {
   width: 60%;
+  color: var(--pancake-text-dark);
 }
 
 .answer_question_right {

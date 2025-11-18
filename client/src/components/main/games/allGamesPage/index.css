@@ -1,39 +1,38 @@
 /* General Styles */
 body {
   font-family: Arial, sans-serif;
-  background-color: #f8f9fa;
+  background-color: var(--pancake-bg-light);
   margin: 0;
   padding: 0;
 }
 
 .game-page {
-  padding: 20px;
-  max-width: 900px;
-  margin: 0 auto;
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 24px 0;
+  max-width: 100%;
+  margin: 0;
+  background: var(--pancake-white);
 }
 
 .game-header h1 {
   font-size: 24px;
-  color: #333;
+  font-weight: 700;
+  color: var(--pancake-text-dark);
 }
 
 .game-status {
-  color: #666;
-  margin-left: 20px;
+  color: var(--pancake-text-medium);
+  margin-left: var(--spacing-lg);
 }
 
 /* Button Spacing */
 .game-controls,
 .game-available,
 .game-details {
-  margin-bottom: 15px;
+  margin-bottom: var(--spacing-md);
 }
 
 button {
-  margin: 10px;
+  margin: var(--spacing-md);
   display: inline-block;
 }
 
@@ -42,49 +41,63 @@ button {
 .btn-leave-game,
 .btn-refresh-list,
 .btn-join-game {
-  background: #007bff;
-  color: white;
+  background: var(--pancake-brown-dark);
+  color: var(--pancake-white);
   padding: 10px 20px;
-  border: none;
-  border-radius: 4px;
+  border: 1px solid var(--pancake-brown-dark);
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  font-size: 16px;
-  transition: background-color 0.2s ease;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow-sm);
 }
 
 .btn-create-game:hover,
 .btn-leave-game:hover,
 .btn-refresh-list:hover,
 .btn-join-game:hover {
-  background: #0056b3;
+  background: var(--pancake-brown-medium);
+  border-color: var(--pancake-brown-medium);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-create-game:active,
+.btn-leave-game:active,
+.btn-refresh-list:active,
+.btn-join-game:active {
+  transform: scale(0.98);
 }
 
 button:disabled {
   background: #ccc;
+  border-color: #ccc;
   cursor: not-allowed;
+  opacity: 0.6;
 }
 
 /* Available Games List */
 .game-list {
-  margin-top: 15px;
-  border-top: 1px solid #ddd;
-  padding-top: 15px;
+  margin-top: var(--spacing-md);
+  border-top: 2px solid var(--pancake-border);
+  padding-top: var(--spacing-md);
 }
 
 .game-list h2 {
   font-size: 20px;
-  color: #444;
+  font-weight: 700;
+  color: var(--pancake-text-dark);
 }
 
 .game-items {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--spacing-md);
 }
 
 /* Error Message */
 .game-error {
-  color: red;
+  color: #dc2626;
   font-weight: bold;
-  margin-top: 15px;
+  margin-top: var(--spacing-md);
 }

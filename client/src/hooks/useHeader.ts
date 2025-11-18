@@ -76,7 +76,7 @@ const useHeader = () => {
     return () => {
       socket.off('transactionEvent', handleCoinUpdate);
     };
-  }, [socket, user.username]);
+  }, [socket, user.coins, user.username]);
 
   /**
    * Signs the user out by clearing the user context, removing the auth token, and navigating to the landing page.

@@ -41,7 +41,7 @@ const useQuestionPage = () => {
       setLoginReward(reward);
       setShowLoginReward(true);
     }
-  }, [getAuthToken]);
+  }, [user.loginStreak, user.username]);
 
   /**
    * When user claims login reward, sets login status in session storage.

@@ -1,19 +1,28 @@
 .btn-action-community {
-  padding: 0.5rem 1rem;
-  background-color: #3b82f6;
-  color: white;
-  border: none;
-  border-radius: 8px;
+  padding: 8px 16px;
+  background-color: var(--pancake-brown-dark);
+  color: var(--pancake-white);
+  border: 1px solid var(--pancake-brown-dark);
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  font-weight: bold;
-  transition: background-color 0.2s ease;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow-sm);
 }
 
 .btn-action-community:hover {
-  background-color: #2563eb;
+  background-color: var(--pancake-brown-medium);
+  border-color: var(--pancake-brown-medium);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-action-community:active {
+  transform: scale(0.98);
 }
 
 .community-error {
-  color: red;
-  margin-top: 1rem;
+  color: #dc2626;
+  font-weight: bold;
+  margin-top: var(--spacing-md);
 }

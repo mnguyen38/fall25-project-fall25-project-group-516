@@ -1,47 +1,49 @@
 .message {
   display: flex;
   flex-direction: column;
-  padding: 10px;
+  padding: var(--spacing-md);
   margin: auto;
-  margin-bottom: 10px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  background-color: #f9f9f9;
+  margin-bottom: var(--spacing-md);
+  border: 1px solid var(--pancake-border);
+  border-radius: var(--radius-md);
+  background-color: var(--pancake-bg-light);
   width: 98%;
+  box-shadow: var(--shadow-sm);
 }
 
 .message.sender {
   align-self: flex-end;
-  background-color: #d1e7ff;
+  background-color: var(--pancake-cream);
+  border-color: var(--pancake-brown-light);
 }
 
 .message.receiver {
   align-self: flex-start;
-  background-color: #ffffff;
+  background-color: var(--pancake-white);
 }
 
 .message-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 5px;
-  font-size: 0.9rem;
-  color: #666;
+  margin-bottom: var(--spacing-sm);
+  font-size: 13px;
+  color: var(--pancake-text-medium);
 }
 
 .message-sender {
   font-weight: bold;
-  color: #333;
+  color: var(--pancake-brown-dark);
 }
 
 .message-time {
-  font-size: 0.8rem;
-  color: #999;
+  font-size: 12px;
+  color: var(--pancake-text-medium);
 }
 
 .message-body {
-  font-size: 1rem;
-  color: #333;
+  font-size: 14px;
+  color: var(--pancake-text-dark);
   line-height: 1.5;
   word-wrap: break-word;
 }

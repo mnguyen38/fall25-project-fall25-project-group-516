@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import {
   getUserByUsername,
   deleteUser,
@@ -19,7 +19,6 @@ import useHeader from './useHeader';
  */
 const useProfileSettings = () => {
   const { username } = useParams<{ username: string }>();
-  const navigate = useNavigate();
   const { user: currentUser } = useUserContext();
   const { handleSignOut } = useHeader();
 
@@ -165,11 +164,6 @@ const useProfileSettings = () => {
       setSuccessMessage(null);
       throw error;
     }
-  };
-
-  const handleViewCollectionsPage = () => {
-    navigate(`/collections/${username}`);
-    return;
   };
 
   const handleEnteringEditMode = () => {
@@ -343,7 +337,6 @@ const useProfileSettings = () => {
     handleToggleLoginStreak,
     handleToggleLoginStreakPreview,
     handleDeleteUser,
-    handleViewCollectionsPage,
     badges,
     displayedBadgeIds,
     uploadingImage,

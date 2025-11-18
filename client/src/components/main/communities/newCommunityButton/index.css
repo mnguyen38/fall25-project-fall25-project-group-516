@@ -1,21 +1,23 @@
 .new-community-button {
-  background-color: #3b82f6;
-  color: #fff;
-  padding: 0.5rem 1.25rem;
-  font-size: 1rem;
-  border: none;
-  border-radius: 8px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  background-color: var(--pancake-brown-dark);
+  color: var(--pancake-white);
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  border: 1px solid var(--pancake-brown-dark);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm);
   cursor: pointer;
-  transition:
-    background-color 0.2s ease,
-    transform 0.1s ease;
+  transition: all 0.2s ease;
 }
 
 .new-community-button:hover {
-  background-color: #2563eb;
+  background-color: var(--pancake-brown-medium);
+  border-color: var(--pancake-brown-medium);
+  box-shadow: var(--shadow-md);
 }
 
 .new-community-button:active {
-  background-color: #2563eb;
+  background-color: var(--pancake-brown-medium);
+  transform: scale(0.98);
 }

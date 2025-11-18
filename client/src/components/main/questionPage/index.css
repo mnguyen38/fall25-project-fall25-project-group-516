@@ -2,6 +2,11 @@
   margin-right: 15%;
 }
 
-.question_list:last-child {
-  border-bottom: #000000 1px dashed;
+.question_list {
+  max-width: 100%;
+  margin: 0;
+  padding: 24px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
 }

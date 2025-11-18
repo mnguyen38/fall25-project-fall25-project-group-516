@@ -1,23 +1,38 @@
 .user {
   display: flex;
   flex-direction: row;
-  border-top: #000000 1px dashed;
+  border-bottom: 1px solid var(--pancake-border);
+  padding: 16px 0;
+  background: var(--pancake-white);
+  transition: all 0.15s ease;
+  gap: 24px;
+  align-items: center;
+}
+
+.user:hover {
+  background: var(--pancake-bg-light);
 }
 
 .userStats {
-  color: #bbbbbb;
+  color: var(--pancake-text-medium);
   text-align: right;
-  width: 30%;
+  min-width: 120px;
+  font-size: 12px;
+  font-weight: 500;
 }
 
 .user_mid {
-  margin-left: 2rem;
-  margin-top: auto;
-  margin-bottom: auto;
-  width: 60%;
+  flex: 1;
 }
 
 .userUsername {
-  color: cornflowerblue;
+  color: var(--pancake-brown-dark);
   cursor: pointer;
+  font-weight: 600;
+  font-size: 15px;
+  transition: color 0.15s ease;
+}
+
+.userUsername:hover {
+  color: var(--pancake-brown-medium);
 }

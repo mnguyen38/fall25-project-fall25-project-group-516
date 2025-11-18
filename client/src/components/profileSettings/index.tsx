@@ -8,7 +8,21 @@ import BadgeDisplay from '../badgeDisplay';
 import ResetPasswordModal from '../resetPasswordModal';
 import DeleteAccountModal from '../deleteAccountModal';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPencil, faGears, faKey, faTrash } from '@fortawesome/free-solid-svg-icons';
+import {
+  faPencil,
+  faGears,
+  faKey,
+  faTrash,
+  faRightFromBracket,
+  faEye,
+  faEyeSlash,
+} from '@fortawesome/free-solid-svg-icons';
+import { useNavigate } from 'react-router-dom';
+import useLoginContext from '../../hooks/useLoginContext';
+import { removeAuthToken, toggleProfilePrivacy } from '../../services/userService';
+import { getQuestionsByUser } from '../../services/questionService';
+import Question from '../main/questionPage/question';
+import { PopulatedDatabaseQuestion } from '../../types/types';
 
 const ProfileSettings: React.FC = () => {
   const {
@@ -24,7 +38,6 @@ const ProfileSettings: React.FC = () => {
     handleResetPassword,
     handleUpdateBiography,
     handleDeleteUser,
-    handleViewCollectionsPage,
     badges,
     displayedBadgeIds,
     uploadingImage,
@@ -40,11 +53,53 @@ const ProfileSettings: React.FC = () => {
     handleToggleLoginStreakPreview,
   } = useProfileSettings();
 
+  const navigate = useNavigate();
+  const { setUser } = useLoginContext();
+
   const [showResetPasswordModal, setShowResetPasswordModal] = React.useState(false);
   const [showDeleteAccountModal, setShowDeleteAccountModal] = React.useState(false);
   const [showSettingsDropdown, setShowSettingsDropdown] = React.useState(false);
   const [editMode, setEditMode] = React.useState(false);
+  const [userQuestions, setUserQuestions] = React.useState<PopulatedDatabaseQuestion[]>([]);
+  const [questionsLoading, setQuestionsLoading] = React.useState(false);
   const settingsDropdownRef = React.useRef<HTMLDivElement>(null);
+
+  const handleLogout = () => {
+    setUser(null);
+    removeAuthToken();
+    navigate('/');
+  };
+
+  const handleTogglePrivacy = async () => {
+    if (!userData?.username) return;
+
+    try {
+      await toggleProfilePrivacy(userData.username);
+      // Refresh the page to show updated privacy state
+      window.location.reload();
+    } catch {
+      // Error handled silently
+    }
+  };
+
+  // Fetch user's questions
+  React.useEffect(() => {
+    const fetchUserQuestions = async () => {
+      if (!userData?.username) return;
+
+      try {
+        setQuestionsLoading(true);
+        const questions = await getQuestionsByUser(userData.username);
+        setUserQuestions(questions);
+      } catch {
+        setUserQuestions([]);
+      } finally {
+        setQuestionsLoading(false);
+      }
+    };
+
+    fetchUserQuestions();
+  }, [userData?.username]);
 
   // Close dropdown when clicking outside
   React.useEffect(() => {
@@ -170,10 +225,32 @@ const ProfileSettings: React.FC = () => {
                             className='dropdown-item'
                             onClick={() => {
                               setShowSettingsDropdown(false);
+                              handleTogglePrivacy();
+                            }}>
+                            <FontAwesomeIcon icon={userData?.profilePrivate ? faEye : faEyeSlash} />
+                            <span>
+                              {userData?.profilePrivate
+                                ? 'Make Profile Public'
+                                : 'Make Profile Private'}
+                            </span>
+                          </button>
+                          <button
+                            className='dropdown-item'
+                            onClick={() => {
+                              setShowSettingsDropdown(false);
                               setShowResetPasswordModal(true);
                             }}>
                             <FontAwesomeIcon icon={faKey} />
                             <span>Reset Password</span>
+                          </button>
+                          <button
+                            className='dropdown-item'
+                            onClick={() => {
+                              setShowSettingsDropdown(false);
+                              handleLogout();
+                            }}>
+                            <FontAwesomeIcon icon={faRightFromBracket} />
+                            <span>Log Out</span>
                           </button>
                           <button
                             className='dropdown-item dropdown-item-danger'
@@ -343,27 +420,50 @@ const ProfileSettings: React.FC = () => {
         </div>
 
         {/* Badges Section */}
-        {badges.length > 0 && (
+        {userData.profilePrivate && !canEditProfile ? (
           <div className='profile-card'>
             <div className='profile-section'>
               <h2 className='section-title'>Badges & Achievements</h2>
-              <BadgeDisplay
-                badges={badges}
-                displayedBadgeIds={displayedBadgeIds}
-                onToggleBadge={canEditProfile ? handleToggleBadge : undefined}
-                showProgress
-                editable={canEditProfile}
-              />
+              <p className='private-message'>This user account is private</p>
             </div>
           </div>
+        ) : (
+          badges.length > 0 && (
+            <div className='profile-card'>
+              <div className='profile-section'>
+                <h2 className='section-title'>Badges & Achievements</h2>
+                <BadgeDisplay
+                  badges={badges}
+                  displayedBadgeIds={displayedBadgeIds}
+                  onToggleBadge={canEditProfile ? handleToggleBadge : undefined}
+                  showProgress
+                  editable={canEditProfile}
+                />
+              </div>
+            </div>
+          )
         )}
 
-        {/* Collections Link */}
+        {/* User's Questions */}
         <div className='profile-card'>
           <div className='profile-section'>
-            <button className='button button-primary' onClick={handleViewCollectionsPage}>
-              View Collections
-            </button>
+            <h2 className='section-title'>
+              Questions Posted{' '}
+              {!userData.profilePrivate || canEditProfile ? `(${userQuestions.length})` : ''}
+            </h2>
+            {userData.profilePrivate && !canEditProfile ? (
+              <p className='private-message'>This user account is private</p>
+            ) : questionsLoading ? (
+              <p>Loading questions...</p>
+            ) : userQuestions.length > 0 ? (
+              <div className='user-questions-list'>
+                {userQuestions.map(question => (
+                  <Question key={question._id.toString()} question={question} />
+                ))}
+              </div>
+            ) : (
+              <p>No questions posted yet.</p>
+            )}
           </div>
         </div>
 
