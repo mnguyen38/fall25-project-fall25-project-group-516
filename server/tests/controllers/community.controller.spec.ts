@@ -3,7 +3,8 @@ import mongoose from 'mongoose';
 import { app } from '../../app';
 import * as communityService from '../../services/community.service';
 import { DatabaseCommunity } from '../../types/types';
-
+import { setupMockAuth } from '../../utils/mocks.util';
+jest.mock('../../middleware/token.middleware');
 // Mock community data for testing
 const mockCommunity: DatabaseCommunity = {
   _id: new mongoose.Types.ObjectId('65e9b58910afe6e94fc6e6dc'),
@@ -38,6 +39,7 @@ const deleteCommunitySpy = jest.spyOn(communityService, 'deleteCommunity');
 describe('Community Controller', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    setupMockAuth();
   });
 
   describe('GET /getCommunity/:communityId', () => {

@@ -4,12 +4,19 @@ import { app } from '../../app';
 import * as commentUtil from '../../services/comment.service';
 import * as databaseUtil from '../../utils/database.util';
 import * as badgeUtil from '../../services/badge.service';
+import { setupMockAuth } from '../../utils/mocks.util';
+
+jest.mock('../../middleware/token.middleware');
 
 const saveCommentSpy = jest.spyOn(commentUtil, 'saveComment');
 const addCommentSpy = jest.spyOn(commentUtil, 'addComment');
 const popDocSpy = jest.spyOn(databaseUtil, 'populateDocument');
 
 describe('POST /addComment', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    setupMockAuth();
+  });
   it('should add a new comment to the question', async () => {
     const validQid = new mongoose.Types.ObjectId();
     const validCid = new mongoose.Types.ObjectId();

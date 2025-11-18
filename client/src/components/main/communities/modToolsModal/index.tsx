@@ -140,7 +140,7 @@ const ModToolsModal = ({
                                     </div>
                                     <div className='action-description'>
                                       {isModerator
-                                        ? 'Can moderate posts, comments, and manage users'
+                                        ? 'Can moderate question, answers, comments, and manage users within this community.'
                                         : 'Grant moderator access to manage community'}
                                     </div>
                                   </div>
@@ -165,7 +165,7 @@ const ModToolsModal = ({
                                         setConfirmAction({ action: 'mod', username: user.username })
                                       }
                                       className={`btn ${isModerator ? 'btn-remove-mod' : 'btn-add-mod'}`}>
-                                      {isModerator ? '↓ Remove Moderator' : '↑ Make Moderator'}
+                                      {isModerator ? 'Remove Moderator' : 'Make Moderator'}
                                     </button>
                                   )}
                                 </div>
@@ -183,7 +183,7 @@ const ModToolsModal = ({
                                   <div className='action-description'>
                                     {isBanned
                                       ? 'Cannot access community or post content'
-                                      : 'Prevent user from accessing this community'}
+                                      : 'Prevents user from accessing this community. Will remove user from community if a member.'}
                                   </div>
                                 </div>
                                 {confirmAction?.action === 'ban' &&
@@ -207,7 +207,7 @@ const ModToolsModal = ({
                                       setConfirmAction({ action: 'ban', username: user.username })
                                     }
                                     className={`btn ${isBanned ? 'btn-unban' : 'btn-ban'}`}>
-                                    {isBanned ? '✓ Unban User' : '⚠️ Ban User'}
+                                    {isBanned ? '✓ Unban User' : 'Ban User'}
                                   </button>
                                 )}
                               </div>

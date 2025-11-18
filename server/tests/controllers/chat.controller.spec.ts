@@ -10,6 +10,7 @@ import * as chatService from '../../services/chat.service';
 import * as databaseUtil from '../../utils/database.util';
 import { DatabaseChat, PopulatedDatabaseChat, Message } from '../../types/types';
 import chatController from '../../controllers/chat.controller';
+import { setupMockAuth } from '../../utils/mocks.util';
 
 /**
  * Spies on the service functions
@@ -22,10 +23,16 @@ const addParticipantSpy = jest.spyOn(chatService, 'addParticipantToChat');
 const populateDocumentSpy = jest.spyOn(databaseUtil, 'populateDocument');
 const getChatsByParticipantsSpy = jest.spyOn(chatService, 'getChatsByParticipants');
 
+jest.mock('../../middleware/token.middleware');
+
 /**
  * Sample test suite for the /chat endpoints
  */
 describe('Chat Controller', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    setupMockAuth();
+  });
   describe('POST /chat/createChat', () => {
     it('should create a new chat successfully', async () => {
       const validChatPayload = {

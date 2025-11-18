@@ -10,10 +10,16 @@ import * as util from '../../services/game.service';
 import gameController from '../../controllers/game.controller';
 import NimGame from '../../services/games/nim';
 import { MAX_NIM_OBJECTS } from '../../types/constants';
+import { setupMockAuth } from '../../utils/mocks.util';
 
+jest.mock('../../middleware/token.middleware');
 const mockGameManager = GameManager.getInstance();
 
 describe('POST /create', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    setupMockAuth();
+  });
   const addGameSpy = jest.spyOn(mockGameManager, 'addGame');
 
   describe('200 OK Requests', () => {

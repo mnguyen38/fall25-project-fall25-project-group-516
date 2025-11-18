@@ -4,6 +4,9 @@ import { app } from '../../app';
 import * as util from '../../services/user.service';
 import * as badgeUtil from '../../services/badge.service';
 import { SafeDatabaseUser, User } from '../../types/types';
+import { setupMockAuth } from '../../utils/mocks.util';
+
+jest.mock('../../middleware/token.middleware');
 
 const mockUser: User = {
   username: 'user1',
@@ -31,6 +34,10 @@ const getUsersListSpy = jest.spyOn(util, 'getUsersList');
 const deleteUserByUsernameSpy = jest.spyOn(util, 'deleteUserByUsername');
 
 describe('Test userController', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    setupMockAuth();
+  });
   describe('POST /signup', () => {
     it('should create a new user given correct arguments', async () => {
       const mockReqBody = {
