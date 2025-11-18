@@ -72,7 +72,6 @@ export interface ToggleModeratorRequest extends Request {
   };
 }
 
-
 /**
  * Type definition for delete community request
  */

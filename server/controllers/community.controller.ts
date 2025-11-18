@@ -43,11 +43,10 @@ const communityController = (socket: FakeSOSocket) => {
         throw new Error(foundCommunity.error);
       }
 
-      if (foundCommunity.banned?.includes(req.user.username)) {
+      if (foundCommunity.banned?.includes(req.user?.username)) {
         res.status(403).send('Access denied');
       }
 
-      res.json(foundCommunity);
     } catch (err: unknown) {
       res.status(500).send(`Error retrieving community: ${(err as Error).message}`);
     }
@@ -68,7 +67,7 @@ const communityController = (socket: FakeSOSocket) => {
         throw new Error(communities.error);
       }
 
-      const allowedCommunities = communities.filter(c => !c.banned?.includes(req.user.username));
+      const allowedCommunities = communities.filter(c => !c.banned?.includes(req.user?.username));
 
       res.json(allowedCommunities);
     } catch (err: unknown) {
