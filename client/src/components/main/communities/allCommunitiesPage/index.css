@@ -1,16 +1,17 @@
 .community-page {
-  padding: 2rem;
+  padding: 24px 0;
   font-family: Arial, sans-serif;
-  background-color: #f9f9f9;
+  background-color: var(--pancake-white);
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 16px;
 }
 
 .community-title {
-  font-size: 2rem;
-  color: #333;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--pancake-text-dark);
 }
 
 .community-controls {
@@ -18,26 +19,34 @@
   flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
-  gap: 1rem;
+  gap: var(--spacing-md);
 }
 
 .community-search {
   flex: 1;
   min-width: 250px;
   max-width: 400px;
-  padding: 0.5rem 1rem;
-  font-size: 1rem;
-  border: 1px solid #ccc;
-  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 14px;
+  border: 1px solid var(--pancake-border);
+  border-radius: var(--radius-sm);
+  transition: all 0.2s ease;
+}
+
+.community-search:focus {
+  outline: none;
+  border-color: var(--pancake-brown-medium);
+  box-shadow: 0 0 0 3px rgba(107, 68, 35, 0.1);
 }
 
 .communities-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1.5rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
 }
 
 .community-error {
-  color: red;
-  margin-top: 1rem;
+  color: #dc2626;
+  font-weight: bold;
+  margin-top: var(--spacing-md);
 }

@@ -3,10 +3,22 @@
     margin-right: auto;
     width: 70%;
     margin-top: auto;
-    height: 2rem;
+    height: 2.5rem;
+    padding: 10px 14px;
+    border: 1px solid var(--pancake-border);
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+#user_search_bar:focus {
+  outline: none;
+  border-color: var(--pancake-brown-medium);
+  box-shadow: 0 0 0 3px rgba(107, 68, 35, 0.1);
 }
 
 .bold_title {
-  font-weight: bold;
+  font-weight: 700;
   white-space: nowrap;
+  color: var(--pancake-text-dark);
 }

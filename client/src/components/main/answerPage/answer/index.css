@@ -2,11 +2,19 @@
 .answer {
   display: flex;
   flex-direction: row;
-  border-bottom: #000000 1px dashed;
+  border-bottom: 1px solid var(--pancake-border);
+  padding: var(--spacing-md) 0;
+  background: var(--pancake-white);
+  transition: all 0.2s ease;
+}
+
+.answer:hover {
+  background: var(--pancake-bg-light);
 }
 
 .answerText {
   width: 75%;
+  color: var(--pancake-text-dark);
 }
 
 .answerAuthor {
@@ -14,5 +22,6 @@
 }
 
 .answer_author {
-  color: green;
+  color: var(--pancake-brown-dark);
+  font-weight: 600;
 }

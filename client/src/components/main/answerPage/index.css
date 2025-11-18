@@ -1,7 +1,8 @@
 .answer_question_meta {
-  color: #bbbbbb;
+  color: var(--pancake-text-medium);
+  font-size: 13px;
 }
 
 .ansButton {
-  margin: 2% 0 2% 2%;
+  margin: var(--spacing-md) 0 var(--spacing-md) var(--spacing-md);
 }

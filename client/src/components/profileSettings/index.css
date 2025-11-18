@@ -1,19 +1,19 @@
-/* ===== Variables ===== */
+/* ===== Variables - Pancake Theme ===== */
 .profile-settings {
-  --color-bg: #f3f2ef;
+  --color-bg: #F8F9FA;
   --color-card-bg: #ffffff;
-  --color-border: #e0e0e0;
-  --color-primary: #0a66c2;
-  --color-primary-hover: #004182;
+  --color-border: var(--pancake-border);
+  --color-primary: var(--pancake-brown-dark);
+  --color-primary-hover: var(--pancake-brown-medium);
   --color-danger: #dc2626;
   --color-danger-hover: #991b1b;
-  --color-success: #057642;
+  --color-success: #15803d;
   --color-error: #cc1016;
-  --color-text-primary: #000000e6;
-  --color-text-secondary: #00000099;
-  --radius: 8px;
+  --color-text-primary: var(--pancake-text-dark);
+  --color-text-secondary: var(--pancake-text-medium);
+  --radius: 6px;
 
-  background-color: var(--color-bg);
+  background: var(--color-bg);
   padding: 2rem;
   display: flex;
   justify-content: center;
@@ -22,6 +22,7 @@
   color: var(--color-text-primary);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell,
     sans-serif;
+  position: relative;
 }
 
 /* ===== Container ===== */
@@ -30,14 +31,23 @@
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 1.5rem;
+  position: relative;
+  z-index: 1;
 }
 
 .profile-settings .profile-card {
   background: var(--color-card-bg);
   border-radius: var(--radius);
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 3px var(--pancake-shadow);
   overflow: hidden;
+  transition: all 0.2s ease;
+  border: 1px solid var(--color-border);
+}
+
+.profile-settings .profile-card:hover {
+  box-shadow: 0 2px 8px var(--pancake-shadow);
+  border-color: var(--pancake-brown-light);
 }
 
 /* ===== Profile Header ===== */
@@ -49,11 +59,11 @@
 
 .profile-banner {
   width: 100%;
-  height: 250px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  height: 240px;
+  background: var(--pancake-accent);
   position: relative;
   overflow: hidden;
-  border-radius: 8px 8px 0 0;
+  border-radius: 6px 6px 0 0;
 }
 
 .profile-banner img {
@@ -77,13 +87,18 @@
 
 .profile-picture-wrapper {
   position: relative;
-  width: 152px;
-  height: 152px;
+  width: 140px;
+  height: 140px;
   border-radius: 50%;
-  border: 4px solid white;
+  border: 4px solid var(--pancake-white);
   overflow: hidden;
   background: white;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 2px 8px var(--pancake-shadow);
+  transition: all 0.2s ease;
+}
+
+.profile-picture-wrapper:hover {
+  box-shadow: 0 4px 12px var(--pancake-shadow);
 }
 
 .profile-picture-wrapper img {
@@ -98,8 +113,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  background: var(--pancake-brown-dark);
+  color: var(--pancake-white);
   font-size: 48px;
   font-weight: 600;
 }
@@ -155,22 +170,24 @@
 .icon-button {
   width: 40px;
   height: 40px;
-  border-radius: 50%;
-  border: none;
-  background-color: white;
-  color: #374151;
+  border-radius: 4px;
+  border: 1px solid var(--pancake-border);
+  background: var(--pancake-white);
+  color: var(--pancake-text-dark);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px var(--pancake-shadow);
   font-size: 16px;
 }
 
 .icon-button:hover {
-  background-color: #f3f4f6;
-  transform: scale(1.05);
+  background: var(--pancake-cream);
+  color: var(--pancake-brown-dark);
+  border-color: var(--pancake-brown-light);
+  box-shadow: 0 2px 6px var(--pancake-shadow);
 }
 
 .icon-button:active {
@@ -186,13 +203,25 @@
   position: absolute;
   top: calc(100% + 8px);
   right: 0;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  background: var(--pancake-white);
+  border-radius: 4px;
+  box-shadow: 0 4px 12px var(--pancake-shadow);
   min-width: 200px;
   overflow: hidden;
   z-index: 9999;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--pancake-border);
+  animation: dropdownSlide 0.2s ease;
+}
+
+@keyframes dropdownSlide {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .dropdown-item {
@@ -202,16 +231,19 @@
   gap: 12px;
   padding: 12px 16px;
   border: none;
-  background: none;
-  color: #374151;
+  background: transparent;
+  color: var(--pancake-text-dark);
   font-size: 14px;
+  font-weight: 600;
   text-align: left;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.2s ease;
+  border-left: 3px solid transparent;
 }
 
 .dropdown-item:hover {
-  background-color: #f3f4f6;
+  background: var(--pancake-cream);
+  border-left-color: var(--pancake-brown-light);
 }
 
 .dropdown-item svg {
@@ -225,7 +257,8 @@
 }
 
 .dropdown-item-danger:hover {
-  background-color: #fee;
+  background: #fee;
+  border-left-color: #dc2626;
 }
 
 /* ===== Edit Mode ===== */
@@ -279,7 +312,7 @@
 .empty-banner {
   width: 100%;
   height: 100%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--pancake-accent);
 }
 
 .editable-banner > .image-upload,
@@ -379,19 +412,25 @@
 .profile-settings .input-text {
   display: block;
   width: 100%;
-  padding: 12px;
+  padding: 10px 14px;
   margin-bottom: 12px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   font-size: 14px;
   font-family: inherit;
-  transition: border-color 0.2s;
+  transition: all 0.2s ease;
+  background: var(--pancake-white);
+  color: var(--color-text-primary);
+}
+
+.profile-settings .input-text:hover {
+  border-color: var(--pancake-brown-light);
 }
 
 .profile-settings .input-text:focus {
   outline: none;
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 1px var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(107, 68, 35, 0.1);
 }
 
 .profile-settings textarea.input-text {
@@ -403,23 +442,32 @@
 .profile-settings .button {
   padding: 10px 20px;
   border: none;
-  border-radius: 24px;
+  border-radius: 4px;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
   margin-right: 8px;
   font-family: inherit;
+  box-shadow: 0 1px 3px var(--pancake-shadow);
+}
+
+.profile-settings .button:hover {
+  box-shadow: 0 2px 6px var(--pancake-shadow);
+}
+
+.profile-settings .button:active {
+  transform: scale(0.98);
 }
 
 .profile-settings .button-primary {
-  background-color: var(--color-primary);
+  background: var(--color-primary);
   color: white;
   border: 1px solid var(--color-primary);
 }
 
 .profile-settings .button-primary:hover {
-  background-color: var(--color-primary-hover);
+  background: var(--color-primary-hover);
   border-color: var(--color-primary-hover);
 }
 
@@ -430,8 +478,9 @@
 }
 
 .profile-settings .button-secondary:hover {
-  background-color: #eef3f8;
-  box-shadow: inset 0 0 0 1px var(--color-primary);
+  background: var(--pancake-cream);
+  border-color: var(--color-primary-hover);
+  color: var(--color-primary-hover);
 }
 
 .profile-settings .button-danger {
@@ -454,21 +503,23 @@
 
 /* ===== Messages ===== */
 .profile-settings .success-message {
-  background-color: #d1f4e0;
+  background: #d1f4e0;
   color: var(--color-success);
   padding: 12px 16px;
   border-radius: var(--radius);
   font-size: 14px;
+  font-weight: 600;
   margin-bottom: 16px;
   border-left: 4px solid var(--color-success);
 }
 
 .profile-settings .error-message {
-  background-color: #fde8e8;
+  background: #fde8e8;
   color: var(--color-error);
   padding: 12px 16px;
   border-radius: var(--radius);
   font-size: 14px;
+  font-weight: 600;
   margin-bottom: 16px;
   border-left: 4px solid var(--color-error);
 }
@@ -481,6 +532,23 @@
   min-height: 400px;
   color: var(--color-text-secondary);
   font-size: 16px;
+}
+
+/* ===== User Questions List ===== */
+.user-questions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-top: 12px;
+}
+
+/* ===== Private Message ===== */
+.private-message {
+  color: var(--pancake-text-medium);
+  font-style: italic;
+  font-size: 14px;
+  padding: 20px 0;
+  text-align: center;
 }
 
 /* ===== Responsive ===== */

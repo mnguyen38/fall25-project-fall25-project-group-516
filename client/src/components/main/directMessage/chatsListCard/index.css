@@ -1,8 +1,15 @@
 .chats-list-card {
-  padding: 12px;
-  margin-bottom: 10px;
-  background-color: #f5f5f5;
-  border-radius: 6px;
+  padding: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+  background-color: var(--pancake-bg-light);
+  border: 1px solid var(--pancake-border);
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: background-color 0.3s;
+  transition: all 0.2s ease;
+}
+
+.chats-list-card:hover {
+  background-color: var(--pancake-cream);
+  border-color: var(--pancake-brown-light);
+  box-shadow: var(--shadow-sm);
 }

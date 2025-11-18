@@ -1,6 +1,6 @@
 .collections-page {
-  padding: 2rem;
-  background-color: #f9f9f9;
+  padding: 24px 0;
+  background-color: var(--pancake-white);
   font-family: Arial, sans-serif;
   min-height: 100vh;
 }
@@ -9,64 +9,71 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2rem;
+  margin-bottom: var(--spacing-lg);
 }
 
 .collections-title {
-  font-size: 2rem;
-  color: #333;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--pancake-text-dark);
 }
 
 .collections-create-btn {
-  background-color: #2563eb;
-  color: white;
-  padding: 0.6rem 1.2rem;
-  font-size: 1rem;
-  border: none;
-  border-radius: 8px;
+  background-color: var(--pancake-brown-dark);
+  color: var(--pancake-white);
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  border: 1px solid var(--pancake-brown-dark);
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  transition:
-    background-color 0.2s ease,
-    transform 0.1s ease;
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow-sm);
 }
 
 .collections-create-btn:hover {
-  background-color: #1e40af;
+  background-color: var(--pancake-brown-medium);
+  border-color: var(--pancake-brown-medium);
+  box-shadow: var(--shadow-md);
 }
 
 .collections-create-btn:active {
-  background-color: #163493;
+  background-color: var(--pancake-brown-medium);
+  transform: scale(0.98);
 }
 
 .collections-list {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
 }
 
 .collection-card {
-  background-color: #fff;
-  padding: 1rem 1.25rem; /* Reduced vertical + horizontal padding */
-  border-radius: 8px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+  background-color: var(--pancake-white);
+  padding: 16px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--pancake-border);
   cursor: pointer;
-  transition: box-shadow 0.2s ease;
+  transition: all 0.15s ease;
 }
 
 .collection-card:hover {
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+  background-color: var(--pancake-bg-light);
+  border-color: var(--pancake-brown-light);
 }
 
 .collection-name {
-  font-size: 1.15rem; /* Slightly smaller */
-  font-weight: 600;
-  margin-bottom: 0.3rem;
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: var(--spacing-xs);
+  color: var(--pancake-brown-dark);
 }
 
 .collection-description {
-  margin-bottom: 0.3rem;
-  color: #555;
-  font-size: 0.95rem;
+  margin-bottom: var(--spacing-xs);
+  color: var(--pancake-text-dark);
+  font-size: 14px;
+  line-height: 1.5;
 
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -80,13 +87,7 @@
 
 .collection-privacy,
 .collection-questions {
-  font-size: 0.85rem;
-  color: #666;
-  margin: 0.1rem 0;
-}
-
-.collections-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 1.5rem;
+  font-size: 13px;
+  color: var(--pancake-text-medium);
+  margin: var(--spacing-xs) 0;
 }

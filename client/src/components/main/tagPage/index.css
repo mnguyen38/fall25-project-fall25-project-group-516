@@ -1,5 +1,6 @@
 .tag_list {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  grid-gap: 80px 20px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  padding: 24px 0;
 }

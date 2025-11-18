@@ -341,6 +341,48 @@ const userController = (socket: FakeSOSocket) => {
   };
 
   /**
+   * Toggles a user's profile privacy setting.
+   * @param req The request containing the username in the body.
+   * @param res The response, either confirming the update or returning an error.
+   * @returns A promise resolving to void.
+   */
+  const toggleProfilePrivacy = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { username } = req.body;
+
+      if (!username) {
+        res.status(400).send('Username must be provided');
+        return;
+      }
+
+      // Get current user to toggle the privacy setting
+      const currentUser = await getUserByUsername(username);
+
+      if ('error' in currentUser) {
+        throw new Error(currentUser.error);
+      }
+
+      // Toggle the profilePrivate field
+      const updatedUser = await updateUser(username, {
+        profilePrivate: !currentUser.profilePrivate,
+      });
+
+      if ('error' in updatedUser) {
+        throw new Error(updatedUser.error);
+      }
+
+      socket.emit('userUpdate', {
+        user: updatedUser,
+        type: 'updated',
+      });
+
+      res.status(200).json(updatedUser);
+    } catch (error) {
+      res.status(500).send(`Error toggling profile privacy: ${error}`);
+    }
+  };
+
+  /**
    * Verifies a JWT token and returns the user data if valid.
    * @param req The request containing the token in the Authorization header.
    * @param res The response, either returning the user or an error.
@@ -447,9 +489,10 @@ const userController = (socket: FakeSOSocket) => {
     uploadProfilePicture,
   );
   router.post('/uploadBannerImage', protect, upload.single('bannerImage'), uploadBannerImage);
-  router.patch('/updateShowLoginStreak', updateShowLoginStreak);
-  router.patch('/addCoins', addCoinTransaction);
-  router.patch('/reduceCoins', reduceCoinTransaction);
+  router.patch('/toggleProfilePrivacy', protect, toggleProfilePrivacy);
+  router.patch('/updateShowLoginStreak', protect, updateShowLoginStreak);
+  router.patch('/addCoins', protect, addCoinTransaction);
+  router.patch('/reduceCoins', protect, reduceCoinTransaction);
 
   return router;
 };

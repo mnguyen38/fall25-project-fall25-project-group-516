@@ -106,6 +106,25 @@ const getCommunityQuestionsById = async (
   return res.data;
 };
 
+/**
+ * Function to get questions by user.
+ *
+ * @param username - The username of the user who asked the questions.
+ * @returns A promise that resolves to an array of populated database questions.
+ * @throws Error if there is an issue fetching questions by user.
+ */
+const getQuestionsByUser = async (username: string): Promise<PopulatedDatabaseQuestion[]> => {
+  const res = await api.get(
+    `${QUESTION_API_URL}/getQuestion?order=newest&search=&askedBy=${username}`,
+  );
+
+  if (res.status !== 200) {
+    throw new Error('Error when fetching questions by user');
+  }
+
+  return res.data;
+};
+
 export {
   getQuestionsByFilter,
   getQuestionById,
@@ -113,4 +132,5 @@ export {
   upvoteQuestion,
   downvoteQuestion,
   getCommunityQuestionsById,
+  getQuestionsByUser,
 };

@@ -298,6 +298,22 @@ const uploadBannerImage = async (
   return res.data;
 };
 
+/**
+ * Toggles the user's profile privacy setting.
+ * @param username The unique username of the user
+ * @returns A promise resolving to the updated user
+ * @throws Error if the request fails
+ */
+const toggleProfilePrivacy = async (username: string): Promise<SafeDatabaseUser> => {
+  const res = await api.patch(`${USER_API_URL}/toggleProfilePrivacy`, {
+    username,
+  });
+  if (res.status !== 200) {
+    throw new Error('Error when toggling profile privacy');
+  }
+  return res.data;
+};
+
 export {
   getUsers,
   getUserByUsername,
@@ -312,4 +328,5 @@ export {
   verifyStoredToken,
   addCoins,
   reduceCoins,
+  toggleProfilePrivacy,
 };

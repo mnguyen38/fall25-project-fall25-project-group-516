@@ -1,70 +1,93 @@
 /* General Styles */
 body {
   font-family: Arial, sans-serif;
-  background-color: #f8f9fa;
+  background-color: var(--pancake-bg-light);
   margin: 0;
   padding: 0;
 }
 
 /* Button Specific Classes */
 .btn-submit {
-  background: #007bff;
-  color: white;
+  background: var(--pancake-brown-dark);
+  color: var(--pancake-white);
   padding: 10px 20px;
-  border: none;
-  border-radius: 4px;
+  border: 1px solid var(--pancake-brown-dark);
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  font-size: 16px;
-  transition: background-color 0.2s ease;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow-sm);
 }
 
 .btn-submit:hover {
-  background: #0056b3;
+  background: var(--pancake-brown-medium);
+  border-color: var(--pancake-brown-medium);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-submit:active {
+  transform: scale(0.98);
 }
 
 .btn-submit:disabled {
   background: #ccc;
+  border-color: #ccc;
   cursor: not-allowed;
+  opacity: 0.6;
 }
 
 button:disabled {
   background: #ccc;
+  border-color: #ccc;
   cursor: not-allowed;
+  opacity: 0.6;
 }
 
 /* Game Details Layout */
 .nim-game-details {
-  margin-top: 20px;
-  padding: 20px;
-  background: #f9f9f9;
-  border: 1px solid #ddd;
-  border-radius: 8px;
+  margin-top: var(--spacing-lg);
+  padding: var(--spacing-lg);
+  background: var(--pancake-bg-light);
+  border: 1px solid var(--pancake-border);
+  border-radius: var(--radius-md);
 }
 
 .nim-game-details h2 {
   font-size: 20px;
-  color: #444;
+  font-weight: 700;
+  color: var(--pancake-text-dark);
 }
 
 .nim-game-move {
-  margin-top: 15px;
-  padding: 15px;
-  background: #fefefe;
-  border: 1px solid #ddd;
-  border-radius: 8px;
+  margin-top: var(--spacing-md);
+  padding: var(--spacing-lg);
+  background: var(--pancake-white);
+  border: 1px solid var(--pancake-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
 }
 
 .nim-game-move h3 {
-  font-size: 20px;
-  color: #444;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--pancake-text-dark);
 }
 
 .nim-game-move input {
-  padding: 8px;
-  margin-right: 10px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
+  padding: 10px 14px;
+  margin-right: var(--spacing-md);
+  border: 1px solid var(--pancake-border);
+  border-radius: var(--radius-sm);
   width: 100px;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.nim-game-move input:focus {
+  outline: none;
+  border-color: var(--pancake-brown-medium);
+  box-shadow: 0 0 0 3px rgba(107, 68, 35, 0.1);
 }
 
 .nim-game-move button {

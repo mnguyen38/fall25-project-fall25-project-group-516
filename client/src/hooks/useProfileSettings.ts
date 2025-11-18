@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import {
   getUserByUsername,
   deleteUser,
@@ -19,7 +19,6 @@ import useLoginContext from './useLoginContext';
  */
 const useProfileSettings = () => {
   const { username } = useParams<{ username: string }>();
-  const navigate = useNavigate();
   const { user: currentUser } = useUserContext();
   const { setUser } = useLoginContext();
 
@@ -170,11 +169,6 @@ const useProfileSettings = () => {
         setShowConfirmation(false);
       }
     });
-  };
-
-  const handleViewCollectionsPage = () => {
-    navigate(`/collections/${username}`);
-    return;
   };
 
   const handleEnteringEditMode = () => {
@@ -348,7 +342,6 @@ const useProfileSettings = () => {
     handleToggleLoginStreak,
     handleToggleLoginStreakPreview,
     handleDeleteUser,
-    handleViewCollectionsPage,
     badges,
     displayedBadgeIds,
     uploadingImage,

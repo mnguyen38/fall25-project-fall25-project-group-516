@@ -1,24 +1,26 @@
 .collection-page {
-  padding: 2rem;
+  padding: 24px 0;
   font-family: Arial, sans-serif;
-  background-color: #f9f9f9;
+  background-color: var(--pancake-white);
   min-height: 100vh;
 }
 
 .collection-header {
-  margin-bottom: 2rem;
+  margin-bottom: var(--spacing-lg);
 }
 
 .collection-title {
-  font-size: 2rem;
-  margin-bottom: 0.5rem;
-  color: #1e293b;
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: var(--spacing-sm);
+  color: var(--pancake-text-dark);
 }
 
 .collection-description {
-  font-size: 1rem;
-  color: #475569;
-  margin-bottom: 0.5rem;
+  font-size: 14px;
+  color: var(--pancake-text-dark);
+  margin-bottom: var(--spacing-sm);
+  line-height: 1.5;
 
   display: -webkit-box;
   -webkit-line-clamp: 3;
@@ -29,25 +31,20 @@
 }
 
 .collection-meta {
-  font-size: 0.9rem;
-  color: #64748b;
+  font-size: 13px;
+  color: var(--pancake-text-medium);
 }
 
 .questions-list {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 0;
 }
 
 .header-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 1rem;
+  gap: var(--spacing-md);
   flex-wrap: wrap;
-}
-
-.collection-title {
-  font-size: 2rem;
-  color: #1e293b;
 }

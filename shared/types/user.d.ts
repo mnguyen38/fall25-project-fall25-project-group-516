@@ -30,6 +30,7 @@ export interface UserCredentials {
  * - `email`: Email associated with user.
  * - `lifeUpvotes`: Lifetime upvotes to user's posts (answers & questions).
  * - `coins`: Amount of coins user currently has.
+ * - `profilePrivate`: Whether the user's profile is private.
  */
 export interface User extends UserCredentials {
   dateJoined: Date;
@@ -48,6 +49,7 @@ export interface User extends UserCredentials {
   roles?: Map<string, string>;
   lifeUpvotes?: number;
   coins?: number;
+  profilePrivate?: boolean;
 }
 
 /**

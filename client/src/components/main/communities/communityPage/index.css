@@ -29,13 +29,13 @@
 
 .community-page-layout {
   display: flex;
-  gap: var(--spacing-xl);
-  padding: var(--spacing-xl);
+  gap: var(--spacing-lg);
+  padding: var(--spacing-lg);
   width: 100%;
   height: 100%;
   box-sizing: border-box;
   font-family: Arial, sans-serif;
-  background-color: var(--pancake-bg-light);
+  background-color: var(--pancake-white);
 }
 
 /* Main questions section */
@@ -45,25 +45,25 @@
 }
 
 .section-heading {
-  font-size: 1.5rem;
+  font-size: 22px;
+  font-weight: 700;
   margin-bottom: var(--spacing-md);
   color: var(--pancake-text-dark);
-  font-weight: 700;
 }
 
 /* Sidebar */
 .community-sidebar {
   width: 300px;
   flex-shrink: 0;
-  background-color: var(--pancake-white);
+  background-color: var(--pancake-bg-light);
   border: 1px solid var(--pancake-border);
   padding: var(--spacing-lg);
   display: flex;
   flex-direction: column;
   overflow-y: auto;
   position: sticky;
-  top: var(--spacing-xl);
-  border-radius: var(--radius-lg);
+  top: var(--spacing-lg);
+  border-radius: var(--radius-md);
   box-shadow: var(--shadow-sm);
 }
 
@@ -105,6 +105,17 @@
 
 .mod-tools-trigger-btn:active {
   transform: scale(0.98);
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: var(--spacing-md);
+  color: var(--pancake-brown-dark);
+}
+
+.community-description {
+  font-size: 14px;
+  color: var(--pancake-text-dark);
+  margin-bottom: var(--spacing-lg);
+  line-height: 1.5;
 }
 
 /* Members list */
@@ -131,8 +142,10 @@
 .member-item {
   padding: var(--spacing-md) var(--spacing-md);
   border-bottom: 1px solid var(--pancake-border);
-  font-size: 0.95rem;
+  font-size: 14px;
   transition: background-color 0.2s ease;
+  border-radius: var(--radius-sm);
+  background-color: var(--pancake-white);
 }
 
 .member-item:last-child {

@@ -1,63 +1,145 @@
+/* CSS Variables - Pancake Theme Color Palette */
+:root {
+  --pancake-brown-dark: #6B4423;
+  --pancake-brown-medium: #8B5A3C;
+  --pancake-brown-light: #C4886B;
+  --pancake-cream: #F5E6D3;
+  --pancake-white: #FFFFFF;
+  --pancake-text-dark: #3D2817;
+  --pancake-text-medium: #6B4423;
+  --pancake-accent: #D4A574;
+  --pancake-border: #E8D4C0;
+  --pancake-shadow: rgba(107, 68, 35, 0.12);
+}
+
 .header {
   display: flex;
   align-items: center;
   justify-content: space-around;
-  height: 10%;
+  height: 80px;
   width: 100%;
-  background: #dddddd;
+  background: var(--pancake-white);
+  border-bottom: 3px solid var(--pancake-brown-light);
+  box-shadow: 0 2px 8px var(--pancake-shadow);
+  padding: 0 3rem;
+  position: relative;
 }
 
 .title {
   font-size: 32px;
-  font-weight: 800;
+  font-weight: 700;
+  color: var(--pancake-brown-dark);
+  position: relative;
+  letter-spacing: -0.3px;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
 }
 
 .logout-button {
-  padding: 12px;
+  padding: 12px 24px;
   font-size: 16px;
-  background-color: #007bff;
+  font-weight: 600;
+  background-color: #e53e3e;
   color: #fff;
   border: none;
-  border-radius: 5px;
+  border-radius: 8px;
   cursor: pointer;
-  transition: background-color 0.3s;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.logout-button:hover {
+  background-color: #c53030;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
 .view-profile-button {
-  background-color: #007bff;
+  background-color: #667eea;
   color: white;
   border: none;
-  padding: 10px 15px;
-  border-radius: 5px;
+  padding: 12px 24px;
+  border-radius: 8px;
   cursor: pointer;
-  margin-left: 10px; /* Add spacing from Logout button */
+  margin-left: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .image-with-text {
   display: flex;
-  width: 100px;
+  width: 120px;
   justify-content: center;
   align-items: center;
+  background: var(--pancake-white);
+  padding: 8px 16px;
+  border-radius: 6px;
+  gap: 8px;
+  border: 2px solid var(--pancake-border);
+  transition: all 0.2s ease;
+  position: relative;
+  z-index: 1;
+}
+
+.image-with-text:hover {
+  border-color: var(--pancake-brown-light);
+  box-shadow: 0 2px 6px var(--pancake-shadow);
 }
 
 .image-with-text img {
   display: block;
   background-color: transparent;
-  width: 50px;
-  height: 50px;
-  justify-content: left;
+  width: 36px;
+  height: 36px;
+  transition: transform 0.3s ease;
+}
+
+.image-with-text:hover img {
+  transform: rotate(360deg);
 }
 
 .image-with-text div {
-  justify-content: center;
-  height: 20px;
-  float: right;
+  color: var(--pancake-text-dark);
+  font-size: 18px;
+  font-weight: 700;
 }
 
 .view-profile-button:hover {
-  background-color: #0056b3;
+  background-color: #5568d3;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
 .view-profile-button:active {
-  background-color: #003f7f;
+  background-color: #4c51bf;
+}
+
+#searchBar {
+  padding: 10px 20px;
+  font-size: 15px;
+  border: 2px solid var(--pancake-border);
+  border-radius: 6px;
+  background: var(--pancake-white);
+  min-width: 400px;
+  transition: all 0.2s ease;
+  position: relative;
+  z-index: 1;
+  color: var(--pancake-text-dark);
+  font-weight: 400;
+}
+
+#searchBar::placeholder {
+  color: var(--pancake-text-medium);
+  opacity: 0.6;
+}
+
+#searchBar:hover {
+  border-color: var(--pancake-brown-light);
+}
+
+#searchBar:focus {
+  outline: none;
+  border-color: var(--pancake-brown-medium);
+  box-shadow: 0 0 0 3px rgba(196, 136, 107, 0.15);
 }

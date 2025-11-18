@@ -1,66 +1,73 @@
 .new-collection-page {
-  padding: 2rem;
+  padding: var(--spacing-lg);
   max-width: 600px;
   margin: 0 auto;
-  background-color: #f9f9f9;
-  border-radius: 10px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  background-color: var(--pancake-white);
+  border: 1px solid var(--pancake-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
 }
 
 .new-collection-title {
-  font-size: 1.8rem;
-  margin-bottom: 1.5rem;
-  color: #1e293b;
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: var(--spacing-lg);
+  color: var(--pancake-text-dark);
 }
 
 .new-collection-input {
   display: block;
   width: 100%;
-  margin-bottom: 1rem;
-  padding: 0.75rem 1rem;
-  font-size: 1rem;
-  border-radius: 8px;
-  border: 1px solid #cbd5e1;
-  background-color: #fff;
+  margin-bottom: var(--spacing-md);
+  padding: 10px 14px;
+  font-size: 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--pancake-border);
+  background-color: var(--pancake-white);
+  transition: all 0.2s ease;
 }
 
 .new-collection-input:focus {
   outline: none;
-  border-color: #2563eb;
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+  border-color: var(--pancake-brown-medium);
+  box-shadow: 0 0 0 3px rgba(107, 68, 35, 0.1);
 }
 
 .new-collection-checkbox {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 1.5rem;
-  font-size: 1rem;
-  color: #334155;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-lg);
+  font-size: 14px;
+  color: var(--pancake-text-dark);
 }
 
 .new-collection-btn {
-  background-color: #2563eb;
-  color: white;
-  padding: 0.75rem 1.5rem;
-  font-size: 1rem;
-  border: none;
-  border-radius: 8px;
+  background-color: var(--pancake-brown-dark);
+  color: var(--pancake-white);
+  padding: 10px 24px;
+  font-size: 14px;
+  font-weight: 600;
+  border: 1px solid var(--pancake-brown-dark);
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  transition:
-    background-color 0.2s ease,
-    transform 0.1s ease;
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow-sm);
 }
 
 .new-collection-btn:hover {
-  background-color: #1e40af;
+  background-color: var(--pancake-brown-medium);
+  border-color: var(--pancake-brown-medium);
+  box-shadow: var(--shadow-md);
 }
 
 .new-collection-btn:active {
-  background-color: #163493;
+  background-color: var(--pancake-brown-medium);
+  transform: scale(0.98);
 }
 
 .new-collection-error {
   color: #dc2626;
-  margin-top: 1rem;
+  font-weight: 600;
+  margin-top: var(--spacing-md);
 }

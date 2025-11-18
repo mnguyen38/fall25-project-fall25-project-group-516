@@ -1,6 +1,10 @@
 .form {
-  background-color: #f4f4f4;
-  padding: 20px;
-  width: 60%; /* Adjust as per requirement */
-  margin: 20px auto; /* Centers the form on the page */
+  background-color: var(--pancake-white);
+  padding: var(--spacing-lg);
+  width: 70%;
+  max-width: 900px;
+  margin: var(--spacing-lg) auto;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--pancake-border);
 }

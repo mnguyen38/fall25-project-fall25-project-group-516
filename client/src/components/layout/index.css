@@ -1,12 +1,20 @@
 .main {
   display: flex;
   flex-direction: row;
-  height: 90%;
+  height: auto;
+  min-height: calc(100vh - 80px);
+  background: var(--pancake-bg-light);
+  justify-content: center;
+  gap: 0;
 }
 
 .right_main {
-  width: 85%;
+  flex: 1;
+  max-width: 1000px;
   overflow: auto;
+  padding: 0 24px;
+  margin: 0;
+  background: var(--pancake-white);
 }
 
 .space_between {
@@ -25,32 +33,52 @@
 }
 
 .bluebtn {
-  background: #3090e2;
-  color: #ffffff;
-  border: #000000 1px solid;
-  font-size: 20px;
-  padding: 10px 10px 10px 10px;
-  margin-right: 5%;
+  background: var(--pancake-brown-dark);
+  color: var(--pancake-white);
+  border: 1px solid var(--pancake-brown-dark);
+  font-size: 16px;
+  font-weight: 600;
+  padding: 10px 20px;
+  margin-right: 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(107, 68, 35, 0.12);
 }
 
 .bluebtn:hover {
-  background: #0056b3;
+  background: var(--pancake-brown-medium);
+  border-color: var(--pancake-brown-medium);
+  box-shadow: 0 2px 8px rgba(107, 68, 35, 0.12);
+}
+
+.bluebtn:active {
+  transform: scale(0.98);
 }
 
 .btn_indicator_container {
   display: flex;
   align-items: center;
-  justify-content: space-between; /* This will push child elements to the extremes of the container */
+  justify-content: space-between;
   width: 100%;
 }
 
 .form_postBtn {
-  background: #3090e2;
-  color: #ffffff;
+  background: var(--pancake-brown-dark);
+  color: var(--pancake-white);
   padding: 10px 20px;
-  border: none;
+  border: 1px solid var(--pancake-brown-dark);
   border-radius: 4px;
   cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(107, 68, 35, 0.12);
+}
+
+.form_postBtn:hover {
+  background: var(--pancake-brown-medium);
+  border-color: var(--pancake-brown-medium);
+  box-shadow: 0 2px 8px rgba(107, 68, 35, 0.12);
 }
 
 .mandatory_indicator {

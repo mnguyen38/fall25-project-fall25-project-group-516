@@ -1,0 +1,31 @@
+.footer {
+  width: 100%;
+  background: var(--pancake-white);
+  border-top: 3px solid var(--pancake-brown-light);
+  box-shadow: 0 -2px 8px var(--pancake-shadow);
+  position: relative;
+  z-index: 100;
+}
+
+.footer-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 60px;
+  padding: 0 3rem;
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+.footer-left {
+  font-size: 13px;
+  color: var(--pancake-text-medium);
+  font-weight: 500;
+  font-style: italic;
+}
+
+.footer-right {
+  font-size: 14px;
+  color: var(--pancake-text-dark);
+  font-weight: 600;
+}
