@@ -23,7 +23,6 @@ import { generateToken } from '../utils/jwt.util';
 import protect from '../middleware/token.middleware';
 import { getCachedUser } from '../utils/cache.util';
 import { checkAndAwardBadges } from '../services/badge.service';
-import { cache, invalidate } from '../middleware/cache.middleware';
 
 const userController = (socket: FakeSOSocket) => {
   const router: Router = express.Router();
@@ -435,26 +434,11 @@ const userController = (socket: FakeSOSocket) => {
   // Define routes for the user-related operations.
   router.post('/signup', createUser);
   router.post('/login', userLogin);
-  router.get(
-    '/verify-token',
-    protect,
-    cache(15 * 60, req => `user:${req.user.username}`),
-    verifyTokenRoute,
-  );
+  router.get('/verify-token', protect, verifyTokenRoute);
   router.patch('/resetPassword', protect, resetPassword);
-  router.get(
-    '/getUser/:username',
-    protect,
-    cache(15 * 60, req => `user:${req.params.username}`),
-    getUser,
-  );
+  router.get('/getUser/:username', protect, getUser);
   router.get('/getUsers', protect, getUsers);
-  router.delete(
-    '/deleteUser/:username',
-    protect,
-    invalidate(req => `user:${req.user.username}`),
-    deleteUser,
-  );
+  router.delete('/deleteUser/:username', protect, deleteUser);
   router.patch('/updateBiography', protect, updateBiography);
   router.post(
     '/uploadProfilePicture',

@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import useCommunityPage from '../../../../hooks/useCommunityPage';
 import QuestionView from '../../questionPage/question';
 import CommunityMembershipButton from '../communityMembershipButton';

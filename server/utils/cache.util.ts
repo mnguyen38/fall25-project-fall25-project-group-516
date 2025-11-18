@@ -19,35 +19,29 @@ const initializeCache = async (): Promise<RedisClientType> => {
     return cacheClient;
   }
 
-  try {
-    cacheClient = createClient({
-      username: 'default',
-      password: process.env.REDIS_PASSWORD,
-      socket: {
-        host: process.env.REDIS_HOST || 'redis-11500.c44.us-east-1-2.ec2.cloud.redislabs.com',
-        port: 11500,
-        tls: false,
-        reconnectStrategy: retries => {
-          if (retries > 10) {
-            console.error('Redis: Max reconnection attempts reached');
-            return new Error('Max retries exceeded');
-          }
-          return Math.min(retries * 50, 2000);
-        },
+  cacheClient = createClient({
+    username: 'default',
+    password: process.env.REDIS_PASSWORD,
+    socket: {
+      host: process.env.REDIS_HOST || 'redis-11500.c44.us-east-1-2.ec2.cloud.redislabs.com',
+      port: 11500,
+      tls: false,
+      reconnectStrategy: retries => {
+        if (retries > 10) {
+          return new Error('Max retries exceeded');
+        }
+        return Math.min(retries * 50, 2000);
       },
-    });
+    },
+  });
 
-    cacheClient.on('error', err => {
-      console.error('Redis Client Error:', err);
-    });
+  cacheClient.on('error', err => {
+    return new Error(`Redis Client Error: ${err}`);
+  });
 
-    await cacheClient.connect();
+  await cacheClient.connect();
 
-    return cacheClient;
-  } catch (error) {
-    console.error('Redis: Failed to initialize:', error);
-    throw error;
-  }
+  return cacheClient;
 };
 
 /**
@@ -70,7 +64,6 @@ export const closeCache = async (): Promise<void> => {
     try {
       await cacheClient.quit();
     } catch (error) {
-      console.error('Redis: Error during disconnect:', error);
       cacheClient.destroy();
     }
   }
@@ -82,7 +75,6 @@ export const getCachedUserRoles = async (userId: string): Promise<Map<string, st
   const cachedUserRoles = await cache.get(`roles:${userId}`);
 
   if (cachedUserRoles !== null) {
-    console.log('role cache hit');
     const parsedRoles = JSON.parse(cachedUserRoles);
     const roleMap: Map<string, string> = new Map(Object.entries(parsedRoles));
     return roleMap;
@@ -109,13 +101,10 @@ export const getCachedUser = async (userId: string): Promise<UserResponse> => {
   const cachedUser = await cache.get(`user:${userId}`);
 
   if (cachedUser !== null) {
-    console.log('user cache hit');
     const parsedUser: SafeDatabaseUser = JSON.parse(cachedUser);
-    console.log(parsedUser);
     return parsedUser;
   }
 
-  console.log('cache miss');
   const user = await UserModel.findById(userId).select('-password');
 
   if (!user) {

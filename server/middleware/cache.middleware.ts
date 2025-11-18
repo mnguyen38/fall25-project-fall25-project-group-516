@@ -11,7 +11,6 @@ export function cache(expiry: number, keyGen: (req: Request) => string) {
       const cachedData = await cache.get(key);
 
       if (cachedData) {
-        console.log(`CACHE HIT: ${key}`);
         return res.type('application/json').send(cachedData);
       }
 
@@ -25,6 +24,7 @@ export function cache(expiry: number, keyGen: (req: Request) => string) {
                 EX: expiry,
               });
             } catch (err) {
+              // eslint-disable-next-line no-console
               console.error('Redis SET error:', err);
             }
           })();
@@ -35,7 +35,8 @@ export function cache(expiry: number, keyGen: (req: Request) => string) {
 
       next();
     } catch (err) {
-      console.error('Cache GET error:', err);
+      // eslint-disable-next-line no-console
+      console.error('Cache (get) failed, bypassing cache.', err);
       next();
     }
   };
@@ -57,6 +58,7 @@ export const invalidate = (keyGen: (req: Request) => string | string[]) => {
               await cache.del(keys);
             }
           } catch (err) {
+            // eslint-disable-next-line no-console
             console.error('Cache invalidation error:', err);
           }
         })();

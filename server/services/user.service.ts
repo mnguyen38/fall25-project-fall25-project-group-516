@@ -9,7 +9,6 @@ import {
   OAuthUserProfile,
   UserRolesResponse,
 } from '../types/types';
-import { getCache } from '../utils/cache.util';
 
 /**
  * Saves a new user to the database.
@@ -299,52 +298,6 @@ export const getUserRolesById = async (id: string): Promise<UserRolesResponse> =
     return roles;
   } catch (error) {
     return { error: `Error occured while the user's roles: ${error}` };
-  }
-};
-
-/**
- * Toggles a specific role for a user in a community.
- * - If the user has the role, it's removed.
- * - If the user has a different role or no role, it's set.
- *
- * @param username The user to update.
- * @param communityId The context (community) for the role.
- * @param role The role to toggle (e.g., 'moderator', 'participant').
- * @returns The updated user.
- */
-export const toggleUserRole = async (
-  username: string,
-  communityId: string,
-  role: 'participant' | 'moderator' | 'admin',
-): Promise<UserResponse> => {
-  try {
-    const userToUpdate = await UserModel.findOne({ username }).select('-password');
-    if (!userToUpdate) {
-      return { error: 'User not found' };
-    }
-
-    if (!userToUpdate.roles) {
-      userToUpdate.roles = new Map<string, string>();
-    }
-
-    const currentRole = userToUpdate.roles.get(communityId);
-
-    if (currentRole === role) {
-      userToUpdate.roles.delete(communityId);
-    } else {
-      userToUpdate.roles.set(communityId, role);
-    }
-
-    console.log(userToUpdate.roles);
-    const updatedUserDoc = await userToUpdate.save();
-
-    const cache = await getCache();
-    await cache.del(`roles:${updatedUserDoc._id.toString()}`);
-
-    const safeUser: SafeDatabaseUser = updatedUserDoc.toObject();
-    return safeUser;
-  } catch (err) {
-    return { error: (err as Error).message };
   }
 };
 

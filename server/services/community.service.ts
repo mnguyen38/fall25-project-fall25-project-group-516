@@ -1,6 +1,5 @@
 import CommunityModel from '../models/community.model';
 import { Community, CommunityResponse, DatabaseCommunity } from '../types/types';
-import { toggleUserRole } from './user.service';
 
 /**
  * Retrieves a community by its ID.
@@ -82,14 +81,11 @@ export const toggleCommunityMembership = async (
       );
     }
 
-    const userUpdateResult = await toggleUserRole(username, communityId, 'participant');
-
-    if ('error' in userUpdateResult) {
-      throw new Error(`Failed to update user roles: ${userUpdateResult.error}`);
+    if (!updatedCommunity) {
+      return { error: 'Failed to update community' };
     }
 
-    console.log(userUpdateResult.roles);
-    return updatedCommunity || { error: 'Failed to update community' };
+    return updatedCommunity;
   } catch (err) {
     return { error: (err as Error).message };
   }
@@ -115,6 +111,7 @@ export const createCommunity = async (communityData: Community): Promise<Communi
     });
 
     const savedCommunity = await newCommunity.save();
+
     return savedCommunity;
   } catch (err) {
     return { error: (err as Error).message };
@@ -229,12 +226,6 @@ export const toggleModerator = async (
       isCurrentlyModerator && isMember
         ? { $pull: { moderators: username } }
         : { $addToSet: { moderators: username } };
-
-    const userUpdateResult = await toggleUserRole(username, communityId, 'moderator');
-
-    if ('error' in userUpdateResult) {
-      throw new Error(`Failed to update user roles: ${userUpdateResult.error}`);
-    }
 
     const updatedCommunity = await CommunityModel.findByIdAndUpdate(
       communityId,

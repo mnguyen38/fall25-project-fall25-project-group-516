@@ -1,6 +1,6 @@
 import protect from '../middleware/token.middleware';
 
-export const DEFAULT_MOCK_USER = {
+export const defaultMockUser = {
   id: 'mock-user-id-123',
   username: 'mockTestUser',
 };
@@ -13,7 +13,7 @@ export const DEFAULT_MOCK_USER = {
  * * @param mockUser - The user object you want to inject into req.user.
  * Defaults to DEFAULT_MOCK_USER.
  */
-export const setupMockAuth = (mockUser = DEFAULT_MOCK_USER) => {
+export const setupMockAuth = (mockUser = defaultMockUser) => {
   const mockedProtect = protect as jest.Mock;
 
   mockedProtect.mockClear();

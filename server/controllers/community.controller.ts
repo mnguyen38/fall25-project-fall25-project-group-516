@@ -16,14 +16,7 @@ import {
   toggleModerator,
   toggleBanUser,
 } from '../services/community.service';
-import { toggleUserRole } from '../services/user.service';
-import { permissions } from '../middleware/permissions.middleware';
 
-const ADMIN = 'admin';
-const MODERATOR = 'moderator';
-const PARTICIPANT = 'participant';
-
-const ALL_ROLES = [ADMIN, MODERATOR, PARTICIPANT];
 /**
  * This controller handles community-related routes.
  * @param socket The socket instance to emit events.
@@ -152,12 +145,6 @@ const communityController = (socket: FakeSOSocket) => {
         throw new Error(savedCommunity.error);
       }
 
-      const userUpdateResult = await toggleUserRole(admin, savedCommunity._id.toString(), 'admin');
-
-      if ('error' in userUpdateResult) {
-        throw new Error(`${userUpdateResult.error}`);
-      }
-
       socket.emit('communityUpdate', {
         type: 'created',
         community: savedCommunity,
@@ -182,7 +169,6 @@ const communityController = (socket: FakeSOSocket) => {
   ): Promise<void> => {
     const { communityId } = req.params;
     const { username } = req.body;
-    console.log('deleting');
     try {
       const result = await deleteCommunity(communityId, username);
 
@@ -271,7 +257,7 @@ const communityController = (socket: FakeSOSocket) => {
   router.post('/create', createCommunityRoute);
   router.delete(
     '/delete/:communityId',
-    permissions([ADMIN], req => req.params.communityId),
+    //permissions([ADMIN], req => req.params.communityId),
     deleteCommunityRoute,
   );
 
