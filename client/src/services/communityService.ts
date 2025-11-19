@@ -117,6 +117,7 @@ const toggleBan = async (communityId: string, username: string): Promise<Databas
   }
   return res.data;
 };
+
 export {
   changeCommunityMembership,
   getCommunities,

@@ -163,7 +163,7 @@ export const toggleBanUser = async (communityId: string, username: string) => {
       return { error: 'Community not found' };
     }
 
-    if (community.admin === username || community.moderators?.includes(username)) {
+    if (community.admin === username) {
       return {
         error:
           'Community admins or moderators cannot be banned. Please transfer ownership or delete the community instead.',

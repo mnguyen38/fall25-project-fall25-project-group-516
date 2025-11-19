@@ -1,16 +1,16 @@
 /* Import root variables if not already available */
 :root {
-  --pancake-brown-dark: #6B4423;
-  --pancake-brown-medium: #8B5A3C;
-  --pancake-brown-light: #C4886B;
-  --pancake-cream: #F5E6D3;
-  --pancake-white: #FFFFFF;
-  --pancake-text-dark: #3D2817;
-  --pancake-text-medium: #6B4423;
-  --pancake-accent: #D4A574;
-  --pancake-border: #E8D4C0;
+  --pancake-brown-dark: #6b4423;
+  --pancake-brown-medium: #8b5a3c;
+  --pancake-brown-light: #c4886b;
+  --pancake-cream: #f5e6d3;
+  --pancake-white: #ffffff;
+  --pancake-text-dark: #3d2817;
+  --pancake-text-medium: #6b4423;
+  --pancake-accent: #d4a574;
+  --pancake-border: #e8d4c0;
   --pancake-shadow: rgba(107, 68, 35, 0.12);
-  --pancake-bg-light: #F8F9FA;
+  --pancake-bg-light: #f8f9fa;
 
   --spacing-xs: 4px;
   --spacing-sm: 8px;
@@ -105,10 +105,8 @@
 
 .mod-tools-trigger-btn:active {
   transform: scale(0.98);
-  font-size: 24px;
   font-weight: 700;
   margin-bottom: var(--spacing-md);
-  color: var(--pancake-brown-dark);
 }
 
 .community-description {
