@@ -175,13 +175,19 @@ export const toggleBanUser = async (communityId: string, username: string) => {
     }
 
     const isMember = community.participants.includes(username);
+    const isModerator = community.moderators?.includes(username);
     const isBanned = community.banned?.includes(username);
 
     const communityUpdateOp = isBanned
       ? { $pull: { banned: username } }
-      : isMember
-        ? { $addToSet: { banned: username }, $pull: { participants: username } }
-        : { $addToSet: { banned: username } };
+      : !isMember
+        ? { $addToSet: { banned: username } }
+        : !isModerator
+          ? { $addToSet: { banned: username }, $pull: { participants: username } }
+          : {
+              $addToSet: { banned: username },
+              $pull: { participants: username, moderators: username },
+            };
 
     const updatedCommunity = await CommunityModel.findByIdAndUpdate(
       communityId,
