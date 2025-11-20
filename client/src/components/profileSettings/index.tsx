@@ -20,7 +20,11 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { useNavigate } from 'react-router-dom';
 import useLoginContext from '../../hooks/useLoginContext';
-import { removeAuthToken, toggleProfilePrivacy } from '../../services/userService';
+import {
+  activatePremiumProfile,
+  removeAuthToken,
+  toggleProfilePrivacy,
+} from '../../services/userService';
 import { getQuestionsByUser } from '../../services/questionService';
 import Question from '../main/questionPage/question';
 import { PopulatedDatabaseQuestion } from '../../types/types';
@@ -82,6 +86,18 @@ const ProfileSettings: React.FC = () => {
       window.location.reload();
     } catch {
       // Error handled silently
+    }
+  };
+
+  const handleActivatePremium = async () => {
+    if (!userData?.username) return;
+
+    try {
+      await activatePremiumProfile(userData.username);
+      // Refresh page to activate ad-free browsing experience
+      window.location.reload();
+    } catch {
+      // error is probably handled
     }
   };
 
@@ -485,9 +501,7 @@ const ProfileSettings: React.FC = () => {
         <TransactionWindow
           isOpen={showPurchaseWindow}
           onClose={() => setShowPurchaseWindow(false)}
-          onConfirm={() => {
-            /* should include a method that gives user premium profile*/
-          }}
+          onConfirm={() => handleActivatePremium()}
           cost={50 /*this is negotiable*/}
           title='Premium Membership Purchase'
           description={
