@@ -21,7 +21,11 @@ const useTransactionWindow = () => {
 
   // general
   useEffect(() => {
+    // eslint-disable-next-line no-console
+    console.log('entered useEffect');
     if (type) {
+      // eslint-disable-next-line no-console
+      console.log('type is defined');
       openTransactionWindow();
     }
   }, [type]);
@@ -32,6 +36,17 @@ const useTransactionWindow = () => {
    */
   const openTransactionWindow = () => {
     switch (type) {
+      case 'premium': {
+        // eslint-disable-next-line no-console
+        console.log('case premium');
+        setCost(50);
+        setAwarded(false);
+        setTitle('Premium Membership Purchase');
+        setDescription(
+          'To purchase premium membership. \nPremium members will have their questions boosted in communities and be able to turn off ads.',
+        );
+        break;
+      }
       case 'login': {
         let reward: number;
         if (user.loginStreak) {
@@ -51,20 +66,12 @@ const useTransactionWindow = () => {
         );
         break;
       }
-      case 'premium': {
-        setCost(50);
-        setAwarded(false);
-        setTitle('Premium Membership Purchase');
-        setDescription(
-          'To purchase premium membership. \nPremium members will have their questions boosted in communities and be able to turn off ads.',
-        );
-        break;
-      }
       default:
         return;
     }
-    setType(type);
     setShowWindow(true);
+    // eslint-disable-next-line no-console
+    console.log(showWindow);
   };
 
   /**
@@ -99,6 +106,7 @@ const useTransactionWindow = () => {
       // error is probably handled
     }
   };
+
   //login reward transaction
   /**
    * If it is user's first login of session, opens transaction window for login reward.
@@ -121,6 +129,7 @@ const useTransactionWindow = () => {
   return {
     showWindow,
     setShowWindow,
+    type,
     setType,
     cost,
     title,

@@ -9,7 +9,7 @@ import useTransactionWindow from '../../hooks/useTransactionWindow';
  */
 const Header = () => {
   const { val, handleInputChange, handleKeyDown, coins } = useHeader();
-  const { openTransactionWindow, setType } = useTransactionWindow();
+  const { setType, type } = useTransactionWindow();
 
   const handleCoinClick = async () => {
     setType('premium');
@@ -28,7 +28,16 @@ const Header = () => {
         onChange={handleInputChange}
         onKeyDown={handleKeyDown}
       />
-      <button id='image' className='image-with-text' onClick={() => handleCoinClick()}>
+      <button
+        id='image'
+        className='image-with-text'
+        onClick={() => {
+          // eslint-disable-next-line no-console
+          console.log(`current type ${type}`);
+          setType('premium');
+          // eslint-disable-next-line no-console
+          console.log(`premium set click ${type}`);
+        }}>
         <img
           src='\coinPicture\stack-coin.PNG'
           alt='Coin emblazoned stack of pancakes'

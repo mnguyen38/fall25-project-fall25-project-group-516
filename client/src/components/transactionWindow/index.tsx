@@ -3,6 +3,7 @@ import { addCoins, reduceCoins } from '../../services/userService';
 import useUserContext from '../../hooks/useUserContext';
 import { useState } from 'react';
 import Modal from '../modal';
+import useTransactionWindow from '../../hooks/useTransactionWindow';
 
 interface TransactionProps {
   isOpen: boolean;
@@ -30,6 +31,7 @@ const TransactionWindow = ({
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const { setType } = useTransactionWindow();
 
   const handleConfirmButton = async (cost: number, awarded: boolean, description?: string) => {
     try {
@@ -51,6 +53,7 @@ const TransactionWindow = ({
 
   const handleCancelButton = async () => {
     setError('');
+    setType(null);
     onClose();
   };
 
