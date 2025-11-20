@@ -57,8 +57,8 @@ const ProfileSettings: React.FC = () => {
 
   const navigate = useNavigate();
   const { setUser } = useLoginContext();
-  const userContext = React.useContext(UserContext);
-  const socket = userContext?.socket;
+  const AuserContext = React.useContext(UserContext);
+  const socket = AuserContext?.socket;
 
   const [showResetPasswordModal, setShowResetPasswordModal] = React.useState(false);
   const [showDeleteAccountModal, setShowDeleteAccountModal] = React.useState(false);
@@ -107,7 +107,7 @@ const ProfileSettings: React.FC = () => {
       setCurrentCustomStatus(customStatus);
       setShowStatusSelector(false);
     } catch (error) {
-      console.error('Failed to update status:', error);
+      // console.error('Failed to update status:', error);
     }
   };
 
@@ -231,10 +231,7 @@ const ProfileSettings: React.FC = () => {
   // Close status dropdown when clicking outside
   React.useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        statusDropdownRef.current &&
-        !statusDropdownRef.current.contains(event.target as Node)
-      ) {
+      if (statusDropdownRef.current && !statusDropdownRef.current.contains(event.target as Node)) {
         setShowStatusSelector(false);
       }
     };
@@ -362,7 +359,11 @@ const ProfileSettings: React.FC = () => {
                                 />
                               </g>
                             </svg>
-                            <svg className='dropdown-container' width='275' height='242' viewBox='0 0 275 242'>
+                            <svg
+                              className='dropdown-container'
+                              width='275'
+                              height='242'
+                              viewBox='0 0 275 242'>
                               <g transform='translate(0,20)'>
                                 <path
                                   className='dropdown-border'
@@ -444,7 +445,11 @@ const ProfileSettings: React.FC = () => {
                               />
                             </g>
                           </svg>
-                          <svg className='dropdown-container' width='275' height='242' viewBox='0 0 275 242'>
+                          <svg
+                            className='dropdown-container'
+                            width='275'
+                            height='242'
+                            viewBox='0 0 275 242'>
                             <g transform='translate(0,20)'>
                               <path
                                 className='dropdown-border'
@@ -467,7 +472,9 @@ const ProfileSettings: React.FC = () => {
                                 setShowSettingsDropdown(false);
                                 handleTogglePrivacy();
                               }}>
-                              <FontAwesomeIcon icon={userData?.profilePrivate ? faEye : faEyeSlash} />
+                              <FontAwesomeIcon
+                                icon={userData?.profilePrivate ? faEye : faEyeSlash}
+                              />
                               <span>
                                 {userData?.profilePrivate
                                   ? 'Make Profile Public'
@@ -622,7 +629,11 @@ const ProfileSettings: React.FC = () => {
                                 />
                               </g>
                             </svg>
-                            <svg className='dropdown-container' width='275' height='242' viewBox='0 0 275 242'>
+                            <svg
+                              className='dropdown-container'
+                              width='275'
+                              height='242'
+                              viewBox='0 0 275 242'>
                               <g transform='translate(0,20)'>
                                 <path
                                   className='dropdown-border'

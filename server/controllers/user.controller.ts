@@ -501,7 +501,7 @@ const userController = (socket: FakeSOSocket) => {
 
       socket.emit('transactionEvent', {
         username,
-        amount,
+        amount: amount ?? 0,
       });
       res.status(200).json(status);
     } catch (error) {
