@@ -14,6 +14,9 @@ interface TransactionProps {
   awarded: boolean;
 }
 
+/**
+ * TransactionWindow component that renders window for reward and purchase transactions.
+ */
 const TransactionWindow = ({
   isOpen,
   onClose,
@@ -75,7 +78,7 @@ const TransactionWindow = ({
             </div>
           </div>
         )}
-        <p className='modal-description'>
+        <div className='modal-description'>
           {awarded ? <h2>{`You have been awarded...`}</h2> : <h2>{`You will spend...`}</h2>}
           <div className='container-container'>
             <div className='coin-container'>
@@ -91,7 +94,7 @@ const TransactionWindow = ({
             </div>
           </div>
           {description && <h3>{description}</h3>}
-        </p>
+        </div>
         <div>
           {!awarded ? (
             <div className='modal-actions'>

@@ -7,7 +7,6 @@ import ImageUpload from '../imageUpload';
 import BadgeDisplay from '../badgeDisplay';
 import ResetPasswordModal from '../resetPasswordModal';
 import DeleteAccountModal from '../deleteAccountModal';
-import TransactionWindow from '../transactionWindow';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faPencil,
@@ -20,11 +19,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { useNavigate } from 'react-router-dom';
 import useLoginContext from '../../hooks/useLoginContext';
-import {
-  activatePremiumProfile,
-  removeAuthToken,
-  toggleProfilePrivacy,
-} from '../../services/userService';
+import { removeAuthToken, toggleProfilePrivacy } from '../../services/userService';
 import { getQuestionsByUser } from '../../services/questionService';
 import Question from '../main/questionPage/question';
 import { PopulatedDatabaseQuestion } from '../../types/types';
@@ -56,8 +51,6 @@ const ProfileSettings: React.FC = () => {
     handleEnteringEditMode,
     showLoginStreak,
     handleToggleLoginStreakPreview,
-    showPurchaseWindow,
-    setShowPurchaseWindow,
   } = useProfileSettings();
 
   const navigate = useNavigate();
@@ -86,18 +79,6 @@ const ProfileSettings: React.FC = () => {
       window.location.reload();
     } catch {
       // Error handled silently
-    }
-  };
-
-  const handleActivatePremium = async () => {
-    if (!userData?.username) return;
-
-    try {
-      await activatePremiumProfile(userData.username);
-      // Refresh page to activate ad-free browsing experience
-      window.location.reload();
-    } catch {
-      // error is probably handled
     }
   };
 
@@ -498,16 +479,6 @@ const ProfileSettings: React.FC = () => {
           onConfirm={handleDeleteUser}
           username={userData.username}
         />
-        <TransactionWindow
-          isOpen={showPurchaseWindow}
-          onClose={() => setShowPurchaseWindow(false)}
-          onConfirm={() => handleActivatePremium()}
-          cost={50 /*this is negotiable*/}
-          title='Premium Membership Purchase'
-          description={
-            'To purchase premium membership. \nPremium members will have their questions boosted in communities and be able to turn off ads.'
-          }
-          awarded={false}></TransactionWindow>
       </div>
     </div>
   );

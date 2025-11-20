@@ -40,9 +40,6 @@ const useProfileSettings = () => {
   const [bannerImageFile, setBannerImageFile] = useState<File | null>(null);
   const [showLoginStreak, setShowLoginStreak] = useState<boolean>(true);
 
-  // purchasing premium
-  const [showPurchaseWindow, setShowPurchaseWindow] = useState<boolean>(false);
-
   const canEditProfile =
     currentUser.username && userData?.username ? currentUser.username === userData.username : false;
 
@@ -353,8 +350,6 @@ const useProfileSettings = () => {
     handleCancelButton,
     handleDoneButton,
     handleEnteringEditMode,
-    showPurchaseWindow,
-    setShowPurchaseWindow
   };
 };
 

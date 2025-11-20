@@ -1,7 +1,6 @@
-import { useNavigate } from 'react-router-dom';
-import useProfileSettings from '../../hooks/useProfileSettings';
 import useHeader from '../../hooks/useHeader';
 import './index.css';
+import useTransactionWindow from '../../hooks/useTransactionWindow';
 
 /**
  * Header component that renders the main title and a search bar.
@@ -9,13 +8,12 @@ import './index.css';
  * when they press Enter.
  */
 const Header = () => {
-  const { val, handleInputChange, handleKeyDown, coins, user } = useHeader();
-  const navigate = useNavigate();
-  const { setShowPurchaseWindow } = useProfileSettings();
+  const { val, handleInputChange, handleKeyDown, coins } = useHeader();
+  const { openTransactionWindow, setType } = useTransactionWindow();
 
   const handleCoinClick = async () => {
-    navigate(`/user/${user.username}`);
-    setShowPurchaseWindow(true);
+    setType('premium');
+    // openTransactionWindow('premium');
   };
 
   return (
