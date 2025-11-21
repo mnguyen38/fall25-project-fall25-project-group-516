@@ -34,6 +34,8 @@ export interface UserCredentials {
  * - `premiumProfile`: Whether the user has a premium profile or not.
  * - `streakPass`: Number of passes user has to miss streak.
  * - `streakHold`: Whether streak is currently on hold to be recovered.
+ * - `status`: User's current status ('online', 'busy', 'away').
+ * - `customStatus`: Custom status message.
  */
 export interface User extends UserCredentials {
   dateJoined: Date;
@@ -56,6 +58,8 @@ export interface User extends UserCredentials {
   premiumProfile?: boolean;
   streakPass?: number;
   streakHold?: boolean;
+  status?: 'online' | 'busy' | 'away';
+  customStatus?: string;
 }
 
 /**
@@ -159,5 +163,19 @@ export interface TransactionRequest extends Request {
     username: string;
     cost: number;
     description?: string;
+  };
+}
+
+/**
+ * Express request for updating user's status.
+ * - `username`: The username whose status is being updated (body).
+ * - `status`: The new status to be set (body).
+ * - `customStatus`: Optional custom status message (body).
+ */
+export interface UpdateStatusRequest extends Request {
+  body: {
+    username: string;
+    status: 'online' | 'busy' | 'away';
+    customStatus?: string;
   };
 }

@@ -143,3 +143,20 @@
   border-color: var(--pancake-brown-medium);
   box-shadow: 0 0 0 3px rgba(196, 136, 107, 0.15);
 }
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.user-avatar-container {
+  padding: 4px;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.user-avatar-container:hover {
+  background: var(--pancake-bg-light, #f8f9fa);
+  transform: scale(1.05);
+}

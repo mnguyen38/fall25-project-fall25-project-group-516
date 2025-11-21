@@ -194,6 +194,7 @@ export interface ServerToClientEvents {
   commentUpdate: (comment: CommentUpdatePayload) => void;
   messageUpdate: (message: MessageUpdatePayload) => void;
   userUpdate: (user: UserUpdatePayload) => void;
+  userStatusUpdate: (status: UserStatusUpdatePayload) => void;
   gameUpdate: (game: GameUpdatePayload) => void;
   gameError: (error: GameErrorPayload) => void;
   chatUpdate: (chat: ChatUpdatePayload) => void;

@@ -50,6 +50,12 @@
   border-color: var(--pancake-brown-light);
 }
 
+/* Remove hover effect for about card */
+.profile-settings .about-card:hover {
+  box-shadow: 0 1px 3px var(--pancake-shadow);
+  border-color: var(--color-border);
+}
+
 /* ===== Profile Header ===== */
 .profile-header {
   position: relative;
@@ -140,9 +146,9 @@
 
 .profile-login-streak {
   font-size: 14px;
-  color: black;
-  font-weight: 600;
-  margin: 0 0 8px 0;
+  color: var(--color-text-secondary);
+  font-weight: 400;
+  margin: 0 0 4px 0;
   display: flex;
   align-items: center;
   gap: 4px;
@@ -151,9 +157,55 @@
 .profile-date {
   font-size: 14px;
   color: var(--color-text-secondary);
+  font-weight: 400;
   display: flex;
   align-items: center;
   gap: 4px;
+  margin: 0 0 4px 0;
+}
+
+.status-dropdown-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.profile-status-clickable {
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 4px 8px;
+  margin-left: -8px;
+  border-radius: 4px;
+}
+
+.profile-status-clickable:hover {
+  background: var(--pancake-cream);
+  color: var(--pancake-brown-dark);
+}
+
+.status-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  border-radius: 8px;
+  width: 275px;
+  z-index: 9999;
+  margin-top: 0;
+  background: var(--pancake-white, #fff);
+  border: 1px solid var(--pancake-border, #e8d4c0);
+  box-shadow: 0 4px 12px rgba(107, 68, 35, 0.12);
+  overflow: hidden;
+}
+
+.status-dropdown .dropdown-shadow {
+  display: none;
+}
+
+.status-dropdown .dropdown-container {
+  display: none;
+}
+
+.status-dropdown .dropdown-border {
+  display: none;
 }
 
 /* ===== Header Actions ===== */
@@ -203,25 +255,29 @@
   position: absolute;
   top: calc(100% + 8px);
   right: 0;
-  background: var(--pancake-white);
-  border-radius: 4px;
-  box-shadow: 0 4px 12px var(--pancake-shadow);
-  min-width: 200px;
-  overflow: hidden;
+  border-radius: 8px;
+  width: 275px;
   z-index: 9999;
-  border: 1px solid var(--pancake-border);
-  animation: dropdownSlide 0.2s ease;
+  background: var(--pancake-white, #fff);
+  border: 1px solid var(--pancake-border, #e8d4c0);
+  box-shadow: 0 4px 12px rgba(107, 68, 35, 0.12);
+  overflow: hidden;
 }
 
-@keyframes dropdownSlide {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.settings-dropdown .dropdown-shadow {
+  display: none;
+}
+
+.settings-dropdown .dropdown-container {
+  display: none;
+}
+
+.settings-dropdown .dropdown-border {
+  display: none;
+}
+
+.settings-dropdown .dropdown-contents {
+  width: 100%;
 }
 
 .dropdown-item {
@@ -229,21 +285,31 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px 16px;
+  padding: 0 16px;
+  height: 46px;
   border: none;
   background: transparent;
   color: var(--pancake-text-dark);
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 500;
   text-align: left;
   cursor: pointer;
-  transition: all 0.2s ease;
-  border-left: 3px solid transparent;
+  transition: background 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  border-bottom: 1px solid var(--pancake-border, #e8d4c0);
+  user-select: none;
+  margin: 0;
+}
+
+.dropdown-item:last-child {
+  border-bottom: none;
 }
 
 .dropdown-item:hover {
-  background: var(--pancake-cream);
-  border-left-color: var(--pancake-brown-light);
+  background: var(--pancake-bg-light, #f8f9fa);
+}
+
+.dropdown-item:active {
+  background: #f0f0f0;
 }
 
 .dropdown-item svg {
@@ -258,7 +324,6 @@
 
 .dropdown-item-danger:hover {
   background: #fee;
-  border-left-color: #dc2626;
 }
 
 /* ===== Edit Mode ===== */
@@ -384,28 +449,111 @@
   margin: 0;
 }
 
-/* Biography Section */
+.about-card {
+  background: var(--pancake-white);
+}
+
+.about-section {
+  padding: 24px !important;
+}
+
+.about-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.edit-icon-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: var(--pancake-text-medium);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 16px;
+  padding: 0;
+}
+
+.edit-icon-btn:hover {
+  background: var(--pancake-bg-light, #f8f9fa);
+  color: var(--pancake-brown-dark);
+}
+
+.edit-icon-btn:active {
+  transform: scale(0.95);
+}
+
 .bio-section {
   margin-top: 0;
 }
 
 .bio-content {
   color: var(--color-text-primary);
-  line-height: 1;
+  line-height: 1.8;
   font-size: 14px;
   margin: 0;
 }
 
 .profile-settings .markdown {
   white-space: pre-wrap;
-  line-height: 1.6;
+  line-height: 1.8;
   font-size: 14px;
+  color: var(--pancake-text-dark);
+}
+
+.profile-settings .markdown p {
+  margin: 0 0 16px 0;
+}
+
+.profile-settings .markdown p:last-child {
+  margin-bottom: 0;
+}
+
+.profile-settings .markdown ul,
+.profile-settings .markdown ol {
+  margin: 8px 0;
+  padding-left: 24px;
+}
+
+.profile-settings .markdown li {
+  margin: 4px 0;
+  line-height: 1.6;
+}
+
+.profile-settings .markdown strong {
+  font-weight: 600;
+  color: var(--pancake-brown-dark);
+}
+
+.profile-settings .markdown a {
+  color: var(--pancake-brown-medium);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.profile-settings .markdown a:hover {
+  color: var(--pancake-brown-dark);
+  text-decoration: underline;
 }
 
 .profile-settings .bio-edit {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  margin-top: 4px;
+}
+
+.profile-settings .bio-edit .input-text {
+  min-height: 150px;
+  resize: vertical;
+  font-size: 14px;
+  line-height: 1.8;
 }
 
 /* ===== Form Elements ===== */
@@ -576,4 +724,18 @@
   .profile-header-actions {
     top: 50px;
   }
+}
+
+.profile-identity-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  margin: 8px 0;
+}
+
+.profile-identity-checkbox input[type='checkbox'] {
+  cursor: pointer;
 }

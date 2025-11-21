@@ -149,7 +149,7 @@ export const loginUser = async (loginCredentials: UserCredentials): Promise<User
     // Update max streak if current streak is higher, ensuring minimum of 1
     const newMaxStreak = Math.max(newLoginStreak, user.maxLoginStreak || 0, 1);
 
-    // Update user with new login data
+    // Update user with new login data and set status to online
     await UserModel.updateOne(
       { username },
       {
@@ -158,6 +158,7 @@ export const loginUser = async (loginCredentials: UserCredentials): Promise<User
           loginStreak: newLoginStreak,
           maxLoginStreak: newMaxStreak,
           streakHold: streakHold,
+          status: 'online',
         },
       },
     );
@@ -372,5 +373,40 @@ export const makeTransaction = async (
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     return { error: message };
+  }
+};
+
+/**
+ * Updates a user's status and custom status message.
+ *
+ * @param {string} username - The username of the user to update.
+ * @param {string} status - The new status ('online', 'busy', 'away').
+ * @param {string} customStatus - Optional custom status message.
+ * @returns {Promise<UserResponse>} - Resolves with the updated user object or an error message.
+ */
+export const updateUserStatus = async (
+  username: string,
+  status: 'online' | 'busy' | 'away',
+  customStatus?: string,
+): Promise<UserResponse> => {
+  try {
+    const updates: Partial<User> = { status };
+    if (customStatus !== undefined) {
+      updates.customStatus = customStatus;
+    }
+
+    const updatedUser: SafeDatabaseUser | null = await UserModel.findOneAndUpdate(
+      { username },
+      { $set: updates },
+      { new: true },
+    ).select('-password');
+
+    if (!updatedUser) {
+      throw Error('Error updating user status');
+    }
+
+    return updatedUser;
+  } catch (error) {
+    return { error: `Error occurred when updating user status: ${error}` };
   }
 };

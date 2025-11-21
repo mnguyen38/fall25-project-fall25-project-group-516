@@ -1,0 +1,265 @@
+.user-status-selector {
+  position: relative;
+  width: 100%;
+}
+
+.status-display {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm, 8px);
+  padding: var(--spacing-sm, 8px) var(--spacing-md, 16px);
+  background: var(--pancake-white, #fff);
+  border: 1px solid var(--pancake-border, #e8d4c0);
+  border-radius: var(--radius-md, 6px);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.status-display:hover {
+  background: var(--pancake-bg-light, #f8f9fa);
+  border-color: var(--pancake-brown-medium, #8b5a3c);
+}
+
+.status-icon {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.status-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.status-label {
+  font-weight: 500;
+  color: var(--pancake-text-dark, #3d2817);
+  font-size: 14px;
+}
+
+.custom-status {
+  font-size: 12px;
+  color: var(--pancake-text-medium, #6b4423);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dropdown-arrow {
+  font-size: 10px;
+  color: var(--pancake-text-medium, #6b4423);
+  transition: transform 0.2s ease;
+}
+
+.status-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: var(--pancake-white, #fff);
+  border: 1px solid var(--pancake-border, #e8d4c0);
+  border-radius: var(--radius-md, 6px);
+  box-shadow: 0 4px 12px var(--pancake-shadow, rgba(107, 68, 35, 0.12));
+  z-index: 1000;
+  overflow: hidden;
+}
+
+.status-options {
+  padding: var(--spacing-xs, 4px);
+  border-bottom: 1px solid var(--pancake-border, #e8d4c0);
+}
+
+.status-option {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm, 8px);
+  padding: var(--spacing-sm, 8px);
+  width: 100%;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm, 4px);
+  cursor: pointer;
+  transition: background 0.2s ease;
+  text-align: left;
+}
+
+.status-option:hover {
+  background: var(--pancake-bg-light, #f8f9fa);
+}
+
+.status-option.active {
+  background: var(--pancake-cream, #f5e6d3);
+}
+
+.status-option .status-label {
+  font-size: 14px;
+  color: var(--pancake-text-dark, #3d2817);
+}
+
+.custom-status-input {
+  padding: var(--spacing-sm, 8px);
+  display: flex;
+  gap: var(--spacing-sm, 8px);
+}
+
+.custom-status-input input {
+  flex: 1;
+  padding: var(--spacing-sm, 8px);
+  border: 1px solid var(--pancake-border, #e8d4c0);
+  border-radius: var(--radius-sm, 4px);
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--pancake-text-dark, #3d2817);
+}
+
+.custom-status-input input:focus {
+  outline: none;
+  border-color: var(--pancake-brown-medium, #8b5a3c);
+}
+
+.custom-status-input input::placeholder {
+  color: var(--pancake-text-medium, #6b4423);
+  opacity: 0.6;
+}
+
+.custom-status-input .save-btn {
+  padding: var(--spacing-sm, 8px) var(--spacing-md, 16px);
+  background: var(--pancake-brown-medium, #8b5a3c);
+  color: var(--pancake-white, #fff);
+  border: none;
+  border-radius: var(--radius-sm, 4px);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.custom-status-input .save-btn:hover {
+  background: var(--pancake-brown-dark, #6b4423);
+}
+
+.custom-status-input .save-btn:active {
+  transform: translateY(1px);
+}
+
+/* Inline version for embedding in dropdowns */
+.user-status-selector-inline {
+  position: relative;
+  width: 100%;
+  padding: 0;
+}
+
+.user-status-selector-inline.visible {
+  opacity: 1;
+}
+
+.user-status-selector-inline .status-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.user-status-selector-inline .status-option {
+  align-items: center;
+  border-bottom: 1px solid var(--pancake-border, #e8d4c0);
+  cursor: pointer;
+  display: flex;
+  height: 46px;
+  padding: 0 16px;
+  user-select: none;
+  background: transparent;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  text-align: left;
+  font-size: 14px;
+  color: var(--pancake-text-dark, #3d2817);
+  font-weight: 500;
+  width: 100%;
+  transition: background 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  margin: 0;
+}
+
+.user-status-selector-inline .status-option:hover {
+  background: var(--pancake-bg-light, #f8f9fa);
+}
+
+.user-status-selector-inline .status-option:active {
+  background: #f0f0f0;
+}
+
+.user-status-selector-inline .status-option.active {
+  background: var(--pancake-cream, #f5e6d3);
+}
+
+.user-status-selector-inline .status-option .status-label {
+  font-size: inherit;
+  color: inherit;
+  font-weight: inherit;
+}
+
+.user-status-selector-inline .custom-status-input {
+  display: flex;
+  align-items: center;
+  height: 46px;
+  padding: 0 10px;
+  gap: 0px;
+  border-bottom: none;
+  margin: 0;
+}
+
+.user-status-selector-inline .custom-status-input input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid var(--pancake-border, #e8d4c0);
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--pancake-text-dark, #3d2817);
+  transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  background: var(--pancake-white, #fff);
+  height: 32px;
+}
+
+.user-status-selector-inline .custom-status-input input:hover {
+  border-color: var(--pancake-brown-light, #c4886b);
+}
+
+.user-status-selector-inline .custom-status-input input:focus {
+  outline: none;
+  border-color: var(--pancake-brown-medium, #8b5a3c);
+}
+
+.user-status-selector-inline .custom-status-input input::placeholder {
+  color: var(--pancake-text-medium, #6b4423);
+  opacity: 0.5;
+}
+
+.user-status-selector-inline .custom-status-input .save-btn {
+  padding: 8px 16px;
+  background: var(--pancake-brown-medium, #8b5a3c);
+  color: var(--pancake-white, #fff);
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  height: 32px;
+  white-space: nowrap;
+  box-shadow: 0 1px 3px rgba(107, 68, 35, 0.1);
+}
+
+.user-status-selector-inline .custom-status-input .save-btn:hover {
+  background: var(--pancake-brown-dark, #6b4423);
+  box-shadow: 0 2px 6px rgba(107, 68, 35, 0.15);
+  transform: translateY(-1px);
+}
+
+.user-status-selector-inline .custom-status-input .save-btn:active {
+  background: #5a3721;
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(107, 68, 35, 0.1);
+}

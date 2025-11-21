@@ -90,6 +90,7 @@ const userSchema: Schema = new Schema(
     email: {
       type: String,
       unique: true,
+      sparse: true,
     },
     roles: {
       type: Map,
@@ -119,6 +120,16 @@ const userSchema: Schema = new Schema(
     streakHold: {
       type: Boolean,
       default: false,
+    },
+    status: {
+      type: String,
+      enum: ['online', 'busy', 'away'],
+      default: 'online',
+    },
+    customStatus: {
+      type: String,
+      default: '',
+      maxlength: 100,
     },
   },
   { collection: 'User' },

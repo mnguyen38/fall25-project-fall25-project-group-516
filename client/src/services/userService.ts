@@ -354,6 +354,30 @@ const deactivatePremiumProfile = async (username: string): Promise<SafeDatabaseU
   return res.data;
 };
 
+/*
+ * Updates a user's status and custom status message
+ * @param username The unique username of the user
+ * @param status The status to set ('online', 'busy', 'away')
+ * @param customStatus Optional custom status message
+ * @returns A promise resolving to the updated user
+ * @throws Error if the request fails
+ */
+const updateStatus = async (
+  username: string,
+  status: 'online' | 'busy' | 'away',
+  customStatus?: string,
+): Promise<SafeDatabaseUser> => {
+  const res = await api.patch(`${USER_API_URL}/updateStatus`, {
+    username,
+    status,
+    customStatus,
+  });
+  if (res.status !== 200) {
+    throw new Error('Error when updating user status');
+  }
+  return res.data;
+};
+
 export {
   getUsers,
   getUserByUsername,
@@ -371,4 +395,5 @@ export {
   toggleProfilePrivacy,
   activatePremiumProfile,
   deactivatePremiumProfile,
+  updateStatus,
 };
