@@ -6,21 +6,24 @@ import Header from '../header';
 import Footer from '../footer';
 import TransactionWindow from '../transactionWindow';
 import useTransactionWindow from '../../hooks/useTransactionWindow';
+import usePremiumTransaction from '../../hooks/usePremiumTransaction';
 
 /**
  * Main component represents the layout of the main page, including a sidebar and the main content area.
  */
 const Layout = () => {
+  // for login
   const {
-    showWindow,
-    setShowWindow,
-    setType,
-    cost,
-    title,
-    description,
-    awarded,
-    handleConfirmation,
+    showRewardWindow,
+    setShowRewardWindow,
+    reward,
+    rewardDescription,
+    handleRewardConfirmation,
   } = useTransactionWindow();
+
+  // for premium
+  const { showPremiumWindow, setShowPremiumWindow, cost, handlePremiumConfirmation } =
+    usePremiumTransaction();
 
   return (
     <>
@@ -29,17 +32,29 @@ const Layout = () => {
         <SideBarNav />
         <div id='right_main' className='right_main'>
           <Outlet />
+          {/* Login reward */}
           <TransactionWindow
-            isOpen={showWindow}
+            isOpen={showRewardWindow}
             onClose={() => {
-              setShowWindow(false);
-              setType(null);
+              setShowRewardWindow(false);
             }}
-            onConfirm={handleConfirmation}
+            onConfirm={handleRewardConfirmation}
+            cost={reward}
+            title='Login Reward'
+            description={rewardDescription}
+            awarded={true}
+          />
+          {/* Premium pruchase */}
+          <TransactionWindow
+            isOpen={showPremiumWindow}
+            onClose={() => {
+              setShowPremiumWindow(false);
+            }}
+            onConfirm={handlePremiumConfirmation}
             cost={cost}
-            title={title}
-            description={description}
-            awarded={awarded}
+            title='Premium Membership Purchase'
+            description='To purchase premium membership. \nPremium members will have their questions boosted in communities and be able to turn off ads.'
+            awarded={false}
           />
         </div>
         <RightSidebar />

@@ -1,6 +1,6 @@
 import useHeader from '../../hooks/useHeader';
 import './index.css';
-import useTransactionWindow from '../../hooks/useTransactionWindow';
+import usePremiumTransaction from '../../hooks/usePremiumTransaction';
 
 /**
  * Header component that renders the main title and a search bar.
@@ -9,11 +9,10 @@ import useTransactionWindow from '../../hooks/useTransactionWindow';
  */
 const Header = () => {
   const { val, handleInputChange, handleKeyDown, coins } = useHeader();
-  const { setType, type } = useTransactionWindow();
+  const { openTransactionWindow } = usePremiumTransaction();
 
   const handleCoinClick = async () => {
-    setType('premium');
-    // openTransactionWindow('premium');
+    openTransactionWindow();
   };
 
   return (
@@ -28,16 +27,7 @@ const Header = () => {
         onChange={handleInputChange}
         onKeyDown={handleKeyDown}
       />
-      <button
-        id='image'
-        className='image-with-text'
-        onClick={() => {
-          // eslint-disable-next-line no-console
-          console.log(`current type ${type}`);
-          setType('premium');
-          // eslint-disable-next-line no-console
-          console.log(`premium set click ${type}`);
-        }}>
+      <button id='image' className='image-with-text' onClick={handleCoinClick}>
         <img
           src='\coinPicture\stack-coin.PNG'
           alt='Coin emblazoned stack of pancakes'

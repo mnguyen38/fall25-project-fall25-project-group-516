@@ -2,109 +2,48 @@ import { useEffect, useState } from 'react';
 import { getAuthToken } from '../utils/auth';
 import { getLoginStatus, setLoginStatus } from '../utils/login';
 import useUserContext from './useUserContext';
-import { activatePremiumProfile } from '../services/userService';
 
 /**
  * Custom hook that encapsulates all logic/state for TransactionWindow Component.
  */
 const useTransactionWindow = () => {
   const { user } = useUserContext();
-  const [showWindow, setShowWindow] = useState(false);
-  const [cost, setCost] = useState<number>(0);
-  const [title, setTitle] = useState<string>('');
-  const [description, setDescription] = useState<string>('');
-  const [awarded, setAwarded] = useState<boolean>(false);
-  const [type, setType] = useState<'login' | 'premium' | null>(null);
+  const [showRewardWindow, setShowRewardWindow] = useState(false);
+  const [reward, setReward] = useState<number>(0);
+  const [rewardDescription, setRewardDescription] = useState<string>('');
 
   // login reward
   const [loginStreak, setLoginStreak] = useState(0);
-
-  // general
-  useEffect(() => {
-    // eslint-disable-next-line no-console
-    console.log('entered useEffect');
-    if (type) {
-      // eslint-disable-next-line no-console
-      console.log('type is defined');
-      openTransactionWindow();
-    }
-  }, [type]);
 
   /**
    * Opens transaction window and sets various attributes depending on type of transaction
    * @param type login or premium transaction
    */
   const openTransactionWindow = () => {
-    switch (type) {
-      case 'premium': {
-        // eslint-disable-next-line no-console
-        console.log('case premium');
-        setCost(50);
-        setAwarded(false);
-        setTitle('Premium Membership Purchase');
-        setDescription(
-          'To purchase premium membership. \nPremium members will have their questions boosted in communities and be able to turn off ads.',
-        );
-        break;
-      }
-      case 'login': {
-        let reward: number;
-        if (user.loginStreak) {
-          reward = user.loginStreak % 7 == 0 ? 10 : user.loginStreak % 7;
-          setLoginStreak(user.loginStreak);
-        } else {
-          // first time login
-          reward = 5;
-        }
-        setCost(reward);
-        setAwarded(true);
-        setTitle('Login Reward');
-        setDescription(
-          loginStreak > 0
-            ? `For logging in for ${loginStreak} days! Log back in tomorrow for ${reward + 1 == 7 ? 10 : reward + 1} coins!`
-            : 'For your first time logging in!',
-        );
-        break;
-      }
-      default:
-        return;
+    let reward: number;
+    if (user.loginStreak) {
+      reward = user.loginStreak % 7 == 0 ? 10 : user.loginStreak % 7;
+      setLoginStreak(user.loginStreak);
+    } else {
+      // first time login
+      reward = 5;
     }
-    setShowWindow(true);
+    setReward(reward);
+    setRewardDescription(
+      loginStreak > 0
+        ? `For logging in for ${loginStreak} days! Log back in tomorrow for ${reward + 1 == 7 ? 10 : reward + 1} coins!`
+        : 'For your first time logging in!',
+    );
+    setShowRewardWindow(true);
     // eslint-disable-next-line no-console
-    console.log(showWindow);
+    console.log(showRewardWindow);
   };
 
   /**
    * Handles transaction confirmation.
    */
-  const handleConfirmation = () => {
-    switch (type) {
-      case 'login':
-        loginClaimed();
-        break;
-      case 'premium':
-        handleActivatePremium();
-        break;
-      default:
-        return;
-    }
-  };
-
-  // premium transaction
-  /**
-   * When user confirms premium transaction, updates user to have premiumProfile.
-   */
-  const handleActivatePremium = async () => {
-    if (!user.username) return;
-
-    try {
-      await activatePremiumProfile(user.username);
-      // Refresh page to activate ad-free browsing experience
-      // is this supposed to log you out? Will revisit at later date
-      // window.location.reload();
-    } catch {
-      // error is probably handled
-    }
+  const handleRewardConfirmation = () => {
+    loginClaimed();
   };
 
   //login reward transaction
@@ -113,8 +52,7 @@ const useTransactionWindow = () => {
    */
   useEffect(() => {
     if (getAuthToken() && !getLoginStatus(user.username)) {
-      setType('login');
-      // openTransactionWindow('login');
+      openTransactionWindow();
     }
   }, [user.loginStreak, user.username]);
 
@@ -127,15 +65,11 @@ const useTransactionWindow = () => {
   };
 
   return {
-    showWindow,
-    setShowWindow,
-    type,
-    setType,
-    cost,
-    title,
-    description,
-    awarded,
-    handleConfirmation,
+    showRewardWindow,
+    setShowRewardWindow,
+    reward,
+    rewardDescription,
+    handleRewardConfirmation,
     openTransactionWindow,
   };
 };

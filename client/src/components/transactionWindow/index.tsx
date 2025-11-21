@@ -3,7 +3,6 @@ import { addCoins, reduceCoins } from '../../services/userService';
 import useUserContext from '../../hooks/useUserContext';
 import { useState } from 'react';
 import Modal from '../modal';
-import useTransactionWindow from '../../hooks/useTransactionWindow';
 
 interface TransactionProps {
   isOpen: boolean;
@@ -31,9 +30,8 @@ const TransactionWindow = ({
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
-  const { setType } = useTransactionWindow();
 
-  const handleConfirmButton = async (cost: number, awarded: boolean, description?: string) => {
+  const handleConfirmButton = async () => {
     try {
       setSubmitting(true);
       if (awarded) {
@@ -53,7 +51,6 @@ const TransactionWindow = ({
 
   const handleCancelButton = async () => {
     setError('');
-    setType(null);
     onClose();
   };
 
@@ -104,17 +101,13 @@ const TransactionWindow = ({
               <button onClick={() => handleCancelButton()} className='button button-secondary'>
                 Cancel
               </button>
-              <button
-                onClick={() => handleConfirmButton(cost, awarded, description)}
-                className='button button-primary'>
+              <button onClick={() => handleConfirmButton()} className='button button-primary'>
                 {submitting ? 'Confirming...' : 'Confirm'}
               </button>
             </div>
           ) : (
             <div className='modal-actions'>
-              <button
-                className='button button-primary'
-                onClick={() => handleConfirmButton(cost, awarded, description)}>
+              <button className='button button-primary' onClick={() => handleConfirmButton()}>
                 Accept
               </button>
             </div>
