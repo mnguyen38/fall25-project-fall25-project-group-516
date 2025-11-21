@@ -319,6 +319,21 @@ const toggleProfilePrivacy = async (username: string): Promise<SafeDatabaseUser>
 };
 
 /**
+ * Toggle the hold state on user's current streak.
+ * @param username The unique username of the user
+ * @returns A promise resolving to the updated user
+ * @throws Error if the request fails
+ */
+const toggleStreakHold = async (username: string): Promise<SafeDatabaseUser> => {
+  const res = await api.patch(`${USER_API_URL}/toggleStreakHold`, {
+    username,
+  });
+  if (res.status !== 200) {
+    throw new Error("Error when toggling hold on user's current streak");
+  }
+  return res.data;
+};
+/**
  * Activates user's premium membership if they do not already have premium.
  * @param username The uniwue username of the user
  * @returns A promise resolving to the updated user
@@ -354,6 +369,22 @@ const deactivatePremiumProfile = async (username: string): Promise<SafeDatabaseU
   return res.data;
 };
 
+/**
+ * Decrements user's streak passes by one if they own any.
+ * @param username The unique username of the user
+ * @returns A promise resolving to the updated user
+ * @throws Error if the request fails
+ */
+const decrementStreakPasses = async (username: string): Promise<SafeDatabaseUser> => {
+  const res = await api.patch(`${USER_API_URL}/decrementStreakPasses`, {
+    username,
+  });
+  if (res.status !== 200) {
+    throw new Error("Error when decrementing user's streak passes.");
+  }
+  return res.data;
+};
+
 export {
   getUsers,
   getUserByUsername,
@@ -369,6 +400,8 @@ export {
   addCoins,
   reduceCoins,
   toggleProfilePrivacy,
+  toggleStreakHold,
   activatePremiumProfile,
   deactivatePremiumProfile,
+  decrementStreakPasses,
 };

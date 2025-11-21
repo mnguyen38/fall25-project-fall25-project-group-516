@@ -112,6 +112,7 @@ export const loginUser = async (loginCredentials: UserCredentials): Promise<User
 
     let newLoginStreak = 1;
     let streakHold = false;
+    let missedDays = 0;
 
     if (lastLogin) {
       const diffTime = Math.abs(now.getTime() - lastLogin.getTime());
@@ -133,6 +134,7 @@ export const loginUser = async (loginCredentials: UserCredentials): Promise<User
           // keep streak unchanged, but ensure minimum of 1
           newLoginStreak = Math.max(user.loginStreak || 1, 1);
           streakHold = true;
+          missedDays = diffDays;
         } else {
           // no streak passes or enough coins - reset to 1
           newLoginStreak = 1;
@@ -158,6 +160,7 @@ export const loginUser = async (loginCredentials: UserCredentials): Promise<User
           loginStreak: newLoginStreak,
           maxLoginStreak: newMaxStreak,
           streakHold: streakHold,
+          missedDays: missedDays,
         },
       },
     );

@@ -252,6 +252,48 @@ const userController = (socket: FakeSOSocket) => {
   };
 
   /**
+   * Toggles hold state on a user's current streak.
+   * @param req The request containing the username of the user.
+   * @param res The response, either confirming the update or returning an error.
+   * @returns a promise resolving to void.
+   */
+  const toggleStreakHold = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { username } = req.body;
+
+      if (!username) {
+        res.status(400).send('Username must be provided');
+        return;
+      }
+
+      // Get current user to toggle streak hold
+      const currentUser = await getUserByUsername(username);
+
+      if ('error' in currentUser) {
+        throw new Error(currentUser.error);
+      }
+
+      // Toggle the streakHold field
+      const updatedUser = await updateUser(username, {
+        streakHold: !currentUser.streakHold,
+      });
+
+      if ('error' in updatedUser) {
+        throw new Error(updatedUser.error);
+      }
+
+      socket.emit('userUpdate', {
+        user: updatedUser,
+        type: 'updated',
+      });
+
+      res.status(200).json(updatedUser);
+    } catch (error) {
+      res.status(500).send(`Error toggling streak hold: ${error}`);
+    }
+  };
+
+  /**
    * Uploads and updates a user's profile picture.
    * @param req The request containing the image file and username in the body.
    * @param res The response, either confirming the update or returning an error.
@@ -594,6 +636,51 @@ const userController = (socket: FakeSOSocket) => {
     }
   };
 
+  /**
+   * Decrements the number of user's streak passes by 1.
+   * @param req The request containing the username of the user.
+   * @param res The response, either confirming the update or returning an error.
+   * @returns a promise resolving to void.
+   */
+  const decrementStreakPasses = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { username } = req.body;
+
+      if (!username) {
+        res.status(400).send('Username must be provided');
+        return;
+      }
+
+      // Get current user to decrement streak passes
+      const currentUser = await getUserByUsername(username);
+
+      if ('error' in currentUser) {
+        throw new Error(currentUser.error);
+      }
+
+      if (!currentUser.streakPass || (currentUser.streakPass && currentUser.streakPass <= 0)) {
+        throw new Error('User has no streak passes to decrement.');
+      }
+      // Decrement streakPass field
+      const updatedUser = await updateUser(username, {
+        streakPass: currentUser.streakPass - 1,
+      });
+
+      if ('error' in updatedUser) {
+        throw new Error(updatedUser.error);
+      }
+
+      socket.emit('userUpdate', {
+        user: updatedUser,
+        type: 'updated',
+      });
+
+      res.status(200).json(updatedUser);
+    } catch (error) {
+      res.status(500).send(`Error decrementing user's streak passes: ${error}`);
+    }
+  };
+
   // Define routes for the user-related operations.
   router.post('/signup', createUser);
   router.post('/login', userLogin);
@@ -610,6 +697,8 @@ const userController = (socket: FakeSOSocket) => {
     uploadProfilePicture,
   );
   router.post('/uploadBannerImage', protect, upload.single('bannerImage'), uploadBannerImage);
+  router.patch('/toggleStreakHold', protect, toggleStreakHold);
+  router.patch('/decrementStreakPasses', protect, decrementStreakPasses);
   router.patch('/toggleProfilePrivacy', protect, toggleProfilePrivacy);
   router.patch('/activatePremium', protect, activatePremium);
   router.patch('/deactivatePremium', protect, deactivatePremium);

@@ -4,7 +4,7 @@ import { getLoginStatus, setLoginStatus } from '../utils/login';
 import useUserContext from './useUserContext';
 
 /**
- * Custom hook that encapsulates all logic/state for TransactionWindow Component.
+ * Custom hook that encapsulates most of the logic/state for TransactionWindow Component.
  */
 const useTransactionWindow = () => {
   const { user } = useUserContext();

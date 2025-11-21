@@ -7,6 +7,7 @@ import Footer from '../footer';
 import TransactionWindow from '../transactionWindow';
 import useTransactionWindow from '../../hooks/useTransactionWindow';
 import usePremiumTransaction from '../../hooks/usePremiumTransaction';
+import StreakRecoveryWindow from '../streakRecoveryWindow';
 
 /**
  * Main component represents the layout of the main page, including a sidebar and the main content area.
@@ -61,6 +62,8 @@ const Layout = () => {
             description={`To purchase premium membership.\nPremium members will have their questions boosted in communities and be able to turn off ads.`}
             awarded={false}
           />
+          {/* Recover streak */}
+          <StreakRecoveryWindow />
         </div>
         <RightSidebar />
       </div>
