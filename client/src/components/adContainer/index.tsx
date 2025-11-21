@@ -23,12 +23,7 @@ interface AdContainerProps {
 /**
  * AdSterra Ad Container component for banner ads
  */
-const AdContainer = ({
-  adKey,
-  width = 300,
-  height = 250,
-  className = '',
-}: AdContainerProps) => {
+const AdContainer = ({ adKey, width = 300, height = 250, className = '' }: AdContainerProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
