@@ -12,6 +12,7 @@ import * as OpenApiValidator from 'express-openapi-validator';
 import swaggerUi from 'swagger-ui-express';
 import yaml from 'yaml';
 import * as fs from 'fs';
+import * as path from 'path';
 
 import answerController from './controllers/answer.controller';
 import questionController from './controllers/question.controller';
@@ -119,6 +120,17 @@ app.use('/api/auth', openAuthorizationController());
 const openApiDocument = yaml.parse(fs.readFileSync('./openapi.yaml', 'utf8'));
 app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(openApiDocument));
 console.log('Swagger UI is available at /api/docs');
+
+// Serve static files from the clients dist folder in production
+if (process.env.MODE === 'production') {
+  const clientDistPath = path.join(__dirname, '..', 'client', 'dist');
+  app.use(express.static(clientDistPath));
+
+  // Serve index.html for all non-API routes (THIS IS THE LAST BLOCK)
+  app.get('*', (_req, res) => {
+    res.sendFile(path.join(clientDistPath, 'index.html'));
+  });
+}
 
 // Export the app instance
 export { app, server, startServer };
