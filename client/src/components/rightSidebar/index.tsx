@@ -1,6 +1,7 @@
 import './index.css';
 import { Link } from 'react-router-dom';
 import useRightSidebar from '../../hooks/useRightSidebar';
+import AdContainer from '../adContainer';
 
 const RightSidebar = () => {
   const { topCommunities, hotQuestions, loading } = useRightSidebar();
@@ -46,6 +47,9 @@ const RightSidebar = () => {
           <div className='sidebar_item'>No questions yet</div>
         )}
       </div>
+
+      {/* Ad at the bottom of right sidebar */}
+      <AdContainer zoneId='ZONE_ID_RIGHT' />
     </div>
   );
 };

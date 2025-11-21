@@ -134,7 +134,7 @@ export const loginUser = async (loginCredentials: UserCredentials): Promise<User
     // Update max streak if current streak is higher, ensuring minimum of 1
     const newMaxStreak = Math.max(newLoginStreak, user.maxLoginStreak || 0, 1);
 
-    // Update user with new login data
+    // Update user with new login data and set status to online
     await UserModel.updateOne(
       { username },
       {
@@ -142,6 +142,7 @@ export const loginUser = async (loginCredentials: UserCredentials): Promise<User
           lastLogin: now,
           loginStreak: newLoginStreak,
           maxLoginStreak: newMaxStreak,
+          status: 'online',
         },
       },
     );

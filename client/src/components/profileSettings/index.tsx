@@ -79,7 +79,15 @@ const ProfileSettings: React.FC = () => {
   const settingsDropdownRef = React.useRef<HTMLDivElement>(null);
   const statusDropdownRef = React.useRef<HTMLDivElement>(null);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    // Set status to away before logging out
+    if (userData?.username) {
+      try {
+        await updateStatus(userData.username, 'away');
+      } catch (error) {
+        // console.error('Failed to update status on logout:', error);
+      }
+    }
     setUser(null);
     removeAuthToken();
     navigate('/');

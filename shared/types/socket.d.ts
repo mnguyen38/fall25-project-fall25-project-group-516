@@ -147,18 +147,6 @@ export interface TransactionEventPayload {
 }
 
 /**
- * Interface representing the payload for a user status update event.
- * - `username`: The username of the user whose status changed.
- * - `status`: The new status of the user.
- * - `customStatus`: The custom status message (optional).
- */
-export interface UserStatusUpdatePayload {
-  username: string;
-  status: 'online' | 'busy' | 'away';
-  customStatus?: string;
-}
-
-/**
  * Interface representing the events the client can emit to the server.
  * - `makeMove`: Client can emit a move in the game.
  * - `joinGame`: Client can join a game.
@@ -183,7 +171,6 @@ export interface ClientToServerEvents {
  * - `commentUpdate`: Server sends updated comment for a question or answer.
  * - `messageUpdate`: Server sends updated message.
  * - `userUpdate`: Server sends updated user status.
- * - `userStatusUpdate`: Server sends real-time user status updates.
  * - `gameUpdate`: Server sends updated game state.
  * - `gameError`: Server sends error message related to game operation.
  * - `chatUpdate`: Server sends updated chat.
@@ -200,7 +187,6 @@ export interface ServerToClientEvents {
   commentUpdate: (comment: CommentUpdatePayload) => void;
   messageUpdate: (message: MessageUpdatePayload) => void;
   userUpdate: (user: UserUpdatePayload) => void;
-  userStatusUpdate: (status: UserStatusUpdatePayload) => void;
   gameUpdate: (game: GameUpdatePayload) => void;
   gameError: (error: GameErrorPayload) => void;
   chatUpdate: (chat: ChatUpdatePayload) => void;
@@ -208,5 +194,5 @@ export interface ServerToClientEvents {
   collectionUpdate: (community: CollectionUpdatePayload) => void;
   badgeUpdate: (badge: BadgeUpdatePayload) => void;
   badgeAwarded: (awarded: BadgeAwardedPayload) => void;
-  transactionEvent: (transaction: TransactionEventPayload) => void;
+  transactionEvent: (transaction: TransactionPayload) => void;
 }
