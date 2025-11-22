@@ -5,7 +5,6 @@ import QuestionModel from '../models/questions.model';
 import AnswerModel from '../models/answers.model';
 import CommentModel from '../models/comments.model';
 import { ObjectId } from 'mongodb';
-import { makeTransaction } from './user.service';
 
 /**
  * Creates a new badge in the database.
