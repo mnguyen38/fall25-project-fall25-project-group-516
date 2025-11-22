@@ -348,13 +348,16 @@ const readAllNotifications = async (
 
   if (res.status !== 200) {
     throw new Error('Error when marking all notifications as read');
+  }
+  return res.data;
+};
 /**
  * Toggle the hold state on user's current streak.
  * @param username The unique username of the user
  * @returns A promise resolving to the updated user
  * @throws Error if the request fails
  */
-const toggleStreakHold = async (username: string): Promise<SafeDatabaseUser> => {
+const toggleStreakHold = async (username: string): Promise<PopulatedSafeDatabaseUser> => {
   const res = await api.patch(`${USER_API_URL}/toggleStreakHold`, {
     username,
   });
@@ -369,7 +372,7 @@ const toggleStreakHold = async (username: string): Promise<SafeDatabaseUser> => 
  * @returns A promise resolving to the updated user
  * @throws Error if the request fails
  */
-const activatePremiumProfile = async (username: string): Promise<SafeDatabaseUser> => {
+const activatePremiumProfile = async (username: string): Promise<PopulatedSafeDatabaseUser> => {
   const res = await api.patch(`${USER_API_URL}/activatePremium`, { username });
 
   if (res.status !== 200) {
@@ -387,7 +390,7 @@ const activatePremiumProfile = async (username: string): Promise<SafeDatabaseUse
  * @returns A promise resolving to the updated user
  * @throws Error if the request fails
  */
-const deactivatePremiumProfile = async (username: string): Promise<SafeDatabaseUser> => {
+const deactivatePremiumProfile = async (username: string): Promise<PopulatedSafeDatabaseUser> => {
   const res = await api.patch(`${USER_API_URL}/deactivatePremium`, { username });
 
   if (res.status !== 200) {
@@ -405,7 +408,7 @@ const deactivatePremiumProfile = async (username: string): Promise<SafeDatabaseU
  * @returns A promise resolving to the updated user
  * @throws Error if the request fails
  */
-const decrementStreakPasses = async (username: string): Promise<SafeDatabaseUser> => {
+const decrementStreakPasses = async (username: string): Promise<PopulatedSafeDatabaseUser> => {
   const res = await api.patch(`${USER_API_URL}/decrementStreakPasses`, {
     username,
   });
@@ -421,7 +424,7 @@ const decrementStreakPasses = async (username: string): Promise<SafeDatabaseUser
  * @returns A promise resolving to the updated user
  * @throws Error if the request fails
  */
-const resetLoginStreak = async (username: string): Promise<SafeDatabaseUser> => {
+const resetLoginStreak = async (username: string): Promise<PopulatedSafeDatabaseUser> => {
   const res = await api.patch(`${USER_API_URL}/resetLoginStreak`, {
     username,
   });
@@ -443,7 +446,7 @@ const updateStatus = async (
   username: string,
   status: 'online' | 'busy' | 'away',
   customStatus?: string,
-): Promise<SafeDatabaseUser> => {
+): Promise<PopulatedSafeDatabaseUser> => {
   const res = await api.patch(`${USER_API_URL}/updateStatus`, {
     username,
     status,

@@ -20,7 +20,7 @@ const Header = ({ openTransactionWindow }: HeaderProps) => {
     unreadNotifications,
     handleNotifPageRedirect,
   } = useHeader();
-  
+
   const handleCoinClick = async () => {
     openTransactionWindow();
   };
@@ -49,7 +49,7 @@ const Header = ({ openTransactionWindow }: HeaderProps) => {
           {coins}
         </div>
         <div id='text'></div>
-      </div>
+      </button>
       <button className='notifications-btn' onClick={() => handleNotifPageRedirect()}>
         <div style={{ position: 'relative', display: 'inline-block' }}>
           <FiBell size={20}></FiBell>

@@ -419,6 +419,9 @@ export const readNotifications = async (
     return safeUser;
   } catch (error) {
     return { error: (error as Error).message };
+  }
+};
+
 /**
  * Updates a user's status and custom status message.
  *
@@ -438,7 +441,7 @@ export const updateUserStatus = async (
       updates.customStatus = customStatus;
     }
 
-    const updatedUser: SafeDatabaseUser | null = await UserModel.findOneAndUpdate(
+    const updatedUser: PopulatedSafeDatabaseUser | null = await UserModel.findOneAndUpdate(
       { username },
       { $set: updates },
       { new: true },
