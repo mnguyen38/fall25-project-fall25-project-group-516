@@ -1,8 +1,4 @@
-import {
-  CommunityPSA,
-  DatabaseNotification,
-  Notification,
-} from '@fake-stack-overflow/shared/types/notification';
+import { DatabaseNotification, Notification } from '@fake-stack-overflow/shared/types/notification';
 import api from './config';
 
 const NOTIFICATIONS_API_URL = `/api/notifications`;
@@ -46,20 +42,3 @@ export const sendNotification = async (
 
   return res.data;
 };
-
-export const sendPSA = async (
-  communityId: string,
-  psa: CommunityPSA,
-): Promise<DatabaseNotification[]> => {
-  const data = { communityId, psa };
-  const res = await api.post(`${NOTIFICATIONS_API_URL}/sendPSA`, data);
-
-  if (res.status !== 200) {
-    throw new Error('Error when sending PSA');
-  }
-
-  return res.data;
-};
-
-
-

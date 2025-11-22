@@ -8,7 +8,7 @@ export * from '@fake-stack-overflow/shared/types/types';
 
 export type FakeSOSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
 
-export type ModToolSections = 'users' | 'danger' | null;
+export type ModToolSections = 'users' | 'danger' | 'announcement' | null;
 
 export type ModToolConfirmation = ModToolAction | null;
 

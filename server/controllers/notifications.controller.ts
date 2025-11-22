@@ -9,6 +9,7 @@ import {
 import {
   SendNotificationRequest,
   ReadNotificationRequest,
+  DatabaseNotification,
 } from '@fake-stack-overflow/shared/types/notification';
 import NotificationModel from '../models/notifications.model';
 
@@ -57,7 +58,7 @@ const notificationController = (socket: FakeSOSocket) => {
         throw new Error('Error reading notification');
       }
 
-      socket.emit('readUpdate', { notification: readNotif });
+      socket.emit('readUpdate', { notification: readNotif as DatabaseNotification });
       res.json(readNotif);
     } catch (error) {
       res.status(500).json({ error: (error as Error).message });
@@ -73,6 +74,10 @@ const notificationController = (socket: FakeSOSocket) => {
       }
 
       const updatedNotifications = await readAllNotifications(username);
+
+      if (updatedNotifications && 'error' in updatedNotifications) {
+        throw new Error(updatedNotifications.error as string);
+      }
 
       socket.emit('readAllUpdate', { notifications: updatedNotifications });
 

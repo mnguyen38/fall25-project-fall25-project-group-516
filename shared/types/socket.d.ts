@@ -63,10 +63,6 @@ export interface NotificationPayload {
   notification: DatabaseNotification;
 }
 
-export interface AnnouncementPayload {
-  announcement: 
-}
-
 export interface ReadAllNotificationsPayload {
   notifications: DatabaseNotification[];
 }
@@ -211,5 +207,4 @@ export interface ServerToClientEvents {
   notificationUpdate: (notification: NotificationPayload) => void;
   readUpdate: (notification: NotificationPayload) => void;
   readlAllUpdate: (notifications: ReadAllNotificationsPayload) => void;
-  communityAnnouncement: (community: )
 }

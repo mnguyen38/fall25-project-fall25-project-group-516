@@ -1,10 +1,16 @@
 import { ChangeEvent, useMemo, useState } from 'react';
 import useUsersListPage from './useUsersListPage';
-import { DatabaseCommunity } from '@fake-stack-overflow/shared';
+import { DatabaseCommunity } from '../types/types';
 import { useNavigate } from 'react-router-dom';
 import useUserContext from './useUserContext';
-import { deleteCommunity, toggleBan, toggleModerator } from '../services/communityService';
+import {
+  deleteCommunity,
+  toggleBan,
+  toggleModerator,
+  sendAnnouncement,
+} from '../services/communityService';
 import { ModToolConfirmation, ModToolSections } from '../types/types';
+import { Notification } from '@fake-stack-overflow/shared/types/notification';
 
 const useModToolsModal = (community: DatabaseCommunity) => {
   const { userList } = useUsersListPage();
@@ -16,9 +22,14 @@ const useModToolsModal = (community: DatabaseCommunity) => {
 
   const [confirmAction, setConfirmAction] = useState<ModToolConfirmation>(null);
 
-  const [expandedSection, setExpandedSection] = useState<ModToolSections>(null);
+  const [expandedSection, setExpandedSection] = useState<ModToolSections | 'announcement'>(null);
 
   const [expandedUser, setExpandedUser] = useState<string | null>(null);
+
+  // Announcement State
+  const [announcementTitle, setAnnouncementTitle] = useState<string>('');
+  const [announcementMsg, setAnnouncementMsg] = useState<string>('');
+  const [announcementStatus, setAnnouncementStatus] = useState<string>('');
 
   const foundUsers = useMemo(() => {
     const query = userSearchQuery.trim().toLowerCase();
@@ -55,6 +66,34 @@ const useModToolsModal = (community: DatabaseCommunity) => {
     }
   };
 
+  const handleSendAnnouncement = async () => {
+    if (!announcementTitle.trim() || !announcementMsg.trim()) {
+      setAnnouncementStatus('Title and message are required.');
+      return;
+    }
+
+    const notification: Notification = {
+      title: announcementTitle,
+      msg: announcementMsg,
+      dateTime: new Date(),
+      sender: user.username,
+      receivers: [...community.participants],
+      contextId: community._id,
+      read: false,
+      type: 'community',
+    };
+
+    try {
+      await sendAnnouncement(community._id.toString(), user.username, notification);
+      setAnnouncementStatus('Announcement sent successfully!');
+      setAnnouncementTitle('');
+      setAnnouncementMsg('');
+      setTimeout(() => setAnnouncementStatus(''), 3000);
+    } catch (e) {
+      setAnnouncementStatus('Failed to send announcement.');
+    }
+  };
+
   return {
     userSearchQuery,
     setUserSearchQuery,
@@ -69,6 +108,12 @@ const useModToolsModal = (community: DatabaseCommunity) => {
     handleDeleteCommunity,
     handleToggleModerator,
     handleToggleBan,
+    announcementTitle,
+    setAnnouncementTitle,
+    announcementMsg,
+    setAnnouncementMsg,
+    announcementStatus,
+    handleSendAnnouncement,
   };
 };
 

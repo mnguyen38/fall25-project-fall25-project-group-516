@@ -276,7 +276,7 @@ const communityController = (socket: FakeSOSocket) => {
         return;
       }
 
-      socket.emit('communityAnnouncement', { announcement: communityAnnouncement });
+      socket.emit('notificationUpdate', { notification: communityAnnouncement });
 
       res.json(communityAnnouncement);
     } catch (error) {

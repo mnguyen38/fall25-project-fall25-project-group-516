@@ -54,15 +54,15 @@ const useNotificationsPage = () => {
 
     const handleNotificationUpdate = (notificationUpdate: NotificationPayload) => {
       const { notification } = notificationUpdate;
-      if (notification.receiver === user.username) {
+      if (notification.receivers.includes(user.username)) {
         setNotificationsList(prev => [notification, ...prev]);
       }
     };
 
     const handleReadNotificationUpdate = (notificationUpdate: NotificationPayload) => {
       const { notification } = notificationUpdate;
-      console.log(notification)
-      if (notification.receiver === user.username) {
+      console.log(notification);
+      if (notification.receivers.includes(user.username)) {
         setNotificationsList(prev =>
           prev.map(n => (n._id === notification._id ? notification : n)),
         );
@@ -73,10 +73,10 @@ const useNotificationsPage = () => {
       readAllNotificationsUpdate: ReadAllNotificationsPayload,
     ) => {
       const { notifications } = readAllNotificationsUpdate;
-      console.log(notifications)
+      console.log(notifications);
 
       // Replace prev notifications with new notification from notifications list if ids match
-      if (notifications.some(n => n.receiver === user.username)) {
+      if (notifications.some(n => n.receivers.includes(user.username))) {
         setNotificationsList(prev =>
           prev.map(n => {
             // Check if this specific notification 'n' is in the list of updated ones
