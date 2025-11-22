@@ -205,7 +205,9 @@ const ProfileSettings: React.FC = () => {
       try {
         setQuestionsLoading(true);
         const questions = await getQuestionsByUser(userData.username);
-        setUserQuestions(questions);
+        // Filter out anonymous questions from profile display
+        const nonAnonymousQuestions = questions.filter(q => !q.isAnonymous);
+        setUserQuestions(nonAnonymousQuestions);
       } catch {
         setUserQuestions([]);
       } finally {
@@ -794,7 +796,12 @@ const ProfileSettings: React.FC = () => {
             ) : userQuestions.length > 0 ? (
               <div className='user-questions-list'>
                 {userQuestions.map(question => (
-                  <Question key={question._id.toString()} question={question} />
+                  <Question
+                    key={question._id.toString()}
+                    question={question}
+                    collectionEditMode={false}
+                    onCollectionClick={() => {}}
+                  />
                 ))}
               </div>
             ) : (

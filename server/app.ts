@@ -26,6 +26,7 @@ import gameController from './controllers/game.controller';
 import collectionController from './controllers/collection.controller';
 import communityController from './controllers/community.controller';
 import badgeController from './controllers/badge.controller';
+import reportController from './controllers/report.controller';
 import openAuthorizationController from './controllers/authorization.controller';
 import protect from './middleware/token.middleware';
 
@@ -54,11 +55,55 @@ function startServer() {
   });
 }
 
+// Track user-to-socket mapping for status management
+const userSocketMap = new Map<string, string>(); // username -> socket.id
+
 socket.on('connection', socket => {
   console.log('A user connected ->', socket.id);
 
-  socket.on('disconnect', () => {
-    console.log('User disconnected');
+  // Handle user connection event
+  socket.on('userConnected', async ({ username }) => {
+    console.log(`User ${username} connected with socket ${socket.id}`);
+    userSocketMap.set(username, socket.id);
+
+    // Import updateUserStatus dynamically to avoid circular dependency
+    const { updateUserStatus } = await import('./services/user.service');
+    await updateUserStatus(username, 'online');
+
+    // Emit status update to all clients
+    socket.broadcast.emit('userStatusUpdate', {
+      username,
+      status: 'online',
+    });
+  });
+
+  socket.on('disconnect', async () => {
+    console.log('User disconnected ->', socket.id);
+
+    // Find the username associated with this socket
+    let disconnectedUsername: string | undefined;
+    for (const [username, socketId] of userSocketMap.entries()) {
+      if (socketId === socket.id) {
+        disconnectedUsername = username;
+        break;
+      }
+    }
+
+    if (disconnectedUsername) {
+      console.log(`Setting ${disconnectedUsername} status to 'away'`);
+      // Import updateUserStatus dynamically to avoid circular dependency
+      const { updateUserStatus } = await import('./services/user.service');
+      await updateUserStatus(disconnectedUsername, 'away');
+
+      // Remove from map
+      userSocketMap.delete(disconnectedUsername);
+
+      // Emit status update to all clients
+      socket.broadcast.emit('userStatusUpdate', {
+        username: disconnectedUsername,
+        status: 'away',
+      });
+    }
   });
 });
 
@@ -115,6 +160,7 @@ app.use('/api/games', protect, gameController(socket));
 app.use('/api/collection', protect, collectionController(socket));
 app.use('/api/community', protect, communityController(socket));
 app.use('/api/badge', protect, badgeController(socket));
+app.use('/api/report', protect, reportController(socket));
 app.use('/api/auth', openAuthorizationController());
 
 const openApiDocument = yaml.parse(fs.readFileSync('./openapi.yaml', 'utf8'));

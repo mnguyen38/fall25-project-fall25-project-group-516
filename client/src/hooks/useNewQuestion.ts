@@ -24,6 +24,7 @@ const useNewQuestion = () => {
   const [text, setText] = useState<string>('');
   const [tagNames, setTagNames] = useState<string>('');
   const [community, setCommunity] = useState<DatabaseCommunity | null>(null);
+  const [isAnonymous, setIsAnonymous] = useState<boolean>(false);
 
   const [titleErr, setTitleErr] = useState<string>('');
   const [textErr, setTextErr] = useState<string>('');
@@ -108,6 +109,7 @@ const useNewQuestion = () => {
       comments: [],
       community: community ? community._id : null,
       premiumStatus: user.premiumProfile ? user.premiumProfile : false,
+      isAnonymous,
     };
 
     const res = await addQuestion(question);
@@ -143,6 +145,8 @@ const useNewQuestion = () => {
     setTagNames,
     community,
     setCommunity,
+    isAnonymous,
+    setIsAnonymous,
     titleErr,
     textErr,
     tagErr,

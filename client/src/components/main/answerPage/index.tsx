@@ -26,7 +26,7 @@ const AnswerPage = () => {
       <QuestionBody
         views={question.views.length}
         text={question.text}
-        askby={question.askedBy}
+        askby={question.isAnonymous ? 'Anonymous' : question.askedBy}
         meta={getMetaData(new Date(question.askDateTime))}
       />
       <CommentSection

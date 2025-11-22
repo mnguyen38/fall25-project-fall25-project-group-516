@@ -152,12 +152,33 @@ export interface PremiumUpdatePayload {
 }
 
 /**
+ * Payload for a user connection event.
+ * - `username`: The username of the user who connected.
+ */
+export interface UserConnectedPayload {
+  username: string;
+}
+
+/**
+ * Payload for a user status update event.
+ * - `username`: The username of the user whose status changed.
+ * - `status`: The new status ('online', 'busy', 'away').
+ * - `customStatus`: Optional custom status message.
+ */
+export interface UserStatusUpdatePayload {
+  username: string;
+  status: 'online' | 'busy' | 'away';
+  customStatus?: string;
+}
+
+/**
  * Interface representing the events the client can emit to the server.
  * - `makeMove`: Client can emit a move in the game.
  * - `joinGame`: Client can join a game.
  * - `leaveGame`: Client can leave a game.
  * - `joinChat`: Client can join a chat.
  * - `leaveChat`: Client can leave a chat.
+ * - `userConnected`: Client notifies server when user connects.
  */
 export interface ClientToServerEvents {
   makeMove: (move: GameMovePayload) => void;
@@ -165,6 +186,7 @@ export interface ClientToServerEvents {
   leaveGame: (gameID: string) => void;
   joinChat: (chatID: string) => void;
   leaveChat: (chatID: string | undefined) => void;
+  userConnected: (payload: UserConnectedPayload) => void;
 }
 
 /**

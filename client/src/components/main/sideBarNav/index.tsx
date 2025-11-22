@@ -2,7 +2,6 @@ import { useState } from 'react';
 import './index.css';
 import { NavLink, useLocation } from 'react-router-dom';
 import useUserContext from '../../../hooks/useUserContext';
-import AdContainer from '../../adContainer';
 
 /**
  * The SideBarNav component has a sidebar navigation menu for all the main pages.
@@ -86,11 +85,6 @@ const SideBarNav = () => {
         className={({ isActive }) => `menu_button ${isActive ? 'menu_selected' : ''}`}>
         View Profile
       </NavLink>
-
-      {/* Ad at the bottom of left sidebar */}
-      <div style={{ marginTop: 'auto', paddingTop: '16px' }}>
-        <AdContainer adKey='6ce0373035f0ee31ed487610473bcdf9' width={160} height={600} />
-      </div>
     </div>
   );
 };

@@ -18,6 +18,8 @@ const NewQuestionPage = () => {
     setTagNames,
     communityList,
     handleDropdownChange,
+    isAnonymous,
+    setIsAnonymous,
     titleErr,
     textErr,
     tagErr,
@@ -62,6 +64,20 @@ const NewQuestionPage = () => {
           </option>
         ))}
       </select>
+      <div
+        className='anonymous_checkbox_container'
+        style={{ marginTop: '15px', marginBottom: '10px' }}>
+        <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+          <input
+            type='checkbox'
+            id='anonymousCheckbox'
+            checked={isAnonymous}
+            onChange={e => setIsAnonymous(e.target.checked)}
+            style={{ marginRight: '8px', cursor: 'pointer' }}
+          />
+          Post anonymously (your username will not be shown)
+        </label>
+      </div>
       <div className='btn_indicator_container'>
         <button
           className='form_postBtn'

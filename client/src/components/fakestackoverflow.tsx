@@ -35,8 +35,23 @@ const ProtectedRoute = ({
   socket: FakeSOSocket | null;
   children: JSX.Element;
 }) => {
-  if (!user || !socket) {
+  if (!user) {
     return <Navigate to='/' />;
+  }
+
+  // Wait for socket to connect before rendering (prevents socket-dependent features from breaking)
+  if (!socket) {
+    return (
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '100vh',
+        }}>
+        <p>Connecting...</p>
+      </div>
+    );
   }
 
   return <UserContext.Provider value={{ user, socket }}>{children}</UserContext.Provider>;
@@ -67,6 +82,13 @@ const FakeStackOverflow = ({ socket }: { socket: FakeSOSocket | null }) => {
 
     checkAuth();
   }, []);
+
+  // Notify server when user is connected via socket
+  useEffect(() => {
+    if (user && socket) {
+      socket.emit('userConnected', { username: user.username });
+    }
+  }, [user, socket]);
 
   // Show loading screen while checking authentication
   if (loading) {

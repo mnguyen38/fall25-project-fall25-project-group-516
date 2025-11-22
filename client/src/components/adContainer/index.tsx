@@ -27,38 +27,39 @@ const AdContainer = ({ adKey, width = 300, height = 250, className = '' }: AdCon
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Create atOptions configuration script
-    const configScript = document.createElement('script');
-    configScript.type = 'text/javascript';
-    configScript.text = `
-      atOptions = {
-        'key': '${adKey}',
-        'format': 'iframe',
-        'height': ${height},
-        'width': ${width},
-        'params': {}
-      };
-    `;
+    if (!containerRef.current) return;
 
-    // Create the invoke script
-    const invokeScript = document.createElement('script');
-    invokeScript.type = 'text/javascript';
-    invokeScript.src = `//www.highperformanceformat.com/${adKey}/invoke.js`;
+    const container = containerRef.current;
 
-    if (containerRef.current) {
-      containerRef.current.appendChild(configScript);
-      containerRef.current.appendChild(invokeScript);
-    }
+    // Use setTimeout to ensure ads load sequentially
+    const timer = setTimeout(() => {
+      // Create atOptions configuration script
+      const configScript = document.createElement('script');
+      configScript.type = 'text/javascript';
+      configScript.innerHTML = `
+        window.atOptions = {
+          'key': '${adKey}',
+          'format': 'iframe',
+          'height': ${height},
+          'width': ${width},
+          'params': {}
+        };
+      `;
+
+      // Create the invoke script
+      const invokeScript = document.createElement('script');
+      invokeScript.type = 'text/javascript';
+      invokeScript.src = `//www.highperformanceformat.com/${adKey}/invoke.js`;
+
+      container.appendChild(configScript);
+      container.appendChild(invokeScript);
+    }, 100);
 
     return () => {
-      // Cleanup scripts when component unmounts
-      if (containerRef.current) {
-        if (configScript.parentNode) {
-          configScript.parentNode.removeChild(configScript);
-        }
-        if (invokeScript.parentNode) {
-          invokeScript.parentNode.removeChild(invokeScript);
-        }
+      clearTimeout(timer);
+      // Cleanup: remove all script tags from container
+      while (container.firstChild) {
+        container.removeChild(container.firstChild);
       }
     };
   }, [adKey, width, height]);
