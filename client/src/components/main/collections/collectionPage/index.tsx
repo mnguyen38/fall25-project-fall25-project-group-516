@@ -29,7 +29,12 @@ const CollectionPage = () => {
 
       <div className='questions-list'>
         {collection.questions.map(q => (
-          <QuestionView question={q} key={q._id.toString()} />
+          <QuestionView
+            question={q}
+            key={q._id.toString()}
+            collectionEditMode={false}
+            onCollectionClick={() => {}}
+          />
         ))}
       </div>
     </div>

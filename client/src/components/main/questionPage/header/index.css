@@ -4,3 +4,37 @@
   font-weight: 400;
   margin-bottom: 16px;
 }
+
+/* Collection Edit Toggle Button */
+.collection-edit-toggle {
+  padding: 10px 20px;
+  font-size: 15px;
+  font-weight: 600;
+  background: var(--pancake-white, #FFFFFF);
+  color: var(--pancake-brown-medium, #8B5A3C);
+  border: 2px solid var(--pancake-brown-light, #C4886B);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.collection-edit-toggle:hover {
+  background: var(--pancake-cream, #F5E6D3);
+  border-color: var(--pancake-brown-medium, #8B5A3C);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px var(--pancake-shadow, rgba(107, 68, 35, 0.12));
+}
+
+.collection-edit-toggle.active {
+  background: var(--pancake-brown-medium, #8B5A3C);
+  color: var(--pancake-white, #FFFFFF);
+  border-color: var(--pancake-brown-dark, #6B4423);
+  box-shadow: 0 2px 8px rgba(107, 68, 35, 0.2);
+}
+
+.collection-edit-toggle.active:hover {
+  background: var(--pancake-brown-dark, #6B4423);
+  transform: translateY(-1px);
+  box-shadow: 0 3px 10px rgba(107, 68, 35, 0.3);
+}

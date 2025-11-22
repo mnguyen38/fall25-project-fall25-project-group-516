@@ -1,9 +1,12 @@
 import './index.css';
 import { Outlet } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import SideBarNav from '../main/sideBarNav';
 import RightSidebar from '../rightSidebar';
 import Header from '../header';
 import Footer from '../footer';
+import AdBlockerModal from '../adBlockerModal';
+import { detectAdBlockCombined } from '../../utils/adBlockDetector';
 import TransactionWindow from '../transactionWindow';
 import useTransactionWindow from '../../hooks/useTransactionWindow';
 import usePremiumTransaction from '../../hooks/usePremiumTransaction';
@@ -13,6 +16,25 @@ import StreakRecoveryWindow from '../streakRecoveryWindow';
  * Main component represents the layout of the main page, including a sidebar and the main content area.
  */
 const Layout = () => {
+  // Ad blocker detection
+  const [showModal, setShowModal] = useState(false);
+
+  useEffect(() => {
+    const checkAdBlock = async () => {
+      const isBlocked = await detectAdBlockCombined();
+
+      if (isBlocked) {
+        setShowModal(true);
+      }
+    };
+
+    checkAdBlock();
+  }, []);
+
+  const handleDismiss = () => {
+    setShowModal(false);
+  };
+
   // for login
   const {
     showRewardWindow,
@@ -68,6 +90,7 @@ const Layout = () => {
         <RightSidebar />
       </div>
       <Footer />
+      <AdBlockerModal isVisible={showModal} onDismiss={handleDismiss} />
     </>
   );
 };

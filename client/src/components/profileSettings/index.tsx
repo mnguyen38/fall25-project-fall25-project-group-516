@@ -7,6 +7,7 @@ import ImageUpload from '../imageUpload';
 import BadgeDisplay from '../badgeDisplay';
 import ResetPasswordModal from '../resetPasswordModal';
 import DeleteAccountModal from '../deleteAccountModal';
+import UserStatusSelector from '../userStatusSelector';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faPencil,
@@ -19,10 +20,11 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { useNavigate } from 'react-router-dom';
 import useLoginContext from '../../hooks/useLoginContext';
-import { removeAuthToken, toggleProfilePrivacy } from '../../services/userService';
+import { removeAuthToken, toggleProfilePrivacy, updateStatus } from '../../services/userService';
 import { getQuestionsByUser } from '../../services/questionService';
 import Question from '../main/questionPage/question';
 import { PopulatedDatabaseQuestion } from '../../types/types';
+import UserContext from '../../contexts/UserContext';
 
 const ProfileSettings: React.FC = () => {
   const {
@@ -55,16 +57,37 @@ const ProfileSettings: React.FC = () => {
 
   const navigate = useNavigate();
   const { setUser } = useLoginContext();
+  const AuserContext = React.useContext(UserContext);
+  const socket = AuserContext?.socket;
 
   const [showResetPasswordModal, setShowResetPasswordModal] = React.useState(false);
   const [showDeleteAccountModal, setShowDeleteAccountModal] = React.useState(false);
   const [showSettingsDropdown, setShowSettingsDropdown] = React.useState(false);
+  const [showStatusSelector, setShowStatusSelector] = React.useState(false);
   const [editMode, setEditMode] = React.useState(false);
   const [userQuestions, setUserQuestions] = React.useState<PopulatedDatabaseQuestion[]>([]);
   const [questionsLoading, setQuestionsLoading] = React.useState(false);
+  const [currentStatus, setCurrentStatus] = React.useState<'online' | 'busy' | 'away' | undefined>(
+    userData?.status,
+  );
+  const [currentCustomStatus, setCurrentCustomStatus] = React.useState<string | undefined>(
+    userData?.customStatus,
+  );
+  const [displayShowLoginStreak, setDisplayShowLoginStreak] = React.useState<boolean>(
+    userData?.showLoginStreak ?? false,
+  );
   const settingsDropdownRef = React.useRef<HTMLDivElement>(null);
+  const statusDropdownRef = React.useRef<HTMLDivElement>(null);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    // Set status to away before logging out
+    if (userData?.username) {
+      try {
+        await updateStatus(userData.username, 'away');
+      } catch (error) {
+        // console.error('Failed to update status on logout:', error);
+      }
+    }
     setUser(null);
     removeAuthToken();
     navigate('/');
@@ -82,6 +105,98 @@ const ProfileSettings: React.FC = () => {
     }
   };
 
+  const handleStatusChange = async (status: 'online' | 'busy' | 'away', customStatus: string) => {
+    if (!userData?.username) return;
+
+    try {
+      await updateStatus(userData.username, status, customStatus);
+      // Update local state immediately
+      setCurrentStatus(status);
+      setCurrentCustomStatus(customStatus);
+      setShowStatusSelector(false);
+    } catch (error) {
+      // console.error('Failed to update status:', error);
+    }
+  };
+
+  const getStatusDisplay = () => {
+    if (!currentStatus) return null;
+
+    // If profile is private and viewer is not the owner, always show "Away"
+    if (userData?.profilePrivate && !canEditProfile) {
+      return 'Away';
+    }
+
+    // If there's a custom status, show only that
+    if (currentCustomStatus) {
+      return currentCustomStatus;
+    }
+
+    // Otherwise show the default status
+    const statusConfig = {
+      online: { text: 'Online' },
+      busy: { text: 'Busy' },
+      away: { text: 'Away' },
+    };
+
+    return statusConfig[currentStatus].text;
+  };
+
+  // Sync local status state with userData
+  React.useEffect(() => {
+    if (userData) {
+      setCurrentStatus(userData.status);
+      setCurrentCustomStatus(userData.customStatus);
+      setDisplayShowLoginStreak(userData.showLoginStreak ?? false);
+    }
+  }, [userData]);
+
+  // Listen for real-time status updates via socket
+  React.useEffect(() => {
+    if (!socket || !userData) return;
+
+    const handleStatusUpdate = (payload: {
+      username: string;
+      status: 'online' | 'busy' | 'away';
+      customStatus?: string;
+    }) => {
+      // Only update if this is the user whose profile we're viewing
+      if (payload.username === userData.username) {
+        setCurrentStatus(payload.status);
+        setCurrentCustomStatus(payload.customStatus || '');
+      }
+    };
+
+    socket.on('userStatusUpdate', handleStatusUpdate);
+
+    return () => {
+      socket.off('userStatusUpdate', handleStatusUpdate);
+    };
+  }, [socket, userData]);
+
+  // Listen for real-time user updates (e.g., login streak visibility) via socket
+  React.useEffect(() => {
+    if (!socket || !userData) return;
+
+    const handleUserUpdate = (payload: {
+      user: { username: string; showLoginStreak?: boolean };
+      type: 'created' | 'deleted' | 'updated';
+    }) => {
+      // Only update if this is the user whose profile we're viewing and it's an update
+      if (payload.type === 'updated' && payload.user.username === userData.username) {
+        if (payload.user.showLoginStreak !== undefined) {
+          setDisplayShowLoginStreak(payload.user.showLoginStreak);
+        }
+      }
+    };
+
+    socket.on('userUpdate', handleUserUpdate);
+
+    return () => {
+      socket.off('userUpdate', handleUserUpdate);
+    };
+  }, [socket, userData]);
+
   // Fetch user's questions
   React.useEffect(() => {
     const fetchUserQuestions = async () => {
@@ -90,7 +205,9 @@ const ProfileSettings: React.FC = () => {
       try {
         setQuestionsLoading(true);
         const questions = await getQuestionsByUser(userData.username);
-        setUserQuestions(questions);
+        // Filter out anonymous questions from profile display
+        const nonAnonymousQuestions = questions.filter(q => !q.isAnonymous);
+        setUserQuestions(nonAnonymousQuestions);
       } catch {
         setUserQuestions([]);
       } finally {
@@ -120,6 +237,23 @@ const ProfileSettings: React.FC = () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [showSettingsDropdown]);
+
+  // Close status dropdown when clicking outside
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (statusDropdownRef.current && !statusDropdownRef.current.contains(event.target as Node)) {
+        setShowStatusSelector(false);
+      }
+    };
+
+    if (showStatusSelector) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showStatusSelector]);
 
   if (loading) {
     return (
@@ -169,7 +303,7 @@ const ProfileSettings: React.FC = () => {
                 <div className='profile-picture-section'>
                   <div className='profile-picture-wrapper'>
                     {userData.profilePicture ? (
-                      <img src={userData.profilePicture} alt={userData.username} />
+                      <img src={userData.profilePicture} alt={`${userData.username}'s profile`} />
                     ) : (
                       <div className='profile-picture-placeholder'>
                         {userData.username.charAt(0).toUpperCase()}
@@ -184,7 +318,7 @@ const ProfileSettings: React.FC = () => {
                       <h1 className='profile-name'>{userData.username}&#x1F31F;</h1>
                     )}
                     <p className='profile-username'>@{userData.username}</p>
-                    {userData.showLoginStreak &&
+                    {displayShowLoginStreak &&
                       userData.loginStreak !== undefined &&
                       userData.loginStreak > 0 && (
                         <p className='profile-login-streak'>
@@ -199,6 +333,76 @@ const ProfileSettings: React.FC = () => {
                           month: 'long',
                         })}
                       </p>
+                    )}
+                    {getStatusDisplay() && (
+                      <div className='status-dropdown-wrapper' ref={statusDropdownRef}>
+                        <p
+                          className={`profile-date ${canEditProfile ? 'profile-status-clickable' : ''}`}
+                          onClick={() => canEditProfile && setShowStatusSelector(true)}
+                          style={{ cursor: canEditProfile ? 'pointer' : 'default' }}>
+                          {getStatusDisplay()}
+                        </p>
+                        {showStatusSelector && canEditProfile && (
+                          <div className='status-dropdown'>
+                            <svg
+                              className='dropdown-shadow'
+                              width='375'
+                              height='322'
+                              viewBox='0 0 375 322'>
+                              <defs>
+                                <filter
+                                  id='blur-status'
+                                  x='-0.053211679'
+                                  width='1.1064234'
+                                  y='-0.068773585'
+                                  height='1.1375472'>
+                                  <feGaussianBlur stdDeviation='6.075' />
+                                </filter>
+                              </defs>
+                              <g transform='translate(0,120)'>
+                                <path
+                                  style={{
+                                    opacity: 0.14,
+                                    fill: 'rgba(107, 68, 35, 0.3)',
+                                    fillOpacity: 1,
+                                    stroke: 'none',
+                                    strokeWidth: 1,
+                                    filter: 'url(#blur-status)',
+                                  }}
+                                  d='M 187.5 59.5 L 176.5 70.5 L 61.107422 70.5 C 55.231364 70.5 50.5 75.229411 50.5 81.105469 L 50.5 260.89258 C 50.5 266.76864 55.231364 271.5 61.107422 271.5 L 187.5 271.5 L 313.89453 271.5 C 319.77059 271.5 324.5 266.76864 324.5 260.89258 L 324.5 81.105469 C 324.5 75.229411 319.77059 70.5 313.89453 70.5 L 198.5 70.5 L 187.5 59.5 z '
+                                  transform='translate(0,-120)'
+                                />
+                              </g>
+                            </svg>
+                            <svg
+                              className='dropdown-container'
+                              width='275'
+                              height='242'
+                              viewBox='0 0 275 242'>
+                              <g transform='translate(0,20)'>
+                                <path
+                                  className='dropdown-border'
+                                  fill='transparent'
+                                  strokeWidth='1.5'
+                                  d='m 137.5,221.5003 h -126.393699 c -5.8760576,0 -10.606602,-4.73054 -10.606602,-10.6066 v -199.787399 c 0,-5.8760576 4.7305444,-10.606602 10.606602,-10.606602 h 115.393699 l 11,-10.999699'
+                                />
+                                <path
+                                  className='dropdown-border'
+                                  fill='transparent'
+                                  strokeWidth='1.5'
+                                  d='m 137.5,-10.5 11,10.999699 h 115.3937 c 5.87606,0 10.6066,4.7305444 10.6066,10.606602 v 199.787399 c 0,5.87606 -4.73054,10.6066 -10.6066,10.6066 h -126.3937'
+                                />
+                              </g>
+                            </svg>
+                            <UserStatusSelector
+                              currentStatus={currentStatus}
+                              currentCustomStatus={currentCustomStatus}
+                              onStatusChange={handleStatusChange}
+                              inline={true}
+                            />
+                          </div>
+                        )}
+                      </div>
                     )}
                   </div>
                 </div>
@@ -226,46 +430,100 @@ const ProfileSettings: React.FC = () => {
                       </button>
                       {showSettingsDropdown && (
                         <div className='settings-dropdown'>
-                          <button
-                            className='dropdown-item'
-                            onClick={() => {
-                              setShowSettingsDropdown(false);
-                              handleTogglePrivacy();
-                            }}>
-                            <FontAwesomeIcon icon={userData?.profilePrivate ? faEye : faEyeSlash} />
-                            <span>
-                              {userData?.profilePrivate
-                                ? 'Make Profile Public'
-                                : 'Make Profile Private'}
-                            </span>
-                          </button>
-                          <button
-                            className='dropdown-item'
-                            onClick={() => {
-                              setShowSettingsDropdown(false);
-                              setShowResetPasswordModal(true);
-                            }}>
-                            <FontAwesomeIcon icon={faKey} />
-                            <span>Reset Password</span>
-                          </button>
-                          <button
-                            className='dropdown-item'
-                            onClick={() => {
-                              setShowSettingsDropdown(false);
-                              handleLogout();
-                            }}>
-                            <FontAwesomeIcon icon={faRightFromBracket} />
-                            <span>Log Out</span>
-                          </button>
-                          <button
-                            className='dropdown-item dropdown-item-danger'
-                            onClick={() => {
-                              setShowSettingsDropdown(false);
-                              setShowDeleteAccountModal(true);
-                            }}>
-                            <FontAwesomeIcon icon={faTrash} />
-                            <span>Delete Account</span>
-                          </button>
+                          <svg
+                            className='dropdown-shadow'
+                            width='375'
+                            height='322'
+                            viewBox='0 0 375 322'>
+                            <defs>
+                              <filter
+                                id='blur-settings'
+                                x='-0.053211679'
+                                width='1.1064234'
+                                y='-0.068773585'
+                                height='1.1375472'>
+                                <feGaussianBlur stdDeviation='6.075' />
+                              </filter>
+                            </defs>
+                            <g transform='translate(0,120)'>
+                              <path
+                                style={{
+                                  opacity: 0.14,
+                                  fill: 'rgba(107, 68, 35, 0.3)',
+                                  fillOpacity: 1,
+                                  stroke: 'none',
+                                  strokeWidth: 1,
+                                  filter: 'url(#blur-settings)',
+                                }}
+                                d='M 187.5 59.5 L 176.5 70.5 L 61.107422 70.5 C 55.231364 70.5 50.5 75.229411 50.5 81.105469 L 50.5 260.89258 C 50.5 266.76864 55.231364 271.5 61.107422 271.5 L 187.5 271.5 L 313.89453 271.5 C 319.77059 271.5 324.5 266.76864 324.5 260.89258 L 324.5 81.105469 C 324.5 75.229411 319.77059 70.5 313.89453 70.5 L 198.5 70.5 L 187.5 59.5 z '
+                                transform='translate(0,-120)'
+                              />
+                            </g>
+                          </svg>
+                          <svg
+                            className='dropdown-container'
+                            width='275'
+                            height='242'
+                            viewBox='0 0 275 242'>
+                            <g transform='translate(0,20)'>
+                              <path
+                                className='dropdown-border'
+                                fill='transparent'
+                                strokeWidth='1.5'
+                                d='m 137.5,221.5003 h -126.393699 c -5.8760576,0 -10.606602,-4.73054 -10.606602,-10.6066 v -199.787399 c 0,-5.8760576 4.7305444,-10.606602 10.606602,-10.606602 h 115.393699 l 11,-10.999699'
+                              />
+                              <path
+                                className='dropdown-border'
+                                fill='transparent'
+                                strokeWidth='1.5'
+                                d='m 137.5,-10.5 11,10.999699 h 115.3937 c 5.87606,0 10.6066,4.7305444 10.6066,10.606602 v 199.787399 c 0,5.87606 -4.73054,10.6066 -10.6066,10.6066 h -126.3937'
+                              />
+                            </g>
+                          </svg>
+                          <div className='dropdown-contents'>
+                            <button
+                              className='dropdown-item'
+                              onClick={() => {
+                                setShowSettingsDropdown(false);
+                                handleTogglePrivacy();
+                              }}>
+                              <FontAwesomeIcon
+                                icon={userData?.profilePrivate ? faEye : faEyeSlash}
+                              />
+                              <span>
+                                {userData?.profilePrivate
+                                  ? 'Make Profile Public'
+                                  : 'Make Profile Private'}
+                              </span>
+                            </button>
+                            <button
+                              className='dropdown-item'
+                              onClick={() => {
+                                setShowSettingsDropdown(false);
+                                setShowResetPasswordModal(true);
+                              }}>
+                              <FontAwesomeIcon icon={faKey} />
+                              <span>Reset Password</span>
+                            </button>
+                            <button
+                              className='dropdown-item'
+                              onClick={() => {
+                                setShowSettingsDropdown(false);
+                                handleLogout();
+                              }}>
+                              <FontAwesomeIcon icon={faRightFromBracket} />
+                              <span>Log Out</span>
+                            </button>
+                            <button
+                              className='dropdown-item dropdown-item-danger'
+                              onClick={() => {
+                                setShowSettingsDropdown(false);
+                                setShowDeleteAccountModal(true);
+                              }}>
+                              <FontAwesomeIcon icon={faTrash} />
+                              <span>Delete Account</span>
+                            </button>
+                          </div>
                         </div>
                       )}
                     </div>
@@ -299,8 +557,11 @@ const ProfileSettings: React.FC = () => {
                 <div className='profile-picture-section'>
                   {/* Profile Picture - Editable */}
                   <div className='profile-picture-wrapper editable-picture'>
-                    {profileImageUrl ? (
-                      <img src={profileImageUrl} alt={userData.username} />
+                    {profileImageUrl || userData.profilePicture ? (
+                      <img
+                        src={profileImageUrl || userData.profilePicture}
+                        alt={`${userData.username}'s profile`}
+                      />
                     ) : (
                       <div className='profile-picture-placeholder'>
                         {userData.username.charAt(0).toUpperCase()}
@@ -343,6 +604,76 @@ const ProfileSettings: React.FC = () => {
                         })}
                       </p>
                     )}
+                    {getStatusDisplay() && (
+                      <div className='status-dropdown-wrapper' ref={statusDropdownRef}>
+                        <p
+                          className='profile-date profile-status-clickable'
+                          onClick={() => setShowStatusSelector(true)}
+                          style={{ cursor: 'pointer' }}>
+                          {getStatusDisplay()}
+                        </p>
+                        {showStatusSelector && (
+                          <div className='status-dropdown'>
+                            <svg
+                              className='dropdown-shadow'
+                              width='375'
+                              height='322'
+                              viewBox='0 0 375 322'>
+                              <defs>
+                                <filter
+                                  id='blur-status-edit'
+                                  x='-0.053211679'
+                                  width='1.1064234'
+                                  y='-0.068773585'
+                                  height='1.1375472'>
+                                  <feGaussianBlur stdDeviation='6.075' />
+                                </filter>
+                              </defs>
+                              <g transform='translate(0,120)'>
+                                <path
+                                  style={{
+                                    opacity: 0.14,
+                                    fill: 'rgba(107, 68, 35, 0.3)',
+                                    fillOpacity: 1,
+                                    stroke: 'none',
+                                    strokeWidth: 1,
+                                    filter: 'url(#blur-status-edit)',
+                                  }}
+                                  d='M 187.5 59.5 L 176.5 70.5 L 61.107422 70.5 C 55.231364 70.5 50.5 75.229411 50.5 81.105469 L 50.5 260.89258 C 50.5 266.76864 55.231364 271.5 61.107422 271.5 L 187.5 271.5 L 313.89453 271.5 C 319.77059 271.5 324.5 266.76864 324.5 260.89258 L 324.5 81.105469 C 324.5 75.229411 319.77059 70.5 313.89453 70.5 L 198.5 70.5 L 187.5 59.5 z '
+                                  transform='translate(0,-120)'
+                                />
+                              </g>
+                            </svg>
+                            <svg
+                              className='dropdown-container'
+                              width='275'
+                              height='242'
+                              viewBox='0 0 275 242'>
+                              <g transform='translate(0,20)'>
+                                <path
+                                  className='dropdown-border'
+                                  fill='transparent'
+                                  strokeWidth='1.5'
+                                  d='m 137.5,221.5003 h -126.393699 c -5.8760576,0 -10.606602,-4.73054 -10.606602,-10.6066 v -199.787399 c 0,-5.8760576 4.7305444,-10.606602 10.606602,-10.606602 h 115.393699 l 11,-10.999699'
+                                />
+                                <path
+                                  className='dropdown-border'
+                                  fill='transparent'
+                                  strokeWidth='1.5'
+                                  d='m 137.5,-10.5 11,10.999699 h 115.3937 c 5.87606,0 10.6066,4.7305444 10.6066,10.606602 v 199.787399 c 0,5.87606 -4.73054,10.6066 -10.6066,10.6066 h -126.3937'
+                                />
+                              </g>
+                            </svg>
+                            <UserStatusSelector
+                              currentStatus={currentStatus}
+                              currentCustomStatus={currentCustomStatus}
+                              onStatusChange={handleStatusChange}
+                              inline={true}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -379,18 +710,20 @@ const ProfileSettings: React.FC = () => {
         </div>
 
         {/* Biography Section */}
-        <div className='profile-card'>
-          <div className='profile-section'>
-            <div className='section-header'>
+        <div className='profile-card about-card'>
+          <div className='profile-section about-section'>
+            <div className='section-header about-header'>
               <h2 className='section-title'>About</h2>
               {canEditProfile && !editBioMode && (
                 <button
-                  className='button button-secondary'
+                  className='edit-icon-btn'
                   onClick={() => {
                     setEditBioMode(true);
                     setNewBio(userData.biography || '');
-                  }}>
-                  Edit
+                  }}
+                  title='Edit about section'
+                  aria-label='Edit about section'>
+                  <FontAwesomeIcon icon={faPencil} />
                 </button>
               )}
             </div>
@@ -463,7 +796,12 @@ const ProfileSettings: React.FC = () => {
             ) : userQuestions.length > 0 ? (
               <div className='user-questions-list'>
                 {userQuestions.map(question => (
-                  <Question key={question._id.toString()} question={question} />
+                  <Question
+                    key={question._id.toString()}
+                    question={question}
+                    collectionEditMode={false}
+                    onCollectionClick={() => {}}
+                  />
                 ))}
               </div>
             ) : (

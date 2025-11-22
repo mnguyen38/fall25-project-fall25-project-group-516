@@ -138,6 +138,9 @@
 }
 
 .member-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
   padding: var(--spacing-md) var(--spacing-md);
   border-bottom: 1px solid var(--pancake-border);
   font-size: 14px;
@@ -192,6 +195,41 @@
 .username {
   font-weight: 500;
   color: var(--pancake-text-dark);
+  flex: 1;
+}
+
+/* Report button */
+.report-button {
+  margin-left: auto;
+  padding: 4px 8px;
+  background-color: transparent;
+  border: 1px solid var(--pancake-border);
+  border-radius: var(--radius-sm);
+  color: var(--pancake-text-medium);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+}
+
+.report-button:hover {
+  background-color: #fde8e8;
+  border-color: #dc2626;
+  color: #dc2626;
+  transform: scale(1.05);
+}
+
+.report-button:active {
+  transform: scale(0.95);
+}
+
+.report-button:focus-visible {
+  outline: 2px solid var(--pancake-brown-medium);
+  outline-offset: 2px;
 }
 
 .member-item.admin-member {

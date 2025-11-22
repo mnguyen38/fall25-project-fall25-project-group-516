@@ -1,0 +1,188 @@
+/* Ad Blocker Modal Overlay - Pancake Theme */
+.adblocker-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(61, 40, 23, 0.85);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Modal Container */
+.adblocker-modal {
+  background: var(--pancake-white, #FFFFFF);
+  border-radius: 12px;
+  max-width: 600px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 40px rgba(107, 68, 35, 0.3);
+  border: 3px solid var(--pancake-brown-light, #C4886B);
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Header */
+.adblocker-header {
+  background: linear-gradient(135deg, var(--pancake-brown-dark, #6B4423) 0%, var(--pancake-brown-medium, #8B5A3C) 100%);
+  color: var(--pancake-white, #FFFFFF);
+  padding: 24px 32px;
+  border-radius: 8px 8px 0 0;
+  border-bottom: 3px solid var(--pancake-brown-light, #C4886B);
+}
+
+.adblocker-header h2 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Content */
+.adblocker-content {
+  padding: 32px;
+  color: var(--pancake-text-dark, #3D2817);
+  line-height: 1.6;
+  background: var(--pancake-cream, #F5E6D3);
+}
+
+.adblocker-message {
+  margin: 0 0 16px 0;
+  font-size: 16px;
+  color: var(--pancake-text-medium, #6B4423);
+}
+
+/* Steps Section */
+.adblocker-steps {
+  background: var(--pancake-white, #FFFFFF);
+  border-left: 4px solid var(--pancake-brown-medium, #8B5A3C);
+  padding: 20px 24px;
+  margin: 24px 0;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px var(--pancake-shadow, rgba(107, 68, 35, 0.12));
+}
+
+.adblocker-steps h3 {
+  margin: 0 0 12px 0;
+  font-size: 18px;
+  color: var(--pancake-brown-dark, #6B4423);
+  font-weight: 700;
+}
+
+.adblocker-steps ol {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.adblocker-steps li {
+  margin: 8px 0;
+  font-size: 15px;
+  color: var(--pancake-text-medium, #6B4423);
+}
+
+/* Thank You Message */
+.adblocker-thank-you {
+  margin: 16px 0 0 0;
+  font-size: 15px;
+  color: var(--pancake-brown-medium, #8B5A3C);
+  font-weight: 600;
+  text-align: center;
+}
+
+/* Actions */
+.adblocker-actions {
+  padding: 0 32px 32px 32px;
+  display: flex;
+  justify-content: center;
+  background: var(--pancake-cream, #F5E6D3);
+}
+
+.adblocker-dismiss-btn {
+  background: var(--pancake-accent, #D4A574);
+  color: var(--pancake-white, #FFFFFF);
+  border: 2px solid var(--pancake-brown-light, #C4886B);
+  padding: 12px 32px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(107, 68, 35, 0.2);
+}
+
+.adblocker-dismiss-btn:hover {
+  background: var(--pancake-brown-light, #C4886B);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(107, 68, 35, 0.3);
+}
+
+.adblocker-dismiss-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(107, 68, 35, 0.2);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .adblocker-modal {
+    width: 95%;
+    margin: 20px;
+  }
+
+  .adblocker-header {
+    padding: 20px 24px;
+  }
+
+  .adblocker-header h2 {
+    font-size: 20px;
+  }
+
+  .adblocker-content {
+    padding: 24px;
+  }
+
+  .adblocker-message {
+    font-size: 15px;
+  }
+
+  .adblocker-steps {
+    padding: 16px 20px;
+  }
+
+  .adblocker-steps h3 {
+    font-size: 16px;
+  }
+
+  .adblocker-steps li {
+    font-size: 14px;
+  }
+
+  .adblocker-actions {
+    padding: 0 24px 24px 24px;
+  }
+}

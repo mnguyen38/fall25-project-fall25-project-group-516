@@ -12,6 +12,7 @@ import * as OpenApiValidator from 'express-openapi-validator';
 import swaggerUi from 'swagger-ui-express';
 import yaml from 'yaml';
 import * as fs from 'fs';
+import * as path from 'path';
 
 import answerController from './controllers/answer.controller';
 import questionController from './controllers/question.controller';
@@ -25,6 +26,7 @@ import gameController from './controllers/game.controller';
 import collectionController from './controllers/collection.controller';
 import communityController from './controllers/community.controller';
 import badgeController from './controllers/badge.controller';
+import reportController from './controllers/report.controller';
 import openAuthorizationController from './controllers/authorization.controller';
 import protect from './middleware/token.middleware';
 
@@ -53,11 +55,55 @@ function startServer() {
   });
 }
 
+// Track user-to-socket mapping for status management
+const userSocketMap = new Map<string, string>(); // username -> socket.id
+
 socket.on('connection', socket => {
   console.log('A user connected ->', socket.id);
 
-  socket.on('disconnect', () => {
-    console.log('User disconnected');
+  // Handle user connection event
+  socket.on('userConnected', async ({ username }) => {
+    console.log(`User ${username} connected with socket ${socket.id}`);
+    userSocketMap.set(username, socket.id);
+
+    // Import updateUserStatus dynamically to avoid circular dependency
+    const { updateUserStatus } = await import('./services/user.service');
+    await updateUserStatus(username, 'online');
+
+    // Emit status update to all clients
+    socket.broadcast.emit('userStatusUpdate', {
+      username,
+      status: 'online',
+    });
+  });
+
+  socket.on('disconnect', async () => {
+    console.log('User disconnected ->', socket.id);
+
+    // Find the username associated with this socket
+    let disconnectedUsername: string | undefined;
+    for (const [username, socketId] of userSocketMap.entries()) {
+      if (socketId === socket.id) {
+        disconnectedUsername = username;
+        break;
+      }
+    }
+
+    if (disconnectedUsername) {
+      console.log(`Setting ${disconnectedUsername} status to 'away'`);
+      // Import updateUserStatus dynamically to avoid circular dependency
+      const { updateUserStatus } = await import('./services/user.service');
+      await updateUserStatus(disconnectedUsername, 'away');
+
+      // Remove from map
+      userSocketMap.delete(disconnectedUsername);
+
+      // Emit status update to all clients
+      socket.broadcast.emit('userStatusUpdate', {
+        username: disconnectedUsername,
+        status: 'away',
+      });
+    }
   });
 });
 
@@ -114,11 +160,23 @@ app.use('/api/games', protect, gameController(socket));
 app.use('/api/collection', protect, collectionController(socket));
 app.use('/api/community', protect, communityController(socket));
 app.use('/api/badge', protect, badgeController(socket));
+app.use('/api/report', protect, reportController(socket));
 app.use('/api/auth', openAuthorizationController());
 
 const openApiDocument = yaml.parse(fs.readFileSync('./openapi.yaml', 'utf8'));
 app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(openApiDocument));
 console.log('Swagger UI is available at /api/docs');
+
+// Serve static files from the clients dist folder in production
+if (process.env.MODE === 'production') {
+  const clientDistPath = path.join(__dirname, '..', 'client', 'dist');
+  app.use(express.static(clientDistPath));
+
+  // Serve index.html for all non-API routes (THIS IS THE LAST BLOCK)
+  app.get('*', (_req, res) => {
+    res.sendFile(path.join(clientDistPath, 'index.html'));
+  });
+}
 
 // Export the app instance
 export { app, server, startServer };
