@@ -1,6 +1,5 @@
 import { ObjectId } from 'mongodb';
 import { Request } from 'express';
-import { Notification } from './notification';
 
 /**
  * Represents a Community (unpopulated).
@@ -82,18 +81,8 @@ export interface DeleteCommunityRequest extends CommunityIdRequest {
   };
 }
 
-export interface CommunityAnnouncementRequest extends Request {
-  body: {
-    communityId: string;
-    managerUsername: string;
-    announcement: Notification;
-  };
-}
-
 /**
  * Type for community operation responses
  * Either returns a DatabaseCommunity (successful operation) or an error message
  */
 export type CommunityResponse = DatabaseCommunity | { error: string };
-
-export type CommunityRole = 'participant' | 'moderator' | 'admin';

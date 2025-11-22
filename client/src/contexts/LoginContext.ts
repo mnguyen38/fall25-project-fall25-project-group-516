@@ -1,5 +1,5 @@
 import { createContext } from 'react';
-import { PopulatedSafeDatabaseUser } from '../types/types';
+import { SafeDatabaseUser } from '../types/types';
 
 /**
  * Interface representing the context type for user login management.
@@ -9,7 +9,7 @@ import { PopulatedSafeDatabaseUser } from '../types/types';
  *             to indicate no user is logged in.
  */
 export interface LoginContextType {
-  setUser: (user: PopulatedSafeDatabaseUser | null) => void;
+  setUser: (user: SafeDatabaseUser | null) => void;
 }
 
 const LoginContext = createContext<LoginContextType | null>(null);

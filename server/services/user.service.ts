@@ -1,7 +1,7 @@
 import UserModel from '../models/users.model';
 import {
   DatabaseUser,
-  PopulatedSafeDatabaseUser,
+  SafeDatabaseUser,
   User,
   UserCredentials,
   UserResponse,
@@ -9,7 +9,6 @@ import {
   OAuthUserProfile,
   UserRolesResponse,
 } from '../types/types';
-import { populateDocument, populateUser } from '../utils/database.util';
 
 /**
  * Saves a new user to the database.
@@ -34,7 +33,7 @@ export const saveUser = async (user: User): Promise<UserResponse> => {
       throw Error('Failed to create user');
     }
 
-    const safeUser: PopulatedSafeDatabaseUser = {
+    const safeUser: SafeDatabaseUser = {
       _id: result._id,
       username: result.username,
       dateJoined: result.dateJoined,
@@ -58,9 +57,7 @@ export const saveUser = async (user: User): Promise<UserResponse> => {
  */
 export const getUserByUsername = async (username: string): Promise<UserResponse> => {
   try {
-    const user: PopulatedSafeDatabaseUser | null = await UserModel.findOne({ username }).select(
-      '-password',
-    );
+    const user: SafeDatabaseUser | null = await UserModel.findOne({ username }).select('-password');
 
     if (!user) {
       throw Error('User not found');
@@ -80,7 +77,7 @@ export const getUserByUsername = async (username: string): Promise<UserResponse>
  */
 export const getUsersList = async (): Promise<UsersResponse> => {
   try {
-    const users: PopulatedSafeDatabaseUser[] = await UserModel.find().select('-password');
+    const users: SafeDatabaseUser[] = await UserModel.find().select('-password');
 
     if (!users) {
       throw Error('Users could not be retrieved');
@@ -150,13 +147,15 @@ export const loginUser = async (loginCredentials: UserCredentials): Promise<User
     );
 
     // Get updated user without password
-    const updatedUser = await populateUser(user._id.toString());
+    const updatedUser: SafeDatabaseUser | null = await UserModel.findOne({ username }).select(
+      '-password',
+    );
 
     if (!updatedUser) {
       throw Error('Failed to retrieve updated user');
     }
 
-    return updatedUser as PopulatedSafeDatabaseUser;
+    return updatedUser;
   } catch (error) {
     return { error: `Error occurred when authenticating user: ${error}` };
   }
@@ -170,7 +169,7 @@ export const loginUser = async (loginCredentials: UserCredentials): Promise<User
  */
 export const deleteUserByUsername = async (username: string): Promise<UserResponse> => {
   try {
-    const deletedUser: PopulatedSafeDatabaseUser | null = await UserModel.findOneAndDelete({
+    const deletedUser: SafeDatabaseUser | null = await UserModel.findOneAndDelete({
       username,
     }).select('-password');
 
@@ -196,7 +195,7 @@ export const updateUser = async (
   updates: Partial<User>,
 ): Promise<UserResponse> => {
   try {
-    const updatedUser: PopulatedSafeDatabaseUser | null = await UserModel.findOneAndUpdate(
+    const updatedUser: SafeDatabaseUser | null = await UserModel.findOneAndUpdate(
       { username },
       { $set: updates },
       { new: true },
@@ -227,7 +226,7 @@ export const findOrCreateOAuthUser = async (
   profile: OAuthUserProfile,
 ): Promise<UserResponse> => {
   try {
-    const user: PopulatedSafeDatabaseUser | null = await UserModel.findOne({
+    const user: SafeDatabaseUser | null = await UserModel.findOne({
       oauthProvider,
       oauthId,
     }).select('-password');
@@ -237,7 +236,7 @@ export const findOrCreateOAuthUser = async (
     }
 
     if (profile.email) {
-      const existingUserByEmail: PopulatedSafeDatabaseUser | null = await UserModel.findOne({
+      const existingUserByEmail: SafeDatabaseUser | null = await UserModel.findOne({
         email: profile.email,
       }).select('-password');
 
@@ -333,7 +332,7 @@ export const makeTransaction = async (
       }
     }
 
-    const updatedUser: PopulatedSafeDatabaseUser | null = await UserModel.findOneAndUpdate(
+    const updatedUser: SafeDatabaseUser | null = await UserModel.findOneAndUpdate(
       { username },
       {
         $set: {

@@ -1,12 +1,12 @@
 import axios from 'axios';
-import { UserCredentials, PopulatedSafeDatabaseUser } from '../types/types';
+import { UserCredentials, SafeDatabaseUser } from '../types/types';
 import api from './config';
 import { setAuthToken, getAuthToken, removeAuthToken } from '../utils/auth';
 
 const USER_API_URL = `/api/user`;
 
 interface AuthResponse {
-  user: PopulatedSafeDatabaseUser;
+  user: SafeDatabaseUser;
   token: string;
 }
 
@@ -18,7 +18,7 @@ export { setAuthToken, getAuthToken, removeAuthToken };
  *
  * @throws Error if there is an issue fetching users.
  */
-const getUsers = async (): Promise<PopulatedSafeDatabaseUser[]> => {
+const getUsers = async (): Promise<SafeDatabaseUser[]> => {
   const res = await api.get(`${USER_API_URL}/getUsers`);
   if (res.status !== 200) {
     throw new Error('Error when fetching users');
@@ -31,7 +31,7 @@ const getUsers = async (): Promise<PopulatedSafeDatabaseUser[]> => {
  *
  * @throws Error if there is an issue fetching users.
  */
-const getUserByUsername = async (username: string): Promise<PopulatedSafeDatabaseUser> => {
+const getUserByUsername = async (username: string): Promise<SafeDatabaseUser> => {
   const res = await api.get(`${USER_API_URL}/getUser/${username}`);
   if (res.status !== 200) {
     throw new Error('Error when fetching user');
@@ -46,7 +46,7 @@ const getUserByUsername = async (username: string): Promise<PopulatedSafeDatabas
  * @returns {Promise<User>} The newly created user object.
  * @throws {Error} If an error occurs during the signup process.
  */
-const createUser = async (user: UserCredentials): Promise<PopulatedSafeDatabaseUser> => {
+const createUser = async (user: UserCredentials): Promise<SafeDatabaseUser> => {
   try {
     const res = await api.post<AuthResponse>(`${USER_API_URL}/signup`, user);
     // Store the token in localStorage
@@ -68,7 +68,7 @@ const createUser = async (user: UserCredentials): Promise<PopulatedSafeDatabaseU
  * @returns {Promise<User>} The authenticated user object.
  * @throws {Error} If an error occurs during the login process.
  */
-const loginUser = async (user: UserCredentials): Promise<PopulatedSafeDatabaseUser> => {
+const loginUser = async (user: UserCredentials): Promise<SafeDatabaseUser> => {
   try {
     const res = await api.post<AuthResponse>(`${USER_API_URL}/login`, user);
 
@@ -90,14 +90,14 @@ const loginUser = async (user: UserCredentials): Promise<PopulatedSafeDatabaseUs
  * @returns The user object if token is valid, null otherwise
  * @throws Error if verification fails
  */
-const verifyStoredToken = async (): Promise<PopulatedSafeDatabaseUser | null> => {
+const verifyStoredToken = async (): Promise<SafeDatabaseUser | null> => {
   try {
     const token = getAuthToken();
     if (!token) {
       return null;
     }
 
-    const res = await api.get<{ user: PopulatedSafeDatabaseUser }>(`${USER_API_URL}/verify-token`, {
+    const res = await api.get<{ user: SafeDatabaseUser }>(`${USER_API_URL}/verify-token`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -120,7 +120,7 @@ const verifyStoredToken = async (): Promise<PopulatedSafeDatabaseUser | null> =>
  * @returns A promise that resolves to the deleted user data
  * @throws {Error} If the request to the server is unsuccessful
  */
-const deleteUser = async (username: string): Promise<PopulatedSafeDatabaseUser> => {
+const deleteUser = async (username: string): Promise<SafeDatabaseUser> => {
   const res = await api.delete(`${USER_API_URL}/deleteUser/${username}`);
   if (res.status !== 200) {
     throw new Error('Error when deleting user');
@@ -140,7 +140,7 @@ const addCoins = async (
   username: string,
   cost: number,
   description?: string,
-): Promise<PopulatedSafeDatabaseUser> => {
+): Promise<SafeDatabaseUser> => {
   const res = await api.patch(`${USER_API_URL}/addCoins`, {
     username,
     cost,
@@ -164,7 +164,7 @@ const reduceCoins = async (
   username: string,
   cost: number,
   description?: string,
-): Promise<PopulatedSafeDatabaseUser> => {
+): Promise<SafeDatabaseUser> => {
   const res = await api.patch(`${USER_API_URL}/reduceCoins`, {
     username,
     cost,
@@ -183,10 +183,7 @@ const reduceCoins = async (
  * @returns A promise that resolves to the updated user data
  * @throws {Error} If the request to the server is unsuccessful
  */
-const resetPassword = async (
-  username: string,
-  newPassword: string,
-): Promise<PopulatedSafeDatabaseUser> => {
+const resetPassword = async (username: string, newPassword: string): Promise<SafeDatabaseUser> => {
   const res = await api.patch(`${USER_API_URL}/resetPassword`, {
     username,
     password: newPassword,
@@ -207,7 +204,7 @@ const resetPassword = async (
 const updateBiography = async (
   username: string,
   newBiography: string,
-): Promise<PopulatedSafeDatabaseUser> => {
+): Promise<SafeDatabaseUser> => {
   const res = await api.patch(`${USER_API_URL}/updateBiography`, {
     username,
     biography: newBiography,
@@ -228,7 +225,7 @@ const updateBiography = async (
 const updateShowLoginStreak = async (
   username: string,
   showLoginStreak: boolean,
-): Promise<PopulatedSafeDatabaseUser> => {
+): Promise<SafeDatabaseUser> => {
   const res = await api.patch(`${USER_API_URL}/updateShowLoginStreak`, {
     username,
     showLoginStreak,
@@ -251,7 +248,7 @@ const uploadProfilePicture = async (
   username: string,
   file: File,
   cropData?: { x: number; y: number; width: number; height: number },
-): Promise<PopulatedSafeDatabaseUser> => {
+): Promise<SafeDatabaseUser> => {
   const formData = new FormData();
   formData.append('profilePicture', file);
   formData.append('username', username);
@@ -282,7 +279,7 @@ const uploadBannerImage = async (
   username: string,
   file: File,
   cropData?: { x: number; y: number; width: number; height: number },
-): Promise<PopulatedSafeDatabaseUser> => {
+): Promise<SafeDatabaseUser> => {
   const formData = new FormData();
   formData.append('bannerImage', file);
   formData.append('username', username);
@@ -307,7 +304,7 @@ const uploadBannerImage = async (
  * @returns A promise resolving to the updated user
  * @throws Error if the request fails
  */
-const toggleProfilePrivacy = async (username: string): Promise<PopulatedSafeDatabaseUser> => {
+const toggleProfilePrivacy = async (username: string): Promise<SafeDatabaseUser> => {
   const res = await api.patch(`${USER_API_URL}/toggleProfilePrivacy`, {
     username,
   });

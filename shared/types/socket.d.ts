@@ -2,7 +2,7 @@ import { PopulatedDatabaseAnswer } from './answer';
 import { PopulatedDatabaseChat } from './chat';
 import { DatabaseMessage } from './message';
 import { PopulatedDatabaseQuestion } from './question';
-import { PopulatedSafeDatabaseUser } from './user';
+import { SafeDatabaseUser } from './user';
 import { BaseMove, GameInstance, GameInstanceID, GameMove, GameState } from './game';
 import { DatabaseCommunity } from './community';
 import { PopulatedDatabaseCollection } from './collection';
@@ -63,14 +63,6 @@ export interface NotificationPayload {
   notification: DatabaseNotification;
 }
 
-export interface AnnouncementPayload {
-  announcement: 
-}
-
-export interface ReadAllNotificationsPayload {
-  notifications: DatabaseNotification[];
-}
-
 /**
  * Payload for a comment update event.
  * - `result`: The updated question or answer.
@@ -95,7 +87,7 @@ export interface MessageUpdatePayload {
  * - `type`: The type of modification (`'created'`, `'deleted'`, or `'updated'`).
  */
 export interface UserUpdatePayload {
-  user: PopulatedSafeDatabaseUser;
+  user: SafeDatabaseUser;
   type: 'created' | 'deleted' | 'updated';
 }
 
@@ -208,8 +200,5 @@ export interface ServerToClientEvents {
   badgeUpdate: (badge: BadgeUpdatePayload) => void;
   badgeAwarded: (awarded: BadgeAwardedPayload) => void;
   transactionEvent: (transaction: TransactionPayload) => void;
-  notificationUpdate: (notification: NotificationPayload) => void;
-  readUpdate: (notification: NotificationPayload) => void;
-  readlAllUpdate: (notifications: ReadAllNotificationsPayload) => void;
-  communityAnnouncement: (community: )
+  notificationEvent: (notification: NotificationPayload) => void;
 }

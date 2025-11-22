@@ -4,7 +4,6 @@ import useLoginContext from './useLoginContext';
 import { removeAuthToken } from '../services/userService';
 import useUserContext from './useUserContext';
 import { TransactionEventPayload } from '@fake-stack-overflow/shared';
-import { DatabaseNotification } from '@fake-stack-overflow/shared/types/notification';
 
 /**
  * Custom hook to manage the state and logic for a header input field.
@@ -25,7 +24,6 @@ const useHeader = () => {
 
   const [val, setVal] = useState<string>('');
   const [coins, setCoins] = useState<number>(0);
-  const [unreadNotifications, setUnreadNotifications] = useState<number>(0);
 
   /**
    * Updates the state value when the input field value changes.
@@ -53,7 +51,7 @@ const useHeader = () => {
     }
   };
 
-  const handleNotifPageRedirect = () => {
+  const handleNotifRedirect = () => {
     navigate('/notifications');
   };
 
@@ -69,15 +67,6 @@ const useHeader = () => {
       }
     };
 
-    const fetchUnreadNotifications = () => {
-      if (user.notifications) {
-        const unread = user.notifications.filter((n: DatabaseNotification) => !n.read);
-        setUnreadNotifications(unread.length);
-      } else {
-        setUnreadNotifications(0);
-      }
-    };
-
     const handleCoinUpdate = async (payload: TransactionEventPayload) => {
       if (payload.username == user.username) {
         setCoins(payload.amount);
@@ -85,7 +74,6 @@ const useHeader = () => {
     };
 
     fetchCurrentCoins();
-    fetchUnreadNotifications();
 
     socket.on('transactionEvent', handleCoinUpdate);
 
@@ -110,8 +98,7 @@ const useHeader = () => {
     handleKeyDown,
     handleSignOut,
     coins,
-    unreadNotifications,
-    handleNotifPageRedirect,
+    handleNotifRedirect,
   };
 };
 

@@ -23,7 +23,6 @@ import { generateToken } from '../utils/jwt.util';
 import protect from '../middleware/token.middleware';
 import { getCachedUser } from '../utils/cache.util';
 import { checkAndAwardBadges } from '../services/badge.service';
-import { populateUser } from '../utils/database.util';
 
 const userController = (socket: FakeSOSocket) => {
   const router: Router = express.Router();
@@ -399,10 +398,9 @@ const userController = (socket: FakeSOSocket) => {
       const { _id: userId } = req.user;
 
       // Get user data from database using the decoded username
-      const user = await populateUser(userId);
+      const user = await getCachedUser(userId);
 
-      console.log(user);
-      if (!user) {
+      if ('error' in user) {
         res.status(404).json({ error: 'User not found' });
         return;
       }

@@ -4,7 +4,7 @@ import {
   ChatUpdatePayload,
   Message,
   PopulatedDatabaseChat,
-  PopulatedSafeDatabaseUser,
+  SafeDatabaseUser,
 } from '../types/types';
 import useUserContext from './useUserContext';
 import { createChat, getChatById, getChatsByUser, sendMessage } from '../services/chatService';
@@ -56,7 +56,7 @@ const useDirectMessage = () => {
     handleJoinChat(chatID);
   };
 
-  const handleUserSelect = (selectedUser: PopulatedSafeDatabaseUser) => {
+  const handleUserSelect = (selectedUser: SafeDatabaseUser) => {
     setChatToCreate(selectedUser.username);
   };
 
