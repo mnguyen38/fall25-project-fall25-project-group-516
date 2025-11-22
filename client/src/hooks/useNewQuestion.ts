@@ -107,6 +107,7 @@ const useNewQuestion = () => {
       views: [],
       comments: [],
       community: community ? community._id : null,
+      premiumStatus: user.premiumProfile ? user.premiumProfile : false,
     };
 
     const res = await addQuestion(question);

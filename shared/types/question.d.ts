@@ -26,6 +26,7 @@ export type OrderType = 'newest' | 'unanswered' | 'active' | 'mostViewed';
  * - `upVotes`: An array of usernames who have upvoted the question.
  * - `downVotes`: An array of usernames who have downvoted the question.
  * - `comments`: An array of comments related to the question.
+ * - `premiumStatus`: Whether the asker has premium.
  */
 export interface Question {
   title: string;
@@ -39,6 +40,7 @@ export interface Question {
   downVotes: string[];
   comments: Comment[];
   community: ObjectId | null;
+  premiumStatus: boolean;
 }
 
 /**

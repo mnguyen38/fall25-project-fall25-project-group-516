@@ -53,7 +53,12 @@ const QuestionView = ({ question }: QuestionProps) => {
         </div>
       </div>
       <div className='lastActivity'>
-        <div className='question_author'>{question.askedBy}</div>
+        {question.premiumStatus === false && (
+          <div className='question_author'>{question.askedBy}</div>
+        )}
+        {question.premiumStatus === true && (
+          <div className='question_author'>{question.askedBy}&#x1F31F;</div>
+        )}
         <div>&nbsp;</div>
         <div className='question_meta'>asked {getMetaData(new Date(question.askDateTime))}</div>
       </div>

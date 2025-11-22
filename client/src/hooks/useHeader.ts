@@ -94,6 +94,7 @@ const useHeader = () => {
     handleKeyDown,
     handleSignOut,
     coins,
+    user,
   };
 };
 

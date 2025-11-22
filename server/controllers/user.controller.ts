@@ -419,6 +419,111 @@ const userController = (socket: FakeSOSocket) => {
   };
 
   /**
+   * Updates user's premium profile status to active.
+   * @param req The request, containing the user's username.
+   * @param res The reponse, containing the updated user.
+   */
+  const activatePremium = async (req: Request, res: Response) => {
+    try {
+      const { username } = req.body;
+
+      if (!username) {
+        res.status(400).send('Username must be provided');
+        return;
+      }
+
+      const currentUser = await getUserByUsername(username);
+
+      if ('error' in currentUser) {
+        throw new Error(currentUser.error);
+      }
+
+      if (currentUser.premiumProfile == true) {
+        res.status(402).send('User already has premium profile.');
+        return;
+      }
+
+      updatePremiumProfile(req, res, 'activate');
+    } catch (error) {
+      res.status(500).send(`Error activating premium profile: ${error}`);
+    }
+  };
+
+  /**
+   * Updates user's premium profile status to inactive.
+   * @param req The request, containing the user's username.
+   * @param res The reponse, containing the updated user.
+   */
+  const deactivatePremium = async (req: Request, res: Response) => {
+    try {
+      const { username } = req.body;
+
+      if (!username) {
+        res.status(400).send('Username must be provided');
+        return;
+      }
+
+      const currentUser = await getUserByUsername(username);
+
+      if ('error' in currentUser) {
+        throw new Error(currentUser.error);
+      }
+
+      if (currentUser.premiumProfile == false) {
+        res.status(402).send('User does not have premium profile.');
+        return;
+      }
+
+      updatePremiumProfile(req, res, 'deactivate');
+    } catch (error) {
+      res.status(500).send(`Error deactivating premium profile: ${error}`);
+    }
+  };
+
+  /**
+   * Helper that updates a user's premium profile status.
+   * @param req The request, containing the user's username.
+   * @param res The reponse, containing the updated user.
+   * @param status whether premium profile is being activated or deactivated.
+   */
+  const updatePremiumProfile = async (
+    req: Request,
+    res: Response,
+    status: 'activate' | 'deactivate',
+  ) => {
+    try {
+      const { username } = req.body;
+
+      let updatedUser;
+
+      if (status == 'activate') {
+        updatedUser = await updateUser(username, { premiumProfile: true, streakPass: 3 });
+      } else {
+        updatedUser = await updateUser(username, { premiumProfile: false });
+      }
+
+      if ('error' in updatedUser) {
+        throw new Error(updatedUser.error);
+      }
+
+      // Emit socket event for real-time updates
+      socket.emit('premiumUpdate', {
+        username: username,
+        premiumStatus: updatedUser.premiumProfile,
+        streakPass: updatedUser.streakPass,
+      });
+
+      res.status(200).json(updatedUser);
+    } catch (error) {
+      res
+        .status(500)
+        .send(
+          `Error ${status == 'activate' ? 'activating' : 'deactivating'} premium profile: ${error}`,
+        );
+    }
+  };
+
+  /**
    * Verifies a JWT token and returns the user data if valid.
    * @param req The request containing the token in the Authorization header.
    * @param res The response, either returning the user or an error.
@@ -537,6 +642,8 @@ const userController = (socket: FakeSOSocket) => {
   );
   router.post('/uploadBannerImage', protect, upload.single('bannerImage'), uploadBannerImage);
   router.patch('/toggleProfilePrivacy', protect, toggleProfilePrivacy);
+  router.patch('/activatePremium', protect, activatePremium);
+  router.patch('/deactivatePremium', protect, deactivatePremium);
   router.patch('/updateShowLoginStreak', protect, updateShowLoginStreak);
   router.patch('/updateStatus', protect, updateStatus);
   router.patch('/addCoins', protect, addCoinTransaction);

@@ -52,6 +52,7 @@ describe('POST /addComment', () => {
       answers: [],
       comments: [mockComment._id],
       community: null,
+      premiumStatus: false,
     });
 
     jest.spyOn(badgeUtil, 'checkAndAwardBadges').mockResolvedValueOnce([]);
@@ -69,6 +70,7 @@ describe('POST /addComment', () => {
       answers: [],
       comments: [mockComment],
       community: null,
+      premiumStatus: false,
     });
 
     const response = await supertest(app).post('/api/comment/addComment').send(mockReqBody);
@@ -365,6 +367,7 @@ describe('POST /addComment', () => {
       answers: [],
       comments: [mockComment._id],
       community: null,
+      premiumStatus: false,
     };
 
     saveCommentSpy.mockResolvedValueOnce(mockComment);

@@ -1,13 +1,21 @@
 import useHeader from '../../hooks/useHeader';
 import './index.css';
 
+interface HeaderProps {
+  openTransactionWindow: () => void;
+}
+
 /**
  * Header component that renders the main title and a search bar.
  * The search bar allows the user to input a query and navigate to the search results page
  * when they press Enter.
  */
-const Header = () => {
+const Header = ({ openTransactionWindow }: HeaderProps) => {
   const { val, handleInputChange, handleKeyDown, coins } = useHeader();
+
+  const handleCoinClick = async () => {
+    openTransactionWindow();
+  };
 
   return (
     <div id='header' className='header'>
@@ -21,7 +29,7 @@ const Header = () => {
         onChange={handleInputChange}
         onKeyDown={handleKeyDown}
       />
-      <div id='image' className='image-with-text'>
+      <button id='image' className='image-with-text' onClick={handleCoinClick}>
         <img
           src='\coinPicture\stack-coin.PNG'
           alt='Coin emblazoned stack of pancakes'
@@ -32,7 +40,7 @@ const Header = () => {
         <div id='text' text-align='center' justify-content='center'>
           {coins}
         </div>
-      </div>
+      </button>
     </div>
   );
 };

@@ -146,6 +146,11 @@ export interface TransactionEventPayload {
   amount: number;
 }
 
+export interface PremiumUpdatePayload {
+  username: string;
+  premiumMembership: boolean;
+}
+
 /**
  * Interface representing the events the client can emit to the server.
  * - `makeMove`: Client can emit a move in the game.
@@ -178,6 +183,8 @@ export interface ClientToServerEvents {
  * - `collectionUpdate`: Server sends updated collection.
  * - `badgeUpdate`: Server sends updated badge.
  * - `badgeAwarded`: Server notifies when badges are awarded to a user.
+ * - `transactionEvent`: Server notifies when transaction goes through.
+ * - `premiumUpdate`: Server notifies when user's premium membership status changes.
  */
 export interface ServerToClientEvents {
   questionUpdate: (question: PopulatedDatabaseQuestion) => void;
@@ -196,4 +203,5 @@ export interface ServerToClientEvents {
   badgeUpdate: (badge: BadgeUpdatePayload) => void;
   badgeAwarded: (awarded: BadgeAwardedPayload) => void;
   transactionEvent: (transaction: TransactionPayload) => void;
+  premiumUpdate: (status: PremiumUpdatePayload) => void;
 }

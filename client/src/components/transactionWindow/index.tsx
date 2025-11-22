@@ -14,6 +14,9 @@ interface TransactionProps {
   awarded: boolean;
 }
 
+/**
+ * TransactionWindow component that renders window for reward and purchase transactions.
+ */
 const TransactionWindow = ({
   isOpen,
   onClose,
@@ -28,7 +31,7 @@ const TransactionWindow = ({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
-  const handleConfirmButton = async (cost: number, awarded: boolean, description?: string) => {
+  const handleConfirmButton = async () => {
     try {
       setSubmitting(true);
       if (awarded) {
@@ -75,7 +78,7 @@ const TransactionWindow = ({
             </div>
           </div>
         )}
-        <p className='modal-description'>
+        <div className='transaction-description'>
           {awarded ? <h2>{`You have been awarded...`}</h2> : <h2>{`You will spend...`}</h2>}
           <div className='container-container'>
             <div className='coin-container'>
@@ -91,24 +94,20 @@ const TransactionWindow = ({
             </div>
           </div>
           {description && <h3>{description}</h3>}
-        </p>
+        </div>
         <div>
           {!awarded ? (
             <div className='modal-actions'>
               <button onClick={() => handleCancelButton()} className='button button-secondary'>
                 Cancel
               </button>
-              <button
-                onClick={() => handleConfirmButton(cost, awarded, description)}
-                className='button button-primary'>
+              <button onClick={() => handleConfirmButton()} className='button button-primary'>
                 {submitting ? 'Confirming...' : 'Confirm'}
               </button>
             </div>
           ) : (
             <div className='modal-actions'>
-              <button
-                className='button button-primary'
-                onClick={() => handleConfirmButton(cost, awarded, description)}>
+              <button className='button button-primary' onClick={() => handleConfirmButton()}>
                 Accept
               </button>
             </div>

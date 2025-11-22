@@ -111,6 +111,7 @@ export const loginUser = async (loginCredentials: UserCredentials): Promise<User
     const lastLogin = user.lastLogin ? new Date(user.lastLogin) : null;
 
     let newLoginStreak = 1;
+    let streakHold = false;
 
     if (lastLogin) {
       const diffTime = Math.abs(now.getTime() - lastLogin.getTime());
@@ -122,8 +123,22 @@ export const loginUser = async (loginCredentials: UserCredentials): Promise<User
       } else if (diffDays === 1) {
         // Consecutive day login - increment streak, ensuring minimum of 1
         newLoginStreak = Math.max(user.loginStreak || 0, 0) + 1;
+      } else if (diffDays <= 7) {
+        if (
+          (user.streakPass && user.streakPass > 0) ||
+          (user.coins && user.coins > diffDays * 10)
+        ) {
+          // will present option for user to use streak pass later
+          // can also use 10*number of days missed to recover <- might want to remove during testing
+          // keep streak unchanged, but ensure minimum of 1
+          newLoginStreak = Math.max(user.loginStreak || 1, 1);
+          streakHold = true;
+        } else {
+          // no streak passes or enough coins - reset to 1
+          newLoginStreak = 1;
+        }
       } else {
-        // Streak broken - reset to 1
+        // Streak broken
         newLoginStreak = 1;
       }
     } else {
@@ -142,6 +157,7 @@ export const loginUser = async (loginCredentials: UserCredentials): Promise<User
           lastLogin: now,
           loginStreak: newLoginStreak,
           maxLoginStreak: newMaxStreak,
+          streakHold: streakHold,
           status: 'online',
         },
       },
