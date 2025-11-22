@@ -32,6 +32,7 @@ const updatedUserSpy = jest.spyOn(util, 'updateUser');
 const getUserByUsernameSpy = jest.spyOn(util, 'getUserByUsername');
 const getUsersListSpy = jest.spyOn(util, 'getUsersList');
 const deleteUserByUsernameSpy = jest.spyOn(util, 'deleteUserByUsername');
+const makeTransactionSpy = jest.spyOn(util, 'makeTransaction');
 
 describe('Test userController', () => {
   beforeEach(() => {
@@ -454,6 +455,223 @@ describe('Test userController', () => {
       expect(response.text).toContain(
         'Error when updating user biography: Error: Error updating user',
       );
+    });
+  });
+
+  describe('PATCH /updateShowLoginStreak', () => {
+    it('should successfully update showLoginStreak given correct arguments', async () => {
+      const mockReqBody = {
+        username: mockUser.username,
+        showLoginStreak: false,
+      };
+
+      // Mock a successful updateUser call
+      updatedUserSpy.mockResolvedValueOnce({ ...mockSafeUser, showLoginStreak: false });
+
+      const response = await supertest(app)
+        .patch('/api/user/updateShowLoginStreak')
+        .send(mockReqBody);
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({ ...mockUserJSONResponse, showLoginStreak: false });
+      // Ensure updateUser is called with the correct args
+      expect(updatedUserSpy).toHaveBeenCalledWith(mockUser.username, {
+        showLoginStreak: false,
+      });
+    });
+
+    it('should return 400 for request missing username', async () => {
+      const mockReqBody = {
+        showLoginStreak: false,
+      };
+
+      const response = await supertest(app)
+        .patch('/api/user/updateShowLoginStreak')
+        .send(mockReqBody);
+
+      expect(response.status).toBe(400);
+    });
+
+    it('should return 400 for request missing showLoginStreak field', async () => {
+      const mockReqBody = {
+        username: mockUser.username,
+      };
+
+      const response = await supertest(app)
+        .patch('/api/user/updateShowLoginStreak')
+        .send(mockReqBody);
+
+      expect(response.status).toBe(400);
+    });
+
+    it('should return 500 if updateUser returns an error', async () => {
+      const mockReqBody = {
+        username: mockUser.username,
+        showLoginStreak: false,
+      };
+
+      // Simulate a DB error
+      updatedUserSpy.mockResolvedValueOnce({ error: 'Error updating user' });
+
+      const response = await supertest(app)
+        .patch('/api/user/updateShowLoginStreak')
+        .send(mockReqBody);
+
+      expect(response.status).toBe(500);
+    });
+  });
+
+  const mockSafeUserCoins: SafeDatabaseUser = {
+    _id: new mongoose.Types.ObjectId(),
+    username: 'user1',
+    dateJoined: new Date('2024-12-03'),
+    coins: 5,
+  };
+
+  const mockSafeUserCoinsJSONResponse = {
+    _id: mockSafeUserCoins._id.toString(),
+    username: 'user1',
+    dateJoined: new Date('2024-12-03').toISOString(),
+    coins: 5,
+  };
+
+  describe('PATCH /addCoins', () => {
+    it("should successfully update user's coins when given correct params", async () => {
+      const mockReqBody = {
+        username: mockSafeUserCoins.username,
+        cost: 5,
+      };
+
+      makeTransactionSpy.mockResolvedValueOnce(mockSafeUserCoins);
+
+      const res = await supertest(app).patch('/api/user/addCoins').send(mockReqBody);
+
+      expect(res.status).toBe(200);
+      expect(res.body).toEqual(mockSafeUserCoinsJSONResponse);
+      expect(makeTransactionSpy).toHaveBeenCalledWith(mockSafeUserCoins.username, 5, 'add');
+    });
+
+    it('should return 400 for request with missing username', async () => {
+      const mockReqBody = {
+        cost: 5,
+      };
+
+      const res = await supertest(app).patch('/api/user/addCoins').send(mockReqBody);
+
+      expect(res.status).toBe(400);
+    });
+
+    it('should return 400 for request with missing cost', async () => {
+      const mockReqBody = {
+        cost: 5,
+      };
+
+      const res = await supertest(app).patch('/api/user/addCoins').send(mockReqBody);
+
+      expect(res.status).toBe(400);
+    });
+
+    it('should return 400 if no params given', async () => {
+      const res = await supertest(app).patch('/api/user/addCoins').send({});
+
+      expect(res.status).toBe(400);
+    });
+
+    it('should return 400 for request with negative cost', async () => {
+      const mockReqBody = {
+        cost: -5,
+      };
+
+      const res = await supertest(app).patch('/api/user/addCoins').send(mockReqBody);
+
+      expect(res.status).toBe(400);
+    });
+
+    it('should return 500 if database error while making transaction', async () => {
+      const mockReqBody = {
+        username: mockSafeUserCoins.username,
+        cost: 5,
+      };
+
+      makeTransactionSpy.mockResolvedValueOnce({ error: 'Error making transaction' });
+
+      const res = await supertest(app).patch('/api/user/addCoins').send(mockReqBody);
+
+      expect(res.status).toBe(500);
+    });
+  });
+
+  describe('PATCH /reduceCoins', () => {
+    it("should successfully update user's coins when given correct params", async () => {
+      const mockReqBody = {
+        username: mockSafeUserCoins.username,
+        cost: 5,
+      };
+
+      makeTransactionSpy.mockResolvedValueOnce(mockSafeUserCoins);
+
+      const res = await supertest(app).patch('/api/user/reduceCoins').send(mockReqBody);
+
+      expect(res.status).toBe(200);
+      expect(res.body).toEqual(mockSafeUserCoinsJSONResponse);
+      expect(makeTransactionSpy).toHaveBeenCalledWith(mockSafeUserCoins.username, 5, 'reduce');
+    });
+
+    it('should return 400 for request with missing username', async () => {
+      const mockReqBody = {
+        cost: 5,
+      };
+
+      const res = await supertest(app).patch('/api/user/reduceCoins').send(mockReqBody);
+
+      expect(res.status).toBe(400);
+    });
+
+    it('should return 400 for request with missing cost', async () => {
+      const mockReqBody = {
+        username: 'user1',
+      };
+
+      const res = await supertest(app).patch('/api/user/reduceCoins').send(mockReqBody);
+
+      expect(res.status).toBe(400);
+    });
+
+    it('should return 400 for request with negative cost', async () => {
+      const mockReqBody = {
+        username: 'user1',
+        cost: -5,
+      };
+
+      const res = await supertest(app).patch('/api/user/reduceCoins').send(mockReqBody);
+
+      expect(res.status).toBe(400);
+    });
+
+    it('should return 402 when user does not have enough coins', async () => {
+      const mockReqBody = {
+        username: 'user1',
+        cost: 40,
+      };
+
+      makeTransactionSpy.mockResolvedValueOnce({ error: 'Not enough coins to make transaction.' });
+
+      const res = await supertest(app).patch('/api/user/reduceCoins').send(mockReqBody);
+
+      expect(res.status).toBe(402);
+    });
+
+    it('should return 500 if database error while making transaction', async () => {
+      const mockReqBody = {
+        username: mockSafeUserCoins.username,
+        cost: 5,
+      };
+
+      makeTransactionSpy.mockResolvedValueOnce({ error: 'Error making transaction' });
+
+      const res = await supertest(app).patch('/api/user/reduceCoins').send(mockReqBody);
+
+      expect(res.status).toBe(500);
     });
   });
 });

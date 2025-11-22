@@ -151,6 +151,31 @@ export interface TransactionEventPayload {
   amount: number;
 }
 
+export interface PremiumUpdatePayload {
+  username: string;
+  premiumMembership: boolean;
+}
+
+/**
+ * Payload for a user connection event.
+ * - `username`: The username of the user who connected.
+ */
+export interface UserConnectedPayload {
+  username: string;
+}
+
+/**
+ * Payload for a user status update event.
+ * - `username`: The username of the user whose status changed.
+ * - `status`: The new status ('online', 'busy', 'away').
+ * - `customStatus`: Optional custom status message.
+ */
+export interface UserStatusUpdatePayload {
+  username: string;
+  status: 'online' | 'busy' | 'away';
+  customStatus?: string;
+}
+
 /**
  * Interface representing the events the client can emit to the server.
  * - `makeMove`: Client can emit a move in the game.
@@ -158,6 +183,7 @@ export interface TransactionEventPayload {
  * - `leaveGame`: Client can leave a game.
  * - `joinChat`: Client can join a chat.
  * - `leaveChat`: Client can leave a chat.
+ * - `userConnected`: Client notifies server when user connects.
  */
 export interface ClientToServerEvents {
   makeMove: (move: GameMovePayload) => void;
@@ -165,6 +191,7 @@ export interface ClientToServerEvents {
   leaveGame: (gameID: string) => void;
   joinChat: (chatID: string) => void;
   leaveChat: (chatID: string | undefined) => void;
+  userConnected: (payload: UserConnectedPayload) => void;
 }
 
 /**
@@ -183,6 +210,8 @@ export interface ClientToServerEvents {
  * - `collectionUpdate`: Server sends updated collection.
  * - `badgeUpdate`: Server sends updated badge.
  * - `badgeAwarded`: Server notifies when badges are awarded to a user.
+ * - `transactionEvent`: Server notifies when transaction goes through.
+ * - `premiumUpdate`: Server notifies when user's premium membership status changes.
  */
 export interface ServerToClientEvents {
   questionUpdate: (question: PopulatedDatabaseQuestion) => void;
@@ -192,6 +221,7 @@ export interface ServerToClientEvents {
   commentUpdate: (comment: CommentUpdatePayload) => void;
   messageUpdate: (message: MessageUpdatePayload) => void;
   userUpdate: (user: UserUpdatePayload) => void;
+  userStatusUpdate: (status: UserStatusUpdatePayload) => void;
   gameUpdate: (game: GameUpdatePayload) => void;
   gameError: (error: GameErrorPayload) => void;
   chatUpdate: (chat: ChatUpdatePayload) => void;
@@ -201,4 +231,5 @@ export interface ServerToClientEvents {
   badgeAwarded: (awarded: BadgeAwardedPayload) => void;
   transactionEvent: (transaction: TransactionPayload) => void;
   notificationUpdate: (notification: NotificationPayload) => void;
+  premiumUpdate: (status: PremiumUpdatePayload) => void;
 }

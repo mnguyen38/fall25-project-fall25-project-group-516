@@ -54,6 +54,10 @@
   width: 125px;
 }
 
+.transaction-description h3 {
+  white-space: initial;
+}
+
 .transaction-modal {
   display: flex;
   flex-direction: column;

@@ -8,7 +8,7 @@ const protect = async (req: Request, res: Response, next: NextFunction) => {
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      res.status(500).json({ error: 'No token provided' });
+      res.status(401).json({ error: 'No token provided' });
       return;
     }
 
@@ -16,7 +16,7 @@ const protect = async (req: Request, res: Response, next: NextFunction) => {
     const decoded = verifyToken(token);
 
     if (!decoded) {
-      res.status(500).json({ error: 'Invalid or expired token' });
+      res.status(401).json({ error: 'Invalid or expired token' });
       return;
     }
 

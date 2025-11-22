@@ -5,7 +5,6 @@ import QuestionModel from '../models/questions.model';
 import AnswerModel from '../models/answers.model';
 import CommentModel from '../models/comments.model';
 import { ObjectId } from 'mongodb';
-import { makeTransaction } from './user.service';
 
 /**
  * Creates a new badge in the database.
@@ -180,7 +179,6 @@ export const checkAndAwardBadges = async (username: string): Promise<DatabaseBad
           { $addToSet: { badges: badge._id } }, // $addToSet prevents duplicates
         );
         newlyEarnedBadges.push(badge);
-        await makeTransaction(user.username, badge.coinValue, 'add');
       }
     }
 

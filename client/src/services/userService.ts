@@ -146,6 +146,7 @@ const addCoins = async (
     cost,
     description,
   });
+
   if (res.status !== 200) {
     throw new Error('Error when adding coins');
   }
@@ -170,7 +171,10 @@ const reduceCoins = async (
     cost,
     description,
   });
-  if (res.status !== 200) {
+
+  if (res.status == 402) {
+    throw new Error('Not enough coins to perform transaction');
+  } else if (res.status !== 200) {
     throw new Error('Error when reducing coins');
   }
   return res.data;
@@ -344,6 +348,109 @@ const readAllNotifications = async (
 
   if (res.status !== 200) {
     throw new Error('Error when marking all notifications as read');
+/**
+ * Toggle the hold state on user's current streak.
+ * @param username The unique username of the user
+ * @returns A promise resolving to the updated user
+ * @throws Error if the request fails
+ */
+const toggleStreakHold = async (username: string): Promise<SafeDatabaseUser> => {
+  const res = await api.patch(`${USER_API_URL}/toggleStreakHold`, {
+    username,
+  });
+  if (res.status !== 200) {
+    throw new Error("Error when toggling hold on user's current streak");
+  }
+  return res.data;
+};
+/**
+ * Activates user's premium membership if they do not already have premium.
+ * @param username The uniwue username of the user
+ * @returns A promise resolving to the updated user
+ * @throws Error if the request fails
+ */
+const activatePremiumProfile = async (username: string): Promise<SafeDatabaseUser> => {
+  const res = await api.patch(`${USER_API_URL}/activatePremium`, { username });
+
+  if (res.status !== 200) {
+    if (res.status == 402) {
+      throw new Error('User already has premium profile.');
+    }
+    throw new Error('Error when activating premium profile');
+  }
+  return res.data;
+};
+
+/**
+ * Deactivates user's premium membership if they currently have premium.
+ * @param username The unique username of the user
+ * @returns A promise resolving to the updated user
+ * @throws Error if the request fails
+ */
+const deactivatePremiumProfile = async (username: string): Promise<SafeDatabaseUser> => {
+  const res = await api.patch(`${USER_API_URL}/deactivatePremium`, { username });
+
+  if (res.status !== 200) {
+    if (res.status == 402) {
+      throw new Error('User does not have premium profile.');
+    }
+    throw new Error('Error when deactivating premium profile');
+  }
+  return res.data;
+};
+
+/**
+ * Decrements user's streak passes by one if they own any.
+ * @param username The unique username of the user
+ * @returns A promise resolving to the updated user
+ * @throws Error if the request fails
+ */
+const decrementStreakPasses = async (username: string): Promise<SafeDatabaseUser> => {
+  const res = await api.patch(`${USER_API_URL}/decrementStreakPasses`, {
+    username,
+  });
+  if (res.status !== 200) {
+    throw new Error("Error when decrementing user's streak passes.");
+  }
+  return res.data;
+};
+
+/**
+ * Resets user's login streak to 1.
+ * @param username The unique username of the user
+ * @returns A promise resolving to the updated user
+ * @throws Error if the request fails
+ */
+const resetLoginStreak = async (username: string): Promise<SafeDatabaseUser> => {
+  const res = await api.patch(`${USER_API_URL}/resetLoginStreak`, {
+    username,
+  });
+  if (res.status !== 200) {
+    throw new Error("Error when reseting user's login streak");
+  }
+  return res.data;
+};
+
+/*
+ * Updates a user's status and custom status message
+ * @param username The unique username of the user
+ * @param status The status to set ('online', 'busy', 'away')
+ * @param customStatus Optional custom status message
+ * @returns A promise resolving to the updated user
+ * @throws Error if the request fails
+ */
+const updateStatus = async (
+  username: string,
+  status: 'online' | 'busy' | 'away',
+  customStatus?: string,
+): Promise<SafeDatabaseUser> => {
+  const res = await api.patch(`${USER_API_URL}/updateStatus`, {
+    username,
+    status,
+    customStatus,
+  });
+  if (res.status !== 200) {
+    throw new Error('Error when updating user status');
   }
   return res.data;
 };
@@ -365,4 +472,10 @@ export {
   toggleProfilePrivacy,
   readNotification,
   readAllNotifications,
+  toggleStreakHold,
+  activatePremiumProfile,
+  deactivatePremiumProfile,
+  decrementStreakPasses,
+  resetLoginStreak,
+  updateStatus,
 };

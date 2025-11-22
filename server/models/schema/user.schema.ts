@@ -18,6 +18,10 @@ import { Schema } from 'mongoose';
  * - `loginStreak`: Number of consecutive days the user has logged in.
  * - `lastLogin`: The last date/time the user logged in.
  * - `showLoginStreak`: Whether to display the login streak on profile.
+ * - `lifeUpvotes`: total number of upvotes to questions & answers over all time.
+ * - `coins`: User's coin count.
+ * - `premiumProfile`: Whether the user has a premium profile.
+ * - `streakPass`: How many chances user has to recover streak.
  */
 const userSchema: Schema = new Schema(
   {
@@ -112,6 +116,32 @@ const userSchema: Schema = new Schema(
         _id: false,
       },
     ],
+    premiumProfile: {
+      type: Boolean,
+      default: false,
+    },
+    streakPass: {
+      type: Number,
+      default: 0,
+    },
+    missedDays: {
+      type: Number,
+      default: 0,
+    },
+    streakHold: {
+      type: Boolean,
+      default: false,
+    },
+    status: {
+      type: String,
+      enum: ['online', 'busy', 'away'],
+      default: 'online',
+    },
+    customStatus: {
+      type: String,
+      default: '',
+      maxlength: 100,
+    },
   },
   { collection: 'User' },
 );

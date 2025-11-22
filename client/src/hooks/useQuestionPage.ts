@@ -3,8 +3,6 @@ import { useEffect, useState } from 'react';
 import useUserContext from './useUserContext';
 import { AnswerUpdatePayload, OrderType, PopulatedDatabaseQuestion } from '../types/types';
 import { getQuestionsByFilter } from '../services/questionService';
-import { getAuthToken } from '../utils/auth';
-import { getLoginStatus, setLoginStatus } from '../utils/login';
 
 /**
  * Custom hook for managing the question page state, filtering, and real-time updates.
@@ -14,42 +12,13 @@ import { getLoginStatus, setLoginStatus } from '../utils/login';
  * @returns setQuestionOrder - Function to set the sorting order of questions (e.g., newest, oldest).
  */
 const useQuestionPage = () => {
-  const { user, socket } = useUserContext();
+  const { socket } = useUserContext();
 
   const [searchParams] = useSearchParams();
   const [titleText, setTitleText] = useState<string>('All Questions');
   const [search, setSearch] = useState<string>('');
   const [questionOrder, setQuestionOrder] = useState<OrderType>('newest');
   const [qlist, setQlist] = useState<PopulatedDatabaseQuestion[]>([]);
-  const [showLoginReward, setShowLoginReward] = useState(false);
-  const [loginReward, setLoginReward] = useState<number>(0);
-  const [loginStreak, setLoginStreak] = useState(0);
-
-  /**
-   * If it is user's first login of session, opens transaction window for login reward.
-   */
-  useEffect(() => {
-    if (getAuthToken() && !getLoginStatus(user.username)) {
-      let reward: number;
-      if (user.loginStreak) {
-        reward = user.loginStreak % 7 == 0 ? 10 : user.loginStreak % 7;
-        setLoginStreak(user.loginStreak);
-      } else {
-        // first time login
-        reward = 5;
-      }
-      setLoginReward(reward);
-      setShowLoginReward(true);
-    }
-  }, [user.loginStreak, user.username]);
-
-  /**
-   * When user claims login reward, sets login status in session storage.
-   * This ensures that the next time they log in during the session, they won't get a duplicate reward.
-   */
-  const loginClaimed = () => {
-    setLoginStatus(user.username);
-  };
 
   useEffect(() => {
     let pageTitle = 'All Questions';
@@ -140,11 +109,6 @@ const useQuestionPage = () => {
     titleText,
     qlist,
     setQuestionOrder,
-    showLoginReward,
-    setShowLoginReward,
-    loginReward,
-    loginStreak,
-    loginClaimed,
   };
 };
 

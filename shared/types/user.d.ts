@@ -32,6 +32,12 @@ export interface UserCredentials {
  * - `lifeUpvotes`: Lifetime upvotes to user's posts (answers & questions).
  * - `coins`: Amount of coins user currently has.
  * - `profilePrivate`: Whether the user's profile is private.
+ * - `premiumProfile`: Whether the user has a premium profile or not.
+ * - `streakPass`: Number of passes user has to miss streak.
+ * - `missedDays`: Number of days user has not logged in for.
+ * - `streakHold`: Whether streak is currently on hold to be recovered.
+ * - `status`: User's current status ('online', 'busy', 'away').
+ * - `customStatus`: Custom status message.
  */
 export interface User extends UserCredentials {
   dateJoined: Date;
@@ -52,6 +58,12 @@ export interface User extends UserCredentials {
   coins?: number;
   profilePrivate?: boolean;
   notifications?: UserNotificationStatus[];
+  premiumProfile?: boolean;
+  streakPass?: number;
+  missedDays?: number;
+  streakHold?: boolean;
+  status?: 'online' | 'busy' | 'away';
+  customStatus?: string;
 }
 
 /**
@@ -186,5 +198,16 @@ export interface ReadNotificationRequest extends Request {
   body: {
     username: string;
     notificationIds: string[];
+  }
+ * Express request for updating user's status.
+ * - `username`: The username whose status is being updated (body).
+ * - `status`: The new status to be set (body).
+ * - `customStatus`: Optional custom status message (body).
+ */
+export interface UpdateStatusRequest extends Request {
+  body: {
+    username: string;
+    status: 'online' | 'busy' | 'away';
+    customStatus?: string;
   };
-}
+

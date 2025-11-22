@@ -9,6 +9,7 @@ import {
   TransactionRequest,
   UpdateShowLoginStreakRequest,
   ReadNotificationRequest,
+  UpdateStatusRequest,
 } from '../types/types';
 import {
   deleteUserByUsername,
@@ -19,6 +20,7 @@ import {
   readNotifications,
   saveUser,
   updateUser,
+  updateUserStatus,
 } from '../services/user.service';
 import { upload, processProfilePicture, processBannerImage } from '../utils/upload';
 import { generateToken } from '../utils/jwt.util';
@@ -229,6 +231,11 @@ const userController = (socket: FakeSOSocket) => {
       // Validate that request has username and showLoginStreak
       const { username, showLoginStreak } = req.body;
 
+      if (!username || showLoginStreak == null) {
+        res.status(400).send('No username or login streak visibility provided');
+        return;
+      }
+
       // Call the same updateUser(...) service used by resetPassword
       const updatedUser = await updateUser(username, { showLoginStreak });
 
@@ -245,6 +252,77 @@ const userController = (socket: FakeSOSocket) => {
       res.status(200).json(updatedUser);
     } catch (error) {
       res.status(500).send(`Error when updating user login streak visibility: ${error}`);
+    }
+  };
+
+  /**
+   * Toggles hold state on a user's current streak.
+   * @param req The request containing the username of the user.
+   * @param res The response, either confirming the update or returning an error.
+   * @returns a promise resolving to void.
+   */
+  const toggleStreakHold = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { username } = req.body;
+
+      if (!username) {
+        res.status(400).send('Username must be provided');
+        return;
+      }
+
+      // Get current user to toggle streak hold
+      const currentUser = await getUserByUsername(username);
+
+      if ('error' in currentUser) {
+        throw new Error(currentUser.error);
+      }
+
+      // Toggle the streakHold field
+      const updatedUser = await updateUser(username, {
+        streakHold: !currentUser.streakHold,
+      });
+
+      if ('error' in updatedUser) {
+        throw new Error(updatedUser.error);
+      }
+
+      socket.emit('userUpdate', {
+        user: updatedUser,
+        type: 'updated',
+      });
+
+      res.status(200).json(updatedUser);
+    } catch (error) {
+      res.status(500).send(`Error toggling streak hold: ${error}`);
+    }
+  };
+
+  /*
+   * Updates a user's status and custom status message.
+   * @param req The request containing username, status, and optional customStatus in the body.
+   * @param res The response, either confirming the update or returning an error.
+   * @returns A promise resolving to void.
+   */
+  const updateStatus = async (req: UpdateStatusRequest, res: Response): Promise<void> => {
+    try {
+      const { username, status, customStatus } = req.body;
+
+      const updatedUser = await updateUserStatus(username, status, customStatus);
+
+      if ('error' in updatedUser) {
+        throw new Error(updatedUser.error);
+      }
+
+      // Emit socket event for real-time status updates
+      socket.emit('userStatusUpdate', {
+        username,
+        status,
+        customStatus,
+      });
+
+      res.status(200).json(updatedUser);
+    } catch (error) {
+      res.status(500).send(`Error when updating user status: ${error}`);
     }
   };
 
@@ -385,6 +463,111 @@ const userController = (socket: FakeSOSocket) => {
   };
 
   /**
+   * Updates user's premium profile status to active.
+   * @param req The request, containing the user's username.
+   * @param res The reponse, containing the updated user.
+   */
+  const activatePremium = async (req: Request, res: Response) => {
+    try {
+      const { username } = req.body;
+
+      if (!username) {
+        res.status(400).send('Username must be provided');
+        return;
+      }
+
+      const currentUser = await getUserByUsername(username);
+
+      if ('error' in currentUser) {
+        throw new Error(currentUser.error);
+      }
+
+      if (currentUser.premiumProfile == true) {
+        res.status(402).send('User already has premium profile.');
+        return;
+      }
+
+      updatePremiumProfile(req, res, 'activate');
+    } catch (error) {
+      res.status(500).send(`Error activating premium profile: ${error}`);
+    }
+  };
+
+  /**
+   * Updates user's premium profile status to inactive.
+   * @param req The request, containing the user's username.
+   * @param res The reponse, containing the updated user.
+   */
+  const deactivatePremium = async (req: Request, res: Response) => {
+    try {
+      const { username } = req.body;
+
+      if (!username) {
+        res.status(400).send('Username must be provided');
+        return;
+      }
+
+      const currentUser = await getUserByUsername(username);
+
+      if ('error' in currentUser) {
+        throw new Error(currentUser.error);
+      }
+
+      if (currentUser.premiumProfile == false) {
+        res.status(402).send('User does not have premium profile.');
+        return;
+      }
+
+      updatePremiumProfile(req, res, 'deactivate');
+    } catch (error) {
+      res.status(500).send(`Error deactivating premium profile: ${error}`);
+    }
+  };
+
+  /**
+   * Helper that updates a user's premium profile status.
+   * @param req The request, containing the user's username.
+   * @param res The reponse, containing the updated user.
+   * @param status whether premium profile is being activated or deactivated.
+   */
+  const updatePremiumProfile = async (
+    req: Request,
+    res: Response,
+    status: 'activate' | 'deactivate',
+  ) => {
+    try {
+      const { username } = req.body;
+
+      let updatedUser;
+
+      if (status == 'activate') {
+        updatedUser = await updateUser(username, { premiumProfile: true, streakPass: 3 });
+      } else {
+        updatedUser = await updateUser(username, { premiumProfile: false });
+      }
+
+      if ('error' in updatedUser) {
+        throw new Error(updatedUser.error);
+      }
+
+      // Emit socket event for real-time updates
+      socket.emit('premiumUpdate', {
+        username: username,
+        premiumStatus: updatedUser.premiumProfile,
+        streakPass: updatedUser.streakPass,
+      });
+
+      res.status(200).json(updatedUser);
+    } catch (error) {
+      res
+        .status(500)
+        .send(
+          `Error ${status == 'activate' ? 'activating' : 'deactivating'} premium profile: ${error}`,
+        );
+    }
+  };
+
+  /**
    * Verifies a JWT token and returns the user data if valid.
    * @param req The request containing the token in the Authorization header.
    * @param res The response, either returning the user or an error.
@@ -452,8 +635,10 @@ const userController = (socket: FakeSOSocket) => {
 
       if (!username || !cost) {
         res.status(400).send('Username and cost must be provided');
+        return;
       } else if (cost < 0) {
         res.status(400).send('Invalid cost provided');
+        return;
       }
 
       let status;
@@ -465,6 +650,10 @@ const userController = (socket: FakeSOSocket) => {
       }
 
       if ('error' in status) {
+        if (status.error.includes('Not enough coins to make transaction')) {
+          res.status(402).send(status.error);
+          return;
+        }
         throw new Error(status.error);
       }
 
@@ -472,11 +661,89 @@ const userController = (socket: FakeSOSocket) => {
 
       socket.emit('transactionEvent', {
         username,
-        amount,
+        amount: amount ?? 0,
       });
       res.status(200).json(status);
+    } catch (err: unknown) {
+      res.status(500).json({ error: `Error making transaction: ${(err as Error).message}` });
+    }
+  };
+
+  /**
+   * Decrements the number of user's streak passes by 1.
+   * @param req The request containing the username of the user.
+   * @param res The response, either confirming the update or returning an error.
+   * @returns a promise resolving to void.
+   */
+  const decrementStreakPasses = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { username } = req.body;
+
+      if (!username) {
+        res.status(400).send('Username must be provided');
+        return;
+      }
+
+      // Get current user to decrement streak passes
+      const currentUser = await getUserByUsername(username);
+
+      if ('error' in currentUser) {
+        throw new Error(currentUser.error);
+      }
+
+      if (!currentUser.streakPass || (currentUser.streakPass && currentUser.streakPass <= 0)) {
+        throw new Error('User has no streak passes to decrement.');
+      }
+      // Decrement streakPass field
+      const updatedUser = await updateUser(username, {
+        streakPass: currentUser.streakPass - 1,
+      });
+
+      if ('error' in updatedUser) {
+        throw new Error(updatedUser.error);
+      }
+
+      socket.emit('userUpdate', {
+        user: updatedUser,
+        type: 'updated',
+      });
+
+      res.status(200).json(updatedUser);
     } catch (error) {
-      res.status(500).send(`Error making transaction: ${error}`);
+      res.status(500).send(`Error decrementing user's streak passes: ${error}`);
+    }
+  };
+
+  /**
+   * Resets user's login streak to 1.
+   * @param req The request containing the username of the user.
+   * @param res The response, either confirming the update or returning an error.
+   * @returns a promise resolving to void.
+   */
+  const resetLoginStreak = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { username } = req.body;
+
+      if (!username) {
+        res.status(400).send('Username must be provided');
+      }
+
+      const updatedUser = await updateUser(username, {
+        loginStreak: 1,
+      });
+
+      if ('error' in updatedUser) {
+        throw new Error(updatedUser.error);
+      }
+
+      socket.emit('userUpdate', {
+        user: updatedUser,
+        type: 'updated',
+      });
+
+      res.status(200).json(updatedUser);
+    } catch (error) {
+      res.status(500).send(`Error reseting user's login strak: ${error}`);
     }
   };
 
@@ -520,11 +787,17 @@ const userController = (socket: FakeSOSocket) => {
     uploadProfilePicture,
   );
   router.post('/uploadBannerImage', protect, upload.single('bannerImage'), uploadBannerImage);
+  router.patch('/toggleStreakHold', protect, toggleStreakHold);
+  router.patch('/decrementStreakPasses', protect, decrementStreakPasses);
   router.patch('/toggleProfilePrivacy', protect, toggleProfilePrivacy);
+  router.patch('/activatePremium', protect, activatePremium);
+  router.patch('/deactivatePremium', protect, deactivatePremium);
   router.patch('/updateShowLoginStreak', protect, updateShowLoginStreak);
+  router.patch('/updateStatus', protect, updateStatus);
   router.patch('/addCoins', protect, addCoinTransaction);
   router.patch('/reduceCoins', protect, reduceCoinTransaction);
   router.patch('/readNotifications', readNotificationsRoute);
+  router.patch('/resetLoginStreak', protect, resetLoginStreak);
 
   return router;
 };

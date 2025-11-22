@@ -115,6 +115,8 @@ export const loginUser = async (loginCredentials: UserCredentials): Promise<User
     const lastLogin = user.lastLogin ? new Date(user.lastLogin) : null;
 
     let newLoginStreak = 1;
+    let streakHold = false;
+    let missedDays = 0;
 
     if (lastLogin) {
       const diffTime = Math.abs(now.getTime() - lastLogin.getTime());
@@ -126,8 +128,23 @@ export const loginUser = async (loginCredentials: UserCredentials): Promise<User
       } else if (diffDays === 1) {
         // Consecutive day login - increment streak, ensuring minimum of 1
         newLoginStreak = Math.max(user.loginStreak || 0, 0) + 1;
+      } else if (diffDays <= 7) {
+        if (
+          (user.streakPass && user.streakPass > 0) ||
+          (user.coins && user.coins > diffDays * 10)
+        ) {
+          // will present option for user to use streak pass later
+          // can also use 10*number of days missed to recover <- might want to remove during testing
+          // keep streak unchanged, but ensure minimum of 1
+          newLoginStreak = Math.max(user.loginStreak || 1, 1);
+          streakHold = true;
+          missedDays = diffDays;
+        } else {
+          // no streak passes or enough coins - reset to 1
+          newLoginStreak = 1;
+        }
       } else {
-        // Streak broken - reset to 1
+        // Streak broken
         newLoginStreak = 1;
       }
     } else {
@@ -138,7 +155,7 @@ export const loginUser = async (loginCredentials: UserCredentials): Promise<User
     // Update max streak if current streak is higher, ensuring minimum of 1
     const newMaxStreak = Math.max(newLoginStreak, user.maxLoginStreak || 0, 1);
 
-    // Update user with new login data
+    // Update user with new login data and set status to online
     await UserModel.updateOne(
       { username },
       {
@@ -146,6 +163,9 @@ export const loginUser = async (loginCredentials: UserCredentials): Promise<User
           lastLogin: now,
           loginStreak: newLoginStreak,
           maxLoginStreak: newMaxStreak,
+          streakHold: streakHold,
+          missedDays: missedDays,
+          status: 'online',
         },
       },
     );
@@ -321,16 +341,22 @@ export const makeTransaction = async (
       return { error: 'Error finding user to make transaction' };
     }
 
-    let newCoinValue = cost;
-    if (type == 'add') {
-      if (user.coins) {
-        newCoinValue += user.coins;
+    let newCoinValue = 0;
+    if (user.coins) {
+      if (type == 'add') {
+        newCoinValue = cost + user.coins;
+      } else {
+        newCoinValue = user.coins - cost;
+        if (newCoinValue < 0) {
+          return { error: 'Not enough coins to make transaction' };
+        }
       }
     } else {
-      if (user.coins) {
-        newCoinValue -= user.coins;
+      if (type == 'add') {
+        newCoinValue = cost;
       } else {
         newCoinValue = 0;
+        return { error: 'Not enough coins to make transaction' };
       }
     }
 
@@ -393,5 +419,37 @@ export const readNotifications = async (
     return safeUser;
   } catch (error) {
     return { error: (error as Error).message };
+/**
+ * Updates a user's status and custom status message.
+ *
+ * @param {string} username - The username of the user to update.
+ * @param {string} status - The new status ('online', 'busy', 'away').
+ * @param {string} customStatus - Optional custom status message.
+ * @returns {Promise<UserResponse>} - Resolves with the updated user object or an error message.
+ */
+export const updateUserStatus = async (
+  username: string,
+  status: 'online' | 'busy' | 'away',
+  customStatus?: string,
+): Promise<UserResponse> => {
+  try {
+    const updates: Partial<User> = { status };
+    if (customStatus !== undefined) {
+      updates.customStatus = customStatus;
+    }
+
+    const updatedUser: SafeDatabaseUser | null = await UserModel.findOneAndUpdate(
+      { username },
+      { $set: updates },
+      { new: true },
+    ).select('-password');
+
+    if (!updatedUser) {
+      throw Error('Error updating user status');
+    }
+
+    return updatedUser;
+  } catch (error) {
+    return { error: `Error occurred when updating user status: ${error}` };
   }
 };

@@ -1,8 +1,12 @@
+import { useState } from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faFlag } from '@fortawesome/free-solid-svg-icons';
 import useCommunityPage from '../../../../hooks/useCommunityPage';
 import QuestionView from '../../questionPage/question';
 import CommunityMembershipButton from '../communityMembershipButton';
 import './index.css';
 import ModToolsModal from '../modToolsModal';
+import ReportUserModal from '../reportUserModal';
 
 /**
  * This component displays the details of a specific community, including its name, description,
@@ -11,6 +15,13 @@ import ModToolsModal from '../modToolsModal';
 const CommunityPage = () => {
   const { community, communityQuestions, isModalOpen, setIsModalOpen, username } =
     useCommunityPage();
+  const [reportModalOpen, setReportModalOpen] = useState(false);
+  const [reportedUser, setReportedUser] = useState<string>('');
+
+  const handleReportUser = (usernameToReport: string) => {
+    setReportedUser(usernameToReport);
+    setReportModalOpen(true);
+  };
 
   if (!community) {
     return <div className='loading'>Loading...</div>;
@@ -22,7 +33,12 @@ const CommunityPage = () => {
         <main className='questions-section'>
           <h3 className='section-heading'>Questions</h3>
           {communityQuestions.map(q => (
-            <QuestionView question={q} key={q._id.toString()} />
+            <QuestionView
+              question={q}
+              key={q._id.toString()}
+              collectionEditMode={false}
+              onCollectionClick={() => {}}
+            />
           ))}
         </main>
 
@@ -53,6 +69,21 @@ const CommunityPage = () => {
                     {isModerator && <span className='role-badge mod-badge'>Mod</span>}
 
                     <span className='username'>{participantUsername}</span>
+
+                    {username &&
+                      username !== participantUsername &&
+                      !isAdmin &&
+                      !isModerator &&
+                      community.participants.includes(username) && (
+                        <button
+                          className='report-button'
+                          onClick={() => handleReportUser(participantUsername)}
+                          title={`Report ${participantUsername}`}
+                          aria-label={`Report ${participantUsername}`}
+                          type='button'>
+                          <FontAwesomeIcon icon={faFlag} />
+                        </button>
+                      )}
                   </li>
                 );
               })}
@@ -61,6 +92,17 @@ const CommunityPage = () => {
         </div>
       </div>
       {isModalOpen && <ModToolsModal community={community} onClose={() => setIsModalOpen(false)} />}
+      {reportModalOpen && username && (
+        <ReportUserModal
+          communityId={community._id.toString()}
+          reportedUsername={reportedUser}
+          reporterUsername={username}
+          onClose={() => setReportModalOpen(false)}
+          onSuccess={() => {
+            // Optionally refresh community data or show success message
+          }}
+        />
+      )}
     </>
   );
 };

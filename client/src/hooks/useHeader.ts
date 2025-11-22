@@ -111,6 +111,7 @@ const useHeader = () => {
     coins,
     unreadNotifications,
     handleNotifPageRedirect,
+    user,
   };
 };
 
