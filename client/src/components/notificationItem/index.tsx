@@ -1,6 +1,6 @@
 import { DatabaseNotification } from '@fake-stack-overflow/shared/types/notification';
-import { getNotificationIcon, getTypeBackground, getTypeColor } from '../../utils/notifStyle';
-import { getRelativeTime } from '../../utils/time';
+import { getNotificationIcon, getTypeBackground, getTypeColor } from '../../utils/notif';
+import getRelativeTime from '../../utils/time';
 
 const NotificationItem = ({
   notification,

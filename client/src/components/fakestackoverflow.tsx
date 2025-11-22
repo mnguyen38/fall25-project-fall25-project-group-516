@@ -2,7 +2,7 @@ import { JSX, useState, useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './layout';
 import Login from './auth/login';
-import { FakeSOSocket, SafeDatabaseUser } from '../types/types';
+import { FakeSOSocket, PopulatedSafeDatabaseUser } from '../types/types';
 import LoginContext from '../contexts/LoginContext';
 import UserContext from '../contexts/UserContext';
 import { verifyStoredToken } from '../services/userService';
@@ -32,7 +32,7 @@ const ProtectedRoute = ({
   socket,
   children,
 }: {
-  user: SafeDatabaseUser | null;
+  user: PopulatedSafeDatabaseUser | null;
   socket: FakeSOSocket | null;
   children: JSX.Element;
 }) => {
@@ -48,7 +48,7 @@ const ProtectedRoute = ({
  * It manages the state for search terms and the main title.
  */
 const FakeStackOverflow = ({ socket }: { socket: FakeSOSocket | null }) => {
-  const [user, setUser] = useState<SafeDatabaseUser | null>(null);
+  const [user, setUser] = useState<PopulatedSafeDatabaseUser | null>(null);
   const [loading, setLoading] = useState(true);
 
   // Check for stored token on mount and auto-login if valid

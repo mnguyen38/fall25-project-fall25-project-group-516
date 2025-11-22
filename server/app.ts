@@ -113,10 +113,10 @@ app.use('/api/user', userController(socket));
 app.use('/api/chat', protect, chatController(socket));
 app.use('/api/games', protect, gameController(socket));
 app.use('/api/collection', protect, collectionController(socket));
-app.use('/api/community', protect, communityController(socket));
+app.use('/api/community', communityController(socket));
 app.use('/api/badge', protect, badgeController(socket));
 app.use('/api/auth', openAuthorizationController());
-app.use('/api/notifications', protect, notificationController(socket));
+app.use('/api/notifications', notificationController(socket));
 
 const openApiDocument = yaml.parse(fs.readFileSync('./openapi.yaml', 'utf8'));
 app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(openApiDocument));

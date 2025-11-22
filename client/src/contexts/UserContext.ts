@@ -1,5 +1,5 @@
 import { createContext } from 'react';
-import { FakeSOSocket, SafeDatabaseUser } from '../types/types';
+import { FakeSOSocket, PopulatedSafeDatabaseUser } from '../types/types';
 
 /**
  * Interface represents the context type for user-related data and a WebSocket connection.
@@ -8,7 +8,7 @@ import { FakeSOSocket, SafeDatabaseUser } from '../types/types';
  * - socket - the WebSocket connection associated with the current user.
  */
 export interface UserContextType {
-  user: SafeDatabaseUser;
+  user: PopulatedSafeDatabaseUser;
   socket: FakeSOSocket;
 }
 

@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import { SafeDatabaseUser } from '../types/types';
+import { PopulatedSafeDatabaseUser } from '../types/types';
 
 // Use environment variable or default secret (should be in .env in production)
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
@@ -10,7 +10,7 @@ const JWT_EXPIRES_IN = '7d'; // Token expires in 7 days
  * @param user The user object to generate token for
  * @returns The JWT token string
  */
-export const generateToken = (user: SafeDatabaseUser): string => {
+export const generateToken = (user: PopulatedSafeDatabaseUser): string => {
   const payload = {
     _id: user._id,
     username: user.username,

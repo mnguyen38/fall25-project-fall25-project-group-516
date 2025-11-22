@@ -1,5 +1,8 @@
+import { Notification, NotificationResponse } from '@fake-stack-overflow/shared/types/notification';
 import CommunityModel from '../models/community.model';
-import { Community, CommunityResponse, DatabaseCommunity } from '../types/types';
+import { Community, CommunityResponse, CommunityRole, DatabaseCommunity } from '../types/types';
+import mongoose from 'mongoose';
+import { addNotificationToUsers, saveNotification } from './notification.service';
 
 /**
  * Retrieves a community by its ID.
@@ -246,5 +249,84 @@ export const toggleModerator = async (
     return updatedCommunity;
   } catch (err) {
     return { error: (err as Error).message };
+  }
+};
+
+export const getCommunityRole = async (
+  communityId: string,
+  username: string,
+): Promise<CommunityRole | { error: string }> => {
+  try {
+    const community = await CommunityModel.findById(communityId);
+
+    if (!community) {
+      throw new Error('Community not found');
+    }
+
+    if (!community.participants.includes(username)) {
+      throw new Error('User is not a member of this community.');
+    }
+
+    if (community.admin === username) {
+      return 'admin';
+    } else if (community.moderators?.includes(username)) {
+      return 'moderator';
+    } else {
+      return 'participant';
+    }
+  } catch (error) {
+    return { error: (error as Error).message };
+  }
+};
+
+export const sendCommunityAnnouncement = async (
+  communityId: string,
+  managerUsername: string,
+  announcement: Notification,
+): Promise<NotificationResponse> => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    const community = await getCommunity(communityId);
+
+    if ('error' in community) {
+      throw new Error(community.error);
+    }
+
+    const isMod = community.moderators?.includes(managerUsername);
+    const isAdmin = community.admin === managerUsername;
+
+    if (!isMod && !isAdmin) {
+      throw new Error('Unauthorized: User does not have proper permissions');
+    }
+
+    const receivers = community.participants;
+
+    const notificationData: Notification = {
+      ...announcement,
+      receivers: receivers, // Ensure the list is populated here
+      type: 'community', // Ensure type is set correctly
+    };
+
+    const savedNotification = await saveNotification(notificationData, session);
+
+    if ('error' in savedNotification) {
+      throw new Error(savedNotification.error);
+    }
+
+    const result = await addNotificationToUsers(savedNotification, session);
+
+    if (result && 'error' in result) {
+      throw new Error(result.error);
+    }
+
+    await session.commitTransaction();
+    return savedNotification;
+  } catch (error) {
+    await session.abortTransaction();
+    return { error: (error as Error).message };
+  } finally {
+    await session.endSession();
   }
 };

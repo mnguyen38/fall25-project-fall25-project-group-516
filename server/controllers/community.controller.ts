@@ -6,6 +6,7 @@ import {
   ToggleMembershipRequest,
   DeleteCommunityRequest,
   ToggleModeratorRequest,
+  CommunityAnnouncementRequest,
 } from '../types/types';
 import {
   getCommunity,
@@ -15,6 +16,7 @@ import {
   deleteCommunity,
   toggleModerator,
   toggleBanUser,
+  sendCommunityAnnouncement,
 } from '../services/community.service';
 
 /**
@@ -175,7 +177,6 @@ const communityController = (socket: FakeSOSocket) => {
       const result = await deleteCommunity(communityId, username);
 
       if ('error' in result) {
-        // Determine appropriate status code based on error
         if (result.error.includes('Unauthorized')) {
           res.status(403).json({ error: result.error });
         } else if (result.error.includes('not found')) {
@@ -250,6 +251,39 @@ const communityController = (socket: FakeSOSocket) => {
         .json({ error: `Error toggling moderator permissions: ${(err as Error).message}` });
     }
   };
+
+  const sendCommunityAnnouncementRoute = async (
+    req: CommunityAnnouncementRequest,
+    res: Response,
+  ) => {
+    const { communityId, managerUsername, announcement } = req.body;
+    console.log('hit');
+    try {
+      const communityAnnouncement = await sendCommunityAnnouncement(
+        communityId,
+        managerUsername,
+        announcement,
+      );
+
+      if (communityAnnouncement && 'error' in communityAnnouncement) {
+        if (communityAnnouncement.error.includes('Unauthorized')) {
+          res.status(403).json({ error: communityAnnouncement.error });
+        } else if (communityAnnouncement.error.includes('not found')) {
+          res.status(404).json({ error: communityAnnouncement.error });
+        } else {
+          res.status(500).json({ error: communityAnnouncement.error });
+        }
+        return;
+      }
+
+      socket.emit('communityAnnouncement', { announcement: communityAnnouncement });
+
+      res.json(communityAnnouncement);
+    } catch (error) {
+      res.status(500).json({ error: `Error sending community PSA: ${(error as Error).message}` });
+    }
+  };
+
   // Registering routes
   router.get('/getCommunity/:communityId', getCommunityRoute);
   router.get('/getAllCommunities', getAllCommunitiesRoute);
@@ -257,11 +291,8 @@ const communityController = (socket: FakeSOSocket) => {
   router.post('/toggleModerator', toggleModeratorRoute);
   router.post('/toggleBanUser', toggleBanUserRoute);
   router.post('/create', createCommunityRoute);
-  router.delete(
-    '/delete/:communityId',
-    //permissions([ADMIN], req => req.params.communityId),
-    deleteCommunityRoute,
-  );
+  router.post('/announcement', sendCommunityAnnouncementRoute);
+  router.delete('/delete/:communityId', deleteCommunityRoute);
 
   return router;
 };

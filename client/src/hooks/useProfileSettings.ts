@@ -10,7 +10,7 @@ import {
   updateShowLoginStreak,
 } from '../services/userService';
 import { getUserBadges, updateDisplayedBadges } from '../services/badgeService';
-import { SafeDatabaseUser, BadgeWithProgress } from '../types/types';
+import { PopulatedSafeDatabaseUser, BadgeWithProgress } from '../types/types';
 import useUserContext from './useUserContext';
 import useHeader from './useHeader';
 
@@ -23,7 +23,7 @@ const useProfileSettings = () => {
   const { handleSignOut } = useHeader();
 
   // Local state
-  const [userData, setUserData] = useState<SafeDatabaseUser | null>(null);
+  const [userData, setUserData] = useState<PopulatedSafeDatabaseUser | null>(null);
   const [loading, setLoading] = useState(false);
   const [editBioMode, setEditBioMode] = useState(false);
   const [newBio, setNewBio] = useState('');

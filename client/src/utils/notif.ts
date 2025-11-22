@@ -1,5 +1,13 @@
-import { NotificationType } from "@fake-stack-overflow/shared/types/notification";
-import { FiMessageCircle, FiHelpCircle, FiUsers, FiMail, FiAlertTriangle, FiCheckCircle, FiBell } from "react-icons/fi";
+import { NotificationType } from '@fake-stack-overflow/shared/types/notification';
+import {
+  FiMessageCircle,
+  FiHelpCircle,
+  FiUsers,
+  FiMail,
+  FiAlertTriangle,
+  FiCheckCircle,
+  FiBell,
+} from 'react-icons/fi';
 
 // --- Icons & Colors Helpers ---
 export const getNotificationIcon = (type: NotificationType) => {

@@ -94,7 +94,9 @@ export interface UserByUsernameRequest extends Request {
 /**
  * Represents a "safe" user object that excludes sensitive information like the password.
  */
-export type SafeDatabaseUser = Omit<DatabaseUser, 'password'>;
+export interface PopulatedSafeDatabaseUser extends Omit<DatabaseUser, 'password notifications'> {
+  notifications?: DatabaseNotification[];
+}
 
 /**
  * Represents the a user object that only includes roles and tokenVersion.
@@ -102,10 +104,10 @@ export type SafeDatabaseUser = Omit<DatabaseUser, 'password'>;
 export type UserRoles = Pick<DatabaseUser, 'roles'>;
 /**
  * Represents the response for user-related operations.
- * - `SafeDatabaseUser`: A user object without sensitive data if the operation is successful.
+ * - `PopulatedSafeDatabaseUser`: A user object without sensitive data if the operation is successful.
  * - `error`: An error message if the operation fails.
  */
-export type UserResponse = SafeDatabaseUser | { error: string };
+export type UserResponse = PopulatedSafeDatabaseUser | { error: string };
 
 /**
  * Represents the response for role-related operations.
@@ -116,10 +118,10 @@ export type UserRolesResponse = UserRoles | { error: string };
 
 /**
  * Represents the response for multiple user-related operations.
- * - `SafeDatabaseUser[]`: A list of user objects without sensitive data if the operation is successful.
+ * - `PopulatedSafeDatabaseUser[]`: A list of user objects without sensitive data if the operation is successful.
  * - `error`: An error message if the operation fails.
  */
-export type UsersResponse = SafeDatabaseUser[] | { error: string };
+export type UsersResponse = PopulatedSafeDatabaseUser[] | { error: string };
 
 /**
  * Express request for updating a user's biography.

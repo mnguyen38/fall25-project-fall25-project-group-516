@@ -2,9 +2,18 @@ import { FiCheckSquare, FiMessageSquare, FiSettings } from 'react-icons/fi';
 import useNotificationsPage from '../../hooks/useNotificationsPage';
 import './index.css';
 import NotificationItem from '../notificationItem';
+import useUserContext from '../../hooks/useUserContext';
 
 const Notifications = () => {
-  const { notificationsList, handleNotificationRedirect } = useNotificationsPage();
+  const { user } = useUserContext();
+  const {
+    notificationsList,
+    handleNotificationRedirect,
+    handleReadNotification,
+    handleReadAllNotifications,
+  } = useNotificationsPage();
+
+  console.log(user);
 
   return (
     <div className='page-container'>
@@ -13,7 +22,10 @@ const Notifications = () => {
           <h1 className='page-title'>Notifications</h1>
 
           <div className='notifications-actions'>
-            <button className='notification-action-btn' title='Mark all as read'>
+            <button
+              className='notification-action-btn'
+              title='Mark all as read'
+              onClick={handleReadAllNotifications}>
               <FiCheckSquare size={20} />
               <span>Mark all as read</span>
             </button>
@@ -35,7 +47,14 @@ const Notifications = () => {
               <NotificationItem
                 key={notif._id?.toString() || index}
                 notification={notif}
-                onClick={handleNotificationRedirect}
+                onClick={() => {
+                  // 1. Mark as read if it isn't already
+                  if (!notif.read) {
+                    handleReadNotification(notif._id.toString());
+                  }
+                  // 2. Proceed with the redirect
+                  handleNotificationRedirect(notif);
+                }}
               />
             ))}
           </ul>

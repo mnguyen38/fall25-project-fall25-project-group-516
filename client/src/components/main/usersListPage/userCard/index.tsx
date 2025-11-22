@@ -1,5 +1,5 @@
 import './index.css';
-import { SafeDatabaseUser } from '../../../../types/types';
+import { PopulatedSafeDatabaseUser } from '../../../../types/types';
 
 /**
  * Interface representing the props for the User component.
@@ -8,8 +8,8 @@ import { SafeDatabaseUser } from '../../../../types/types';
  * handleUserCardViewClickHandler - The function to handle the click event on the user card.
  */
 interface UserProps {
-  user: SafeDatabaseUser;
-  handleUserCardViewClickHandler: (user: SafeDatabaseUser) => void;
+  user: PopulatedSafeDatabaseUser;
+  handleUserCardViewClickHandler: (user: PopulatedSafeDatabaseUser) => void;
 }
 
 /**

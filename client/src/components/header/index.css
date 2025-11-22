@@ -171,10 +171,6 @@
   box-shadow: var(--shadow-md);
 }
 
-.notifications-btn:active {
-  transform: scale(0.98);
-}
-
 /* Bell icon animation on hover */
 .notifications-btn:hover svg {
   animation: bell-ring 0.6s ease-in-out;

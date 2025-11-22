@@ -9,6 +9,7 @@ import {
   PopulatedDatabaseChat,
   PopulatedDatabaseCollection,
   PopulatedDatabaseQuestion,
+  PopulatedSafeDatabaseUser,
 } from '../types/types';
 import AnswerModel from '../models/answers.model';
 import QuestionModel from '../models/questions.model';
@@ -20,6 +21,11 @@ import MessageModel from '../models/messages.model';
 import CollectionModel from '../models/collection.model';
 import { ObjectId } from 'mongodb';
 import CommunityModel from '../models/community.model';
+import NotificationModel from '../models/notifications.model';
+import {
+  DatabaseNotification,
+  PopulatedDatabaseUserNotifications,
+} from '@fake-stack-overflow/shared/types/notification';
 
 /**
  * Fetches and populates a question document with its related tags, answers, and comments.
@@ -46,7 +52,6 @@ const populateQuestion = async (questionID: string): Promise<PopulatedDatabaseQu
 
   return result;
 };
-
 
 /**
  * Fetches and populates an answer document with its related comments.
@@ -145,6 +150,41 @@ const populateCollection = async (
 
   return populatedCollection;
 };
+
+const populateNotification = async (
+  notificationId: string,
+): Promise<DatabaseNotification | null> => {
+  const result = await NotificationModel.findOne({ _id: notificationId });
+  return result;
+};
+
+export const populateUser = async (userId: string): Promise<PopulatedSafeDatabaseUser | null> => {
+  const user = await UserModel.findById(userId).select('-password');
+
+  if (!user) {
+    throw new Error('User not found');
+  }
+
+  const populatedNotifications = await Promise.all(
+    user.notifications?.map(async (notificationId: ObjectId) => {
+      const notification = await populateNotification(notificationId.toString());
+
+      if (!notification) {
+        throw new Error('Notification not found');
+      }
+
+      return notification;
+    }) ?? [],
+  );
+
+  const populatedUser: PopulatedSafeDatabaseUser = {
+    ...user.toObject(),
+    notifications: populatedNotifications,
+  };
+
+  return populatedUser;
+};
+
 
 /**
  * Fetches and populates a question, answer, or chat document based on the provided ID and type.
