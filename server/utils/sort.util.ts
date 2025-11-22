@@ -10,8 +10,21 @@ import { getMostRecentAnswerTime } from '../services/answer.service';
  */
 export const sortQuestionsByNewest = (
   qlist: PopulatedDatabaseQuestion[],
-): PopulatedDatabaseQuestion[] =>
-  qlist.sort((a, b) => {
+): PopulatedDatabaseQuestion[] => {
+  const now = new Date();
+  return qlist.sort((a, b) => {
+    const diffTime = Math.abs(now.getTime() - a.askDateTime.getTime());
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    const aPremium = a.premiumStatus && diffDays <= 10;
+    const bPremium = b.premiumStatus && diffDays <= 10;
+    if (aPremium && !bPremium) {
+      return -1;
+    }
+
+    if (!aPremium && bPremium) {
+      return 1;
+    }
+
     if (a.askDateTime > b.askDateTime) {
       return -1;
     }
@@ -22,6 +35,7 @@ export const sortQuestionsByNewest = (
 
     return 0;
   });
+};
 
 /**
  * Filters and sorts a list of questions to return only unanswered questions, sorted by the asking date in descending order.
