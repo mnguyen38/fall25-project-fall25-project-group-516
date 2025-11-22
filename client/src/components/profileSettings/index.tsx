@@ -177,7 +177,12 @@ const ProfileSettings: React.FC = () => {
                     )}
                   </div>
                   <div className='profile-identity'>
-                    <h1 className='profile-name'>{userData.username}</h1>
+                    {userData.premiumProfile === false && (
+                      <h1 className='profile-name'>{userData.username}</h1>
+                    )}
+                    {userData.premiumProfile === true && (
+                      <h1 className='profile-name'>{userData.username}&#x1F31F;</h1>
+                    )}
                     <p className='profile-username'>@{userData.username}</p>
                     {userData.showLoginStreak &&
                       userData.loginStreak !== undefined &&
