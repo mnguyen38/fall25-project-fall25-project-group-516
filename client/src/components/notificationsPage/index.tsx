@@ -118,8 +118,8 @@ const Notifications = () => {
                     <button
                       className='dropdown-item'
                       onClick={() => {
-                        handleToggleCommunityNotifs();
                         setShowSettingsDropdown(!showSettingsDropdown);
+                        handleToggleCommunityNotifs();
                       }}>
                       <span>
                         {communityNotif
@@ -130,8 +130,8 @@ const Notifications = () => {
                     <button
                       className='dropdown-item'
                       onClick={() => {
-                        handleToggleMessageNotifs();
                         setShowSettingsDropdown(!showSettingsDropdown);
+                        handleToggleMessageNotifs();
                       }}>
                       <span>
                         {messageNotif
