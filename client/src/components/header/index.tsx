@@ -1,3 +1,4 @@
+// eslint-disable-next-line import/no-extraneous-dependencies
 import { FiBell } from 'react-icons/fi';
 import useHeader from '../../hooks/useHeader';
 import './index.css';

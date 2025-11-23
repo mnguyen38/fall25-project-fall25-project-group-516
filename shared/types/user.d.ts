@@ -38,6 +38,8 @@ export interface UserCredentials {
  * - `streakHold`: Whether streak is currently on hold to be recovered.
  * - `status`: User's current status ('online', 'busy', 'away').
  * - `customStatus`: Custom status message.
+ * - `communityNotifs`: Whether notifications are enabled for all communities.
+ * - `messageNotifs`: Whether notifications are enabled for all users.
  */
 export interface User extends UserCredentials {
   dateJoined: Date;
@@ -64,6 +66,9 @@ export interface User extends UserCredentials {
   streakHold?: boolean;
   status?: 'online' | 'busy' | 'away';
   customStatus?: string;
+  notifications?: Notification[];
+  communityNotifs?: boolean;
+  messageNotifs?: boolean;
 }
 
 /**
@@ -198,7 +203,10 @@ export interface ReadNotificationRequest extends Request {
   body: {
     username: string;
     notificationIds: string[];
-  }
+  };
+}
+
+/*
  * Express request for updating user's status.
  * - `username`: The username whose status is being updated (body).
  * - `status`: The new status to be set (body).
@@ -210,4 +218,4 @@ export interface UpdateStatusRequest extends Request {
     status: 'online' | 'busy' | 'away';
     customStatus?: string;
   };
-
+}

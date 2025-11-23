@@ -48,19 +48,47 @@ export const addNotificationToUsers = async (
       throw new Error('Invalid Notification');
     }
 
-    await UserModel.updateMany(
-      {
-        username: { $in: recipients },
-      },
-      {
-        $push: {
+    let result;
+
+    if (notif.type == 'community') {
+      result = await UserModel.updateMany(
+        {
+          username: { $in: notif.recipients },
+          communityNotifs: true,
+        },
+        {  $push: {
           notifications: {
             $each: [{ notification: notif._id, read: false }], // Correct structure
             $position: 0,
           },
+        }, },
+      ).session(session);
+    } else if (notif.type == 'message') {
+      result = await UserModel.updateMany(
+        {
+          username: { $in: notif.recipients },
+          messageNotifs: true,
         },
-      },
-    ).session(session);
+        {  $push: {
+          notifications: {
+            $each: [{ notification: notif._id, read: false }], // Correct structure
+            $position: 0,
+          },
+        }, },
+      ).session(session);
+    } else {
+      result = await UserModel.updateMany(
+        {
+          username: { $in: notif.recipients },
+        },
+        { $push: {
+          notifications: {
+            $each: [{ notification: notif._id, read: false }], // Correct structure
+            $position: 0,
+          },
+        }, },
+      ).session(session);
+    }
 
     if (isInternalSession) {
       await session.commitTransaction();

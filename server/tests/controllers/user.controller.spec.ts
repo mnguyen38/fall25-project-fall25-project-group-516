@@ -521,7 +521,7 @@ describe('Test userController', () => {
     });
   });
 
-  const mockSafeUserCoins: SafeDatabaseUser = {
+  const mockSafeUserCoins: PopulatedSafeDatabaseUser = {
     _id: new mongoose.Types.ObjectId(),
     username: 'user1',
     dateJoined: new Date('2024-12-03'),

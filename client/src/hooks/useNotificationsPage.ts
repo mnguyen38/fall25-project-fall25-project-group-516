@@ -1,9 +1,17 @@
 import { DatabaseNotification } from '@fake-stack-overflow/shared/types/notification';
-import { PopulatedUserNotificationStatus } from '@fake-stack-overflow/shared';
+import {
+  PopulatedUserNotificationStatus,
+  PopulatedSafeDatabaseUser,
+} from '@fake-stack-overflow/shared';
 import { useEffect, useState } from 'react';
 import useUserContext from './useUserContext';
 import { useNavigate } from 'react-router-dom';
 import { readAllNotifications, readNotification } from '../services/userService';
+import {
+  getUserByUsername,
+  toggleCommunityNotifs,
+  toggleMessageNotifs,
+} from '../services/userService';
 
 const useNotificationsPage = () => {
   const { user } = useUserContext();
@@ -14,6 +22,45 @@ const useNotificationsPage = () => {
   );
 
   const [isTabOpen, setisTabOpen] = useState<boolean>(false);
+
+  const [userData, setUserData] = useState<PopulatedSafeDatabaseUser | null>(null);
+
+  /**
+   * Toggles community notification settings when button is clicked
+   */
+  const handleToggleCommunityNotifs = async (): Promise<void> => {
+    try {
+      if (!user.username) return;
+      console.log(user.communityNotifs);
+      const updatedUser = await toggleCommunityNotifs(user.username);
+
+      if (!updatedUser) {
+        throw new Error();
+      }
+
+      setUserData(updatedUser);
+    } catch (error) {
+      // nothing
+    }
+  };
+
+  /**
+   * Toggles message notification settings when button is clicked
+   */
+  const handleToggleMessageNotifs = async (): Promise<void> => {
+    try {
+      if (!user.username) return;
+      const updatedUser = await toggleMessageNotifs(user.username);
+
+      if (!updatedUser) {
+        throw new Error();
+      }
+
+      setUserData(updatedUser);
+    } catch (error) {
+      // nothing to be done
+    }
+  };
 
   const handleNotificationRedirect = (notif: DatabaseNotification): void => {
     switch (notif.type) {
@@ -55,6 +102,21 @@ const useNotificationsPage = () => {
     sortNotifications();
   }, [notificationsList]);
 
+  useEffect(() => {
+    if (!user.username) return;
+
+    const fetchUserData = async () => {
+      try {
+        const data = await getUserByUsername(user.username);
+        setUserData(data);
+      } catch (error) {
+        // nothing
+      }
+    };
+
+    fetchUserData();
+  }, [user.username]);
+
   return {
     notificationsList,
     isTabOpen,
@@ -62,6 +124,9 @@ const useNotificationsPage = () => {
     handleNotificationRedirect,
     handleReadNotification,
     handleReadAllNotifications,
+    handleToggleCommunityNotifs,
+    handleToggleMessageNotifs,
+    userData,
   };
 };
 

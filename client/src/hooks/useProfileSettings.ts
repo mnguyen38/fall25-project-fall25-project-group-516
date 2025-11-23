@@ -38,6 +38,8 @@ const useProfileSettings = () => {
   const [bannerImageUrl, setBannerImageUrl] = useState<string | null>(null);
   const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
   const [bannerImageFile, setBannerImageFile] = useState<File | null>(null);
+
+  // toggle login streak visibility
   const [showLoginStreak, setShowLoginStreak] = useState<boolean>(true);
 
   const canEditProfile =

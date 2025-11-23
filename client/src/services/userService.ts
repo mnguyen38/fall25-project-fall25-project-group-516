@@ -458,6 +458,38 @@ const updateStatus = async (
   return res.data;
 };
 
+/**
+ * Toggles a user's community notification setting.
+ * @param username The unique username of the user
+ * @returns A promise resolving to the updated user
+ * @throws Error if the request fails
+ */
+const toggleCommunityNotifs = async (username: string): Promise<PopulatedSafeDatabaseUser> => {
+  const res = await api.patch(`${USER_API_URL}/toggleCommunityNotifs`, {
+    username,
+  });
+  if (res.status !== 200) {
+    throw new Error('Error when updating user status');
+  }
+  return res.data;
+};
+
+/**
+ * Toggles a user's message notification setting.
+ * @param username The unique username of the user
+ * @returns A promise resolving to the updated user
+ * @throws Error if the request fails
+ */
+const toggleMessageNotifs = async (username: string): Promise<PopulatedSafeDatabaseUser> => {
+  const res = await api.patch(`${USER_API_URL}/toggleMessageNotifs`, {
+    username,
+  });
+  if (res.status !== 200) {
+    throw new Error('Error when updating user status');
+  }
+  return res.data;
+};
+
 export {
   getUsers,
   getUserByUsername,
@@ -481,4 +513,6 @@ export {
   decrementStreakPasses,
   resetLoginStreak,
   updateStatus,
+  toggleCommunityNotifs,
+  toggleMessageNotifs,
 };
