@@ -55,7 +55,7 @@ const answerController = (socket: FakeSOSocket) => {
         type: 'answer',
       };
 
-      const sentNotification = await sendNotification([status.askedBy], notificationData);
+      const sentNotification = await sendNotification(status.interestedUsers, notificationData);
 
       if ('error' in sentNotification) {
         throw new Error(sentNotification.error);

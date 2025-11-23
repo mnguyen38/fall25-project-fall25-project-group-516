@@ -162,7 +162,12 @@ export const fetchAndIncrementQuestionViewsById = async (
  */
 export const saveQuestion = async (question: Question): Promise<QuestionResponse> => {
   try {
-    const result: DatabaseQuestion = await QuestionModel.create(question);
+    const newQuestion = {
+      ...question,
+      interestedUsers: !question.interestedUsers ? [question.askedBy] : question.interestedUsers,
+    };
+
+    const result: DatabaseQuestion = await QuestionModel.create(newQuestion);
 
     return result;
   } catch (error) {
@@ -279,5 +284,32 @@ export const getCommunityQuestions = async (communityId: string): Promise<Databa
     return questions;
   } catch (error) {
     return [];
+  }
+};
+
+/**
+ * Fetches a question by ID and adds a user to interestedUsers.
+ * @param {string} qid - The question ID
+ * @param {string} username - The username requesting the question
+ * @returns {Promise<QuestionResponse | null>} - The question with updated or error message
+ */
+export const addInterestedUserToQuestion = async (
+  qid: string,
+  username: string,
+): Promise<PopulatedDatabaseQuestion | { error: string }> => {
+  try {
+    const q: PopulatedDatabaseQuestion | null = await QuestionModel.findOneAndUpdate(
+      { _id: new ObjectId(qid) },
+      { $addToSet: { interestedUsers: username } },
+      { new: true },
+    );
+
+    if (!q) {
+      throw new Error('Question not found');
+    }
+
+    return q;
+  } catch (error) {
+    return { error: 'Error when fetching and updating interested users' };
   }
 };

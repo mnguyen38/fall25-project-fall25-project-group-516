@@ -11,6 +11,7 @@ import {
   CommunityQuestionsRequest,
 } from '../types/types';
 import {
+  addInterestedUserToQuestion,
   addVoteToQuestion,
   fetchAndIncrementQuestionViewsById,
   filterQuestionsByAskedBy,
@@ -252,6 +253,35 @@ const questionController = (socket: FakeSOSocket) => {
     }
   };
 
+  /**
+   * Retrieves a question by its unique ID, and adds username to its list of interested users.
+   * If there is an error, the HTTP response's status is updated.
+   *
+   * @param req The VoteRequest object containing the question ID (body) and the username of the interested user (body).
+   * @param res The HTTP response object used to send back the question details.
+   *
+   * @returns A Promise that resolves to void.
+   */
+  const addInterestedUserRoute = async (req: VoteRequest, res: Response): Promise<void> => {
+    const { qid, username } = req.body;
+
+    try {
+      const q = await addInterestedUserToQuestion(qid, username);
+
+      if (q && 'error' in q) {
+        throw new Error(q.error);
+      }
+
+      // Emit the updated question
+      socket.emit('questionUpdate', q);
+      res.status(200).json(q);
+    } catch (err) {
+      res
+        .status(500)
+        .send(`Error when trying to add an interested user: ${(err as Error).message}`);
+    }
+  };
+
   // add appropriate HTTP verbs and their endpoints to the router
   router.get('/getQuestion', getQuestionsByFilter);
   router.get('/getQuestionById/:qid', getQuestionById);
@@ -259,6 +289,7 @@ const questionController = (socket: FakeSOSocket) => {
   router.post('/upvoteQuestion', upvoteQuestion);
   router.post('/downvoteQuestion', downvoteQuestion);
   router.get('/getCommunityQuestions/:communityId', getCommunityQuestionsRoute);
+  router.patch('/addInterestedUserToQuestion', addInterestedUserRoute);
 
   return router;
 };

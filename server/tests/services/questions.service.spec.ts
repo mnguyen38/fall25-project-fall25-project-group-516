@@ -318,6 +318,7 @@ describe('Question model', () => {
         comments: [],
         community: null,
         premiumStatus: false,
+        interestedUsers: ['question3_user'],
       };
 
       jest
@@ -352,6 +353,7 @@ describe('Question model', () => {
         comments: [],
         community: null,
         premiumStatus: false,
+        interestedUsers: ['question3_user'],
       };
 
       jest
@@ -573,6 +575,7 @@ describe('Question model', () => {
       comments: [],
       community: new mongoose.Types.ObjectId('65e9b58910afe6e94fc6e6f1'),
       premiumStatus: false,
+      interestedUsers: ['question3_user'],
     };
     test('getCommunityQuestions should return questions for a given community', async () => {
       jest
