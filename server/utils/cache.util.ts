@@ -3,6 +3,7 @@ import { createClient } from 'redis';
 import { PopulatedSafeDatabaseUser, UserResponse } from '@fake-stack-overflow/shared';
 import { getUserRolesById } from '../services/user.service';
 import { populateUser } from './database.util';
+import UserModel from '../models/users.model';
 
 type Cache = RedisClientType | null;
 
@@ -136,6 +137,6 @@ export const getCachedUser = async (userId: string): Promise<UserResponse> => {
       return { error: 'User not found' };
     }
 
-    return user.toObject() as SafeDatabaseUser;
+    return user.toObject() as PopulatedSafeDatabaseUser;
   }
 };

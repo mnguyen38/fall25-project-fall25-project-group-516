@@ -4,6 +4,9 @@ import { Answer, AddAnswerRequest, FakeSOSocket, PopulatedDatabaseAnswer } from 
 import { addAnswerToQuestion, saveAnswer } from '../services/answer.service';
 import { populateDocument } from '../utils/database.util';
 import { checkAndAwardBadges } from '../services/badge.service';
+import userSocketMap from '../utils/socketMap.util';
+import { sendNotification } from '../services/notification.service';
+import { Notification } from '@fake-stack-overflow/shared/types/notification';
 
 const answerController = (socket: FakeSOSocket) => {
   const router = express.Router();
@@ -43,6 +46,28 @@ const answerController = (socket: FakeSOSocket) => {
         throw new Error(populatedAns.error);
       }
 
+      const notificationData: Notification = {
+        title: `New Answer from ${ansFromDb.ansBy}`,
+        msg: ansFromDb.text,
+        dateTime: ansFromDb.ansDateTime,
+        sender: ansFromDb.ansBy,
+        contextId: status._id,
+        type: 'answer',
+      };
+
+      const sentNotification = await sendNotification([status.askedBy], notificationData);
+
+      if ('error' in sentNotification) {
+        throw new Error(sentNotification.error);
+      }
+
+      const socketId = userSocketMap.get(status.askedBy);
+
+      if (socketId) {
+        socket.to(socketId).emit('notificationUpdate', {
+          notificationStatus: { notification: notificationData, read: false },
+        });
+      }
       // Populates the fields of the answer that was added and emits the new object
       socket.emit('answerUpdate', {
         qid: new ObjectId(qid),

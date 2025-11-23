@@ -65,11 +65,7 @@ export const getUserByUsername = async (username: string): Promise<UserResponse>
       throw Error('User not found');
     }
 
-    const populatedUser: PopulatedSafeDatabaseUser | null = await populateUser(user._id.toString());
-
-    if (!populatedUser) {
-      throw Error('User not found');
-    }
+    const populatedUser: PopulatedSafeDatabaseUser = await populateUser(user._id.toString());
 
     return populatedUser;
   } catch (error) {
@@ -415,10 +411,6 @@ export const readNotifications = async (
     }
 
     const safeUser = await populateUser(user._id.toString());
-
-    if (!safeUser) {
-      throw new Error('Failed to format user response');
-    }
 
     return safeUser;
   } catch (error) {

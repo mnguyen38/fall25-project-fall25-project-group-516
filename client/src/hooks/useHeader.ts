@@ -3,7 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import useLoginContext from './useLoginContext';
 import { removeAuthToken } from '../services/userService';
 import useUserContext from './useUserContext';
-import { NotificationPayload, TransactionEventPayload } from '@fake-stack-overflow/shared';
+import {
+  NotificationPayload,
+  TransactionEventPayload,
+  UserUpdatePayload,
+} from '@fake-stack-overflow/shared';
 
 /**
  * Custom hook to manage the state and logic for a header input field.
@@ -84,12 +88,25 @@ const useHeader = () => {
       }
     };
 
+    const handleUserUpdate = async (payload: UserUpdatePayload) => {
+      if (payload.type === 'updated' && payload.user.username === user.username) {
+        if (payload.user.notifications) {
+          const numberOfUnread = payload.user.notifications.filter(n => !n.read).length;
+          setUnreadNotifications(numberOfUnread);
+        } else {
+          setUnreadNotifications(0);
+        }
+      }
+    };
+
     socket.on('transactionEvent', handleCoinUpdate);
     socket.on('notificationUpdate', handleNotificationUpdate);
+    socket.on('userUpdate', handleUserUpdate);
 
     return () => {
       socket.off('transactionEvent', handleCoinUpdate);
       socket.off('notificationUpdate', handleNotificationUpdate);
+      socket.off('userUpdate', handleUserUpdate);
     };
   }, [socket, user.username]);
 

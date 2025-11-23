@@ -7,10 +7,13 @@ import { AddressInfo } from 'net';
 import { app } from '../../app';
 import * as messageService from '../../services/message.service';
 import * as chatService from '../../services/chat.service';
+import * as notificationService from '../../services/notification.service';
 import * as databaseUtil from '../../utils/database.util';
 import { DatabaseChat, PopulatedDatabaseChat, Message } from '../../types/types';
 import chatController from '../../controllers/chat.controller';
 import { setupMockAuth } from '../../utils/mocks.util';
+import { DatabaseNotification } from '@fake-stack-overflow/shared/types/notification';
+import UserModel from '../../models/users.model';
 
 /**
  * Spies on the service functions
@@ -22,6 +25,7 @@ const getChatSpy = jest.spyOn(chatService, 'getChat');
 const addParticipantSpy = jest.spyOn(chatService, 'addParticipantToChat');
 const populateDocumentSpy = jest.spyOn(databaseUtil, 'populateDocument');
 const getChatsByParticipantsSpy = jest.spyOn(chatService, 'getChatsByParticipants');
+const sendNotificationSpy = jest.spyOn(notificationService, 'sendNotification');
 
 jest.mock('../../middleware/token.middleware');
 
@@ -161,6 +165,7 @@ describe('Chat Controller', () => {
   describe('POST /chat/:chatId/addMessage', () => {
     it('should add a message to chat successfully', async () => {
       const chatId = new mongoose.Types.ObjectId();
+      const notifId = new mongoose.Types.ObjectId();
       const messagePayload: Message = {
         msg: 'Hello!',
         msgFrom: 'user1',
@@ -198,9 +203,22 @@ describe('Chat Controller', () => {
         updatedAt: new Date('2025-01-01'),
       };
 
+      const notification: DatabaseNotification = {
+        _id: notifId,
+        title: 'test',
+        msg: 'testing',
+        dateTime: new Date('2025-01-01'),
+        sender: 'user1',
+        contextId: chatId,
+        type: 'message',
+      };
+
       saveMessageSpy.mockResolvedValue(messageResponse);
       addMessageSpy.mockResolvedValue(chatResponse);
       populateDocumentSpy.mockResolvedValue(populatedChatResponse);
+      sendNotificationSpy.mockResolvedValue(notification);
+
+      jest.spyOn(UserModel, 'find').mockResolvedValueOnce([]);
 
       const response = await supertest(app)
         .post(`/api/chat/${chatId}/addMessage`)
