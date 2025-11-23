@@ -8,6 +8,11 @@ import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended'
 import eslintPluginImport from 'eslint-plugin-import';
 import eslintReactHooks from 'eslint-plugin-react-hooks';
 import eslintReactRefresh from 'eslint-plugin-react-refresh';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 export default defineConfig([
   globalIgnores(['build/*', 'dist/*', '.stryker-tmp/*', 'coverage/*']),
@@ -18,6 +23,10 @@ export default defineConfig([
       eslintPluginImport.flatConfigs.recommended,
       eslintPluginImport.flatConfigs.typescript,
     ],
+    languageOptions: {
+      ecmaVersion: 2022,
+      sourceType: 'module',
+    },
     settings: {
       'import/resolver': {
         typescript: true,
