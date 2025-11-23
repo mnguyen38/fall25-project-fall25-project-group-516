@@ -19,6 +19,7 @@ export interface Community {
   admin: string;
   moderators?: string[];
   banned?: string[];
+  muted?: string[];
 }
 
 /**

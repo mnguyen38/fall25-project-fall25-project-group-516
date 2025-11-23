@@ -9,6 +9,8 @@ import {
 } from '../types/types';
 import AnswerModel from '../models/answers.model';
 import QuestionModel from '../models/questions.model';
+import { isAllowedToPostInCommunity } from './community.service';
+import { isAllowedToPostOnQuestion } from './question.service';
 
 /**
  * Records the most recent answer time for a given question based on its answers.
@@ -72,4 +74,23 @@ export const addAnswerToQuestion = async (
   } catch (error) {
     return { error: 'Error when adding answer to question' };
   }
+};
+
+export const isAllowedToPostOnAnswer = async (
+  answerId: string,
+  username: string,
+): Promise<boolean> => {
+  const question: DatabaseQuestion | null = await QuestionModel.findOne({
+    answers: { $in: [answerId] },
+  }).select('community');
+
+  if (!question) {
+    throw new Error('Answer not found');
+  }
+
+  const isAllowed = question.community
+    ? await isAllowedToPostInCommunity(question.community.toString(), username)
+    : true;
+
+  return isAllowed;
 };

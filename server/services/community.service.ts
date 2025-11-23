@@ -11,7 +11,7 @@ import {
   DatabaseCommunity,
   FakeSOSocket,
 } from '../types/types';
-import mongoose from 'mongoose';
+import mongoose, { ObjectId } from 'mongoose';
 import { addNotificationToUsers, saveNotification } from './notification.service';
 import UserModel from '../models/users.model';
 import userSocketMap from '../utils/socketMap.util';
@@ -371,5 +371,74 @@ export const sendNotificationUpdates = async (
     });
   } catch (error) {
     return { error: (error as Error).message };
+  }
+};
+
+export const muteCommunityUser = async (
+  communityId: string,
+  managerUsername: string,
+  username: string,
+): Promise<CommunityResponse> => {
+  try {
+    const community = await CommunityModel.findById(communityId);
+
+    if (!community) {
+      throw new Error('Community not found');
+    }
+
+    const hasPermission =
+      community.admin === managerUsername || community.moderators?.includes(managerUsername);
+
+    if (!hasPermission) {
+      throw new Error('Unauthorized: User does not have proper permissions');
+    }
+
+    const isMuted = community.muted?.includes(username);
+
+    const operation = isMuted ? { $pull: { muted: username } } : { $addToSet: { muted: username } };
+
+    const updatedCommunity = await CommunityModel.findByIdAndUpdate(communityId, operation, {
+      new: true,
+    });
+
+    if (!updatedCommunity) {
+      throw new Error('Count not update muted users');
+    }
+
+    return updatedCommunity;
+  } catch (error) {
+    return { error: (error as Error).message };
+  }
+};
+
+/**
+ * Checks if a user is allowed to post content in a specific community.
+ * Enforces that the user must be a participant and not muted.
+ *
+ * @param communityId - The ID of the community
+ * @param username - The username of the user
+ * @returns {Promise<boolean>} - True if allowed, false otherwise
+ */
+export const isAllowedToPostInCommunity = async (
+  communityId: string,
+  username: string,
+): Promise<boolean> => {
+  try {
+    if (!communityId) {
+      return true;
+    }
+
+    const isAllowed = await CommunityModel.findOne({
+      _id: communityId,
+      participants: { $in: [username] },
+      muted: { $nin: [username] },
+    });
+
+    if (!isAllowed) {
+      return false;
+    }
+    return true;
+  } catch {
+    return false;
   }
 };

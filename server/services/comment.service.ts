@@ -10,6 +10,9 @@ import {
 import AnswerModel from '../models/answers.model';
 import QuestionModel from '../models/questions.model';
 import CommentModel from '../models/comments.model';
+import { isAllowedToPostInCommunity } from './community.service';
+import { isAllowedToPostOnQuestion } from './question.service';
+import { isAllowedToPostOnAnswer } from './answer.service';
 
 /**
  * Saves a new comment to the database.
@@ -45,12 +48,20 @@ export const addComment = async (
     let result: DatabaseQuestion | DatabaseAnswer | null;
 
     if (type === 'question') {
+      const isAllowed = isAllowedToPostOnQuestion(id, comment.commentBy);
+      if (!isAllowed) {
+        throw new Error('User not allowed to comment');
+      }
       result = await QuestionModel.findOneAndUpdate(
         { _id: id },
         { $push: { comments: { $each: [comment._id] } } },
         { new: true },
       );
     } else {
+      const isAllowed = isAllowedToPostOnAnswer(id, comment.commentBy);
+      if (!isAllowed) {
+        throw new Error('User not allowed to comment');
+      }
       result = await AnswerModel.findOneAndUpdate(
         { _id: id },
         { $push: { comments: { $each: [comment._id] } } },

@@ -24,6 +24,7 @@ import {
   sortQuestionsByNewest,
   sortQuestionsByUnanswered,
 } from '../utils/sort.util';
+import { isAllowedToPostInCommunity } from './community.service';
 
 /**
  * Checks if keywords exist in a question's title or text.
@@ -162,6 +163,14 @@ export const fetchAndIncrementQuestionViewsById = async (
  */
 export const saveQuestion = async (question: Question): Promise<QuestionResponse> => {
   try {
+    const allowed = question.community
+      ? await isAllowedToPostInCommunity(question.community.toString(), question.askedBy)
+      : true;
+
+    if (!allowed) {
+      throw new Error('Unauthorized: User cannot post question in this community');
+    }
+
     const result: DatabaseQuestion = await QuestionModel.create(question);
 
     return result;
@@ -280,4 +289,21 @@ export const getCommunityQuestions = async (communityId: string): Promise<Databa
   } catch (error) {
     return [];
   }
+};
+
+export const isAllowedToPostOnQuestion = async (
+  questionId: string,
+  username: string,
+): Promise<boolean> => {
+  const question = await QuestionModel.findById(questionId).select('community');
+
+  if (!question) {
+    throw new Error('Question not found');
+  }
+
+  const isAllowed = question.community
+    ? await isAllowedToPostInCommunity(question.community.toString(), username)
+    : true;
+
+  return isAllowed;
 };

@@ -6,6 +6,7 @@ import {
   toggleCommunityMembership,
   createCommunity,
   deleteCommunity,
+  muteCommunityUser,
 } from '../../services/community.service';
 import { Community, DatabaseCommunity } from '../../types/types';
 
@@ -21,6 +22,9 @@ describe('Community Service', () => {
     description: 'Test Description',
     admin: 'admin_user',
     participants: ['admin_user', 'user1', 'user2'],
+    moderators: [],
+    muted: [],
+    banned: [],
     visibility: 'PUBLIC',
     createdAt: new Date('2024-03-01'),
     updatedAt: new Date('2024-03-01'),
@@ -287,6 +291,55 @@ describe('Community Service', () => {
       const result = await deleteCommunity('65e9b58910afe6e94fc6e6dc', 'admin_user');
 
       expect(result).toEqual({ error: 'Database error' });
+    });
+  });
+
+  describe('Muting user', () => {
+    test('Mute successfully if users role is admin', async () => {
+      const updatedCommunity = { ...mockCommunity, muted: ['user1'] };
+
+      jest.spyOn(CommunityModel, 'findById').mockResolvedValueOnce(mockCommunity);
+      jest.spyOn(CommunityModel, 'findByIdAndUpdate').mockResolvedValue(updatedCommunity);
+
+      const result = await muteCommunityUser('65e9b58910afe6e94fc6e6dc', 'admin_user', 'user1');
+
+      expect(result).toBe(updatedCommunity);
+    });
+    test('Mute successfully if users role is moderator', async () => {
+      const newMockCommunity = { ...mockCommunity, moderators: ['user2'] };
+      const updatedCommunity = { ...newMockCommunity, muted: ['user123'] };
+
+      jest.spyOn(CommunityModel, 'findById').mockResolvedValueOnce(newMockCommunity);
+      jest.spyOn(CommunityModel, 'findByIdAndUpdate').mockResolvedValue(updatedCommunity);
+
+      const result = await muteCommunityUser('65e9b58910afe6e94fc6e6dc', 'user2', 'user1');
+
+      expect(result).toBe(updatedCommunity);
+    });
+
+    test('Mute fails if community does not exist', async () => {
+      jest.spyOn(CommunityModel, 'findById').mockResolvedValueOnce(null);
+
+      const result = await muteCommunityUser('65e9b58910afe6e94fc6e6dc', 'user2', 'user1');
+
+      expect('error' in result).toBe(true);
+    });
+
+    test('Mute fails if user does not have permissions', async () => {
+      jest.spyOn(CommunityModel, 'findById').mockResolvedValueOnce(mockCommunity);
+
+      const result = await muteCommunityUser('65e9b58910afe6e94fc6e6dc', 'user2', 'user1');
+
+      expect('error' in result).toBe(true);
+    });
+
+    test('Mute fails if update is unsuccessful', async () => {
+      jest.spyOn(CommunityModel, 'findById').mockResolvedValueOnce(mockCommunity);
+      jest.spyOn(CommunityModel, 'findByIdAndUpdate').mockResolvedValue(null);
+
+      const result = await muteCommunityUser('65e9b58910afe6e94fc6e6dc', 'admin_user', 'user1');
+
+      expect('error' in result).toBe(true);
     });
   });
 });
