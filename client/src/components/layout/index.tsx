@@ -11,15 +11,23 @@ import TransactionWindow from '../transactionWindow';
 import useTransactionWindow from '../../hooks/useTransactionWindow';
 import usePremiumTransaction from '../../hooks/usePremiumTransaction';
 import StreakRecoveryWindow from '../streakRecoveryWindow';
+import useUserContext from '../../hooks/useUserContext';
 
 /**
  * Main component represents the layout of the main page, including a sidebar and the main content area.
  */
 const Layout = () => {
-  // Ad blocker detection
+  const { user } = useUserContext();
+
+  // Ad blocker detection - only for non-premium users
   const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
+    // Skip ad blocker detection for premium users
+    if (user.premiumProfile) {
+      return;
+    }
+
     const checkAdBlock = async () => {
       const isBlocked = await detectAdBlockCombined();
 
@@ -29,7 +37,7 @@ const Layout = () => {
     };
 
     checkAdBlock();
-  }, []);
+  }, [user.premiumProfile]);
 
   const handleDismiss = () => {
     setShowModal(false);
@@ -90,7 +98,8 @@ const Layout = () => {
         <RightSidebar />
       </div>
       <Footer />
-      <AdBlockerModal isVisible={showModal} onDismiss={handleDismiss} />
+      {/* Ad blocker modal - only shown to non-premium users */}
+      {!user.premiumProfile && <AdBlockerModal isVisible={showModal} onDismiss={handleDismiss} />}
     </>
   );
 };

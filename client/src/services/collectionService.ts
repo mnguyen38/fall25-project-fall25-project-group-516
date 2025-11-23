@@ -1,4 +1,4 @@
-import axios from 'axios';
+import api from './config';
 import { Collection, PopulatedDatabaseCollection } from '../types/types';
 
 const COLLECTION_API_URL = '/api/collection';
@@ -9,7 +9,7 @@ const COLLECTION_API_URL = '/api/collection';
  * @returns {Promise<PopulatedDatabaseCollection>} - A promise that resolves to the created collection
  */
 const createCollection = async (collection: Collection): Promise<PopulatedDatabaseCollection> => {
-  const res = await axios.post(`${COLLECTION_API_URL}/create`, collection);
+  const res = await api.post(`${COLLECTION_API_URL}/create`, collection);
 
   if (res.status !== 200) {
     throw new Error('Error while creating collection');
@@ -29,7 +29,7 @@ const getAllCollectionsByUsername = async (
   usernameToView: string,
   currentUsername: string,
 ): Promise<PopulatedDatabaseCollection[]> => {
-  const res = await axios.get(
+  const res = await api.get(
     `${COLLECTION_API_URL}/getCollectionsByUsername/${usernameToView}?currentUsername=${currentUsername}`,
   );
 
@@ -50,7 +50,7 @@ const getCollectionById = async (
   username: string,
   collectionId: string,
 ): Promise<PopulatedDatabaseCollection> => {
-  const res = await axios.get(
+  const res = await api.get(
     `${COLLECTION_API_URL}/getCollectionById/${collectionId}?username=${username}`,
   );
 
@@ -68,7 +68,7 @@ const getCollectionById = async (
  * @returns A promise that resolves to the updated collection object
  */
 const toggleSaveQuestion = async (collectionId: string, questionId: string, username: string) => {
-  const res = await axios.patch(`${COLLECTION_API_URL}/toggleSaveQuestion`, {
+  const res = await api.patch(`${COLLECTION_API_URL}/toggleSaveQuestion`, {
     collectionId,
     questionId,
     username,
@@ -93,7 +93,7 @@ const toggleSaveQuestion = async (collectionId: string, questionId: string, user
  * @throws An error if the API response status is not 200
  */
 const deleteCollection = async (collectionId: string, username: string) => {
-  const res = await axios.delete(
+  const res = await api.delete(
     `${COLLECTION_API_URL}/delete/${collectionId}?username=${username}`,
   );
 

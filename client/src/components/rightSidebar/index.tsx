@@ -1,10 +1,12 @@
 import './index.css';
 import { Link } from 'react-router-dom';
 import useRightSidebar from '../../hooks/useRightSidebar';
+import useUserContext from '../../hooks/useUserContext';
 import AdContainer from '../adContainer';
 
 const RightSidebar = () => {
   const { topCommunities, hotQuestions, loading } = useRightSidebar();
+  const { user } = useUserContext();
 
   return (
     <div className='rightSidebar'>
@@ -48,8 +50,10 @@ const RightSidebar = () => {
         )}
       </div>
 
-      {/* Ad at the bottom of right sidebar */}
-      <AdContainer adKey='7beebaa8acee60713ef045584ce68a7b' width={300} height={250} />
+      {/* Ad at the bottom of right sidebar - only shown to non-premium users */}
+      {!user.premiumProfile && (
+        <AdContainer adKey='7beebaa8acee60713ef045584ce68a7b' width={300} height={250} />
+      )}
     </div>
   );
 };

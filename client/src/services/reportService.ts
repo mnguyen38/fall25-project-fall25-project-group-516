@@ -31,13 +31,35 @@ export interface CreateReportResponse {
 export const createReport = async (
   reportData: CreateReportRequest,
 ): Promise<CreateReportResponse> => {
-  const res = await api.post(`${REPORT_API_URL}/create`, reportData);
+  try {
+    const res = await api.post(`${REPORT_API_URL}/create`, reportData);
+    return res.data;
+  } catch (error: unknown) {
+    // Extract user-friendly error message from server response
+    const serverMessage = (error as { response?: { data?: { error?: string } } }).response?.data
+      ?.error;
 
-  if (res.status !== 200) {
-    throw new Error('Error while creating report');
+    if (serverMessage) {
+      // Make error messages more user-friendly
+      if (serverMessage.includes('already reported')) {
+        throw new Error(
+          'We have already received your report for this user. Thank you for helping keep our community safe!',
+        );
+      } else if (serverMessage.includes('cannot report yourself')) {
+        throw new Error('You cannot report yourself.');
+      } else if (serverMessage.includes('not found')) {
+        throw new Error('The community or user could not be found.');
+      } else if (serverMessage.includes('must be a member')) {
+        throw new Error('You must be a member of this community to submit reports.');
+      } else {
+        // Use the server's error message if it's descriptive
+        throw new Error(serverMessage);
+      }
+    }
+
+    // Fallback to generic error
+    throw new Error('Unable to submit report. Please try again later.');
   }
-
-  return res.data;
 };
 
 /**
@@ -48,16 +70,17 @@ export const createReport = async (
  * @returns An array of reports for the user
  */
 export const getReportsByUser = async (communityId: string, username: string) => {
-  const res = await api.post(`${REPORT_API_URL}/getByUser`, {
-    communityId,
-    username,
-  });
-
-  if (res.status !== 200) {
-    throw new Error('Error while fetching reports');
+  try {
+    const res = await api.post(`${REPORT_API_URL}/getByUser`, {
+      communityId,
+      username,
+    });
+    return res.data;
+  } catch (error: unknown) {
+    const serverMessage = (error as { response?: { data?: { error?: string } } }).response?.data
+      ?.error;
+    throw new Error(serverMessage || 'Unable to fetch reports. Please try again later.');
   }
-
-  return res.data;
 };
 
 /**
@@ -67,13 +90,14 @@ export const getReportsByUser = async (communityId: string, username: string) =>
  * @returns An array of pending reports
  */
 export const getPendingReports = async (communityId: string) => {
-  const res = await api.get(`${REPORT_API_URL}/pending/${communityId}`);
-
-  if (res.status !== 200) {
-    throw new Error('Error while fetching pending reports');
+  try {
+    const res = await api.get(`${REPORT_API_URL}/pending/${communityId}`);
+    return res.data;
+  } catch (error: unknown) {
+    const serverMessage = (error as { response?: { data?: { error?: string } } }).response?.data
+      ?.error;
+    throw new Error(serverMessage || 'Unable to fetch pending reports. Please try again later.');
   }
-
-  return res.data;
 };
 
 /**
@@ -89,15 +113,21 @@ export const updateReportStatus = async (
   status: 'reviewed' | 'dismissed',
   reviewedBy: string,
 ) => {
-  const res = await api.post(`${REPORT_API_URL}/updateStatus`, {
-    reportId,
-    status,
-    reviewedBy,
-  });
+  try {
+    const res = await api.post(`${REPORT_API_URL}/updateStatus`, {
+      reportId,
+      status,
+      reviewedBy,
+    });
+    return res.data;
+  } catch (error: unknown) {
+    const serverMessage = (error as { response?: { data?: { error?: string } } }).response?.data
+      ?.error;
 
-  if (res.status !== 200) {
-    throw new Error('Error while updating report status');
+    if (serverMessage?.includes('not found')) {
+      throw new Error('Report not found.');
+    }
+
+    throw new Error(serverMessage || 'Unable to update report status. Please try again later.');
   }
-
-  return res.data;
 };
