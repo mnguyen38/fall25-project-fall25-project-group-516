@@ -481,10 +481,10 @@ export const getUserIfTopContributor = async (username: string): Promise<UserRes
       throw Error('Could not find average lifetimeUpvote score');
     }
 
-    const user: DatabaseUser | null = (await UserModel.find({
+    const user: PopulatedSafeDatabaseUser | null = (await UserModel.find({
       username: username,
       lifetimeUpvotes: { $gt: { average } },
-    })) as unknown as DatabaseUser | null;
+    })) as unknown as PopulatedSafeDatabaseUser | null;
 
     if (!user) {
       return null;
