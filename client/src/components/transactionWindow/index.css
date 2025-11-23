@@ -55,7 +55,7 @@
 }
 
 .transaction-description h3 {
-  white-space: initial;
+  white-space: pre-wrap;
 }
 
 .transaction-modal {

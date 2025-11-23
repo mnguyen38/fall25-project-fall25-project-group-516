@@ -51,10 +51,11 @@ const useTransactionWindow = () => {
    * If it is user's first login of session, opens transaction window for login reward.
    */
   useEffect(() => {
+    if (user.streakHold === true) return;
     if (getAuthToken() && !getLoginStatus(user.username)) {
       openTransactionWindow();
     }
-  }, [user.loginStreak, user.username]);
+  }, [user.loginStreak, user.username, user.streakHold]);
 
   /**
    * When user claims login reward, sets login status in session storage.

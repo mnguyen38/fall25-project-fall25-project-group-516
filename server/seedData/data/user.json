@@ -202,5 +202,15 @@
     "password": "C1CD@ut0mat3!",
     "dateJoined": "2024-01-11T16:44:37Z",
     "biography": "DevOps engineer specializing in containerization, orchestration, and infrastructure as code. Making deployment smooth and reliable."
+  },
+  "kittycakemaker": {
+    "username": "kittycakemaker",
+    "password": "cat",
+    "dateJoined": "2024-01-11T16:44:37Z",
+    "biography": "Lover of cake and cake-adjacent confectionary!",
+    "premiumProfile": "true",
+    "streakPass": "3",
+    "lastLogin": "2025-11-20T16:44:37Z",
+    "loginStreak": "4"
   }
 }

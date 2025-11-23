@@ -91,7 +91,7 @@ const Layout = () => {
             onConfirm={handlePremiumConfirmation}
             cost={cost}
             title='Premium Membership Purchase'
-            description={`To purchase premium membership.\nPremium members will have their questions boosted in communities and be able to turn off ads.`}
+            description={`To purchase premium membership.!\nPremium members will...\n- Have their questions boosted in communities\n- Gain three streak passes to recover missed login streaks (miss up to 7 days!)\n- Have ads disabled`}
             awarded={false}
           />
         </div>
