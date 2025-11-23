@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import useUserContext from './useUserContext';
-import { SafeDatabaseUser, UserUpdatePayload } from '../types/types';
+import { PopulatedSafeDatabaseUser, UserUpdatePayload } from '../types/types';
 import { getUsers } from '../services/userService';
 
 /**
@@ -14,7 +14,7 @@ const useUsersListPage = () => {
   const { socket } = useUserContext();
 
   const [userFilter, setUserFilter] = useState<string>('');
-  const [userList, setUserList] = useState<SafeDatabaseUser[]>([]);
+  const [userList, setUserList] = useState<PopulatedSafeDatabaseUser[]>([]);
 
   useEffect(() => {
     /**
@@ -36,8 +36,10 @@ const useUsersListPage = () => {
      * @param user the user to remove
      * @returns a list without the given user
      */
-    const removeUserFromList = (prevUserList: SafeDatabaseUser[], user: SafeDatabaseUser) =>
-      prevUserList.filter(otherUser => user.username !== otherUser.username);
+    const removeUserFromList = (
+      prevUserList: PopulatedSafeDatabaseUser[],
+      user: PopulatedSafeDatabaseUser,
+    ) => prevUserList.filter(otherUser => user.username !== otherUser.username);
 
     /**
      * Adds a user to the userList, if not present. Otherwise updates the user.
@@ -45,7 +47,10 @@ const useUsersListPage = () => {
      * @param user the user to add
      * @returns a list with the user added, or updated if present.
      */
-    const addUserToList = (prevUserList: SafeDatabaseUser[], user: SafeDatabaseUser) => {
+    const addUserToList = (
+      prevUserList: PopulatedSafeDatabaseUser[],
+      user: PopulatedSafeDatabaseUser,
+    ) => {
       const userExists = prevUserList.some(otherUser => otherUser.username === user.username);
 
       if (userExists) {

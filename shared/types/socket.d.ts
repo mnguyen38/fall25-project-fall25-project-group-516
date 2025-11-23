@@ -2,7 +2,7 @@ import { PopulatedDatabaseAnswer } from './answer';
 import { PopulatedDatabaseChat } from './chat';
 import { DatabaseMessage } from './message';
 import { PopulatedDatabaseQuestion } from './question';
-import { SafeDatabaseUser } from './user';
+import { PopulatedSafeDatabaseUser } from './user';
 import { BaseMove, GameInstance, GameInstanceID, GameMove, GameState } from './game';
 import { DatabaseCommunity } from './community';
 import { PopulatedDatabaseCollection } from './collection';
@@ -58,6 +58,10 @@ export interface ChatUpdatePayload {
   type: 'created' | 'newMessage' | 'newParticipant';
 }
 
+export interface NotificationPayload {
+  notificationStatus: PopulatedUserNotificationStatus;
+}
+
 /**
  * Payload for a comment update event.
  * - `result`: The updated question or answer.
@@ -82,7 +86,7 @@ export interface MessageUpdatePayload {
  * - `type`: The type of modification (`'created'`, `'deleted'`, or `'updated'`).
  */
 export interface UserUpdatePayload {
-  user: SafeDatabaseUser;
+  user: PopulatedSafeDatabaseUser;
   type: 'created' | 'deleted' | 'updated';
 }
 
@@ -225,5 +229,6 @@ export interface ServerToClientEvents {
   badgeUpdate: (badge: BadgeUpdatePayload) => void;
   badgeAwarded: (awarded: BadgeAwardedPayload) => void;
   transactionEvent: (transaction: TransactionPayload) => void;
+  notificationUpdate: (notification: NotificationPayload) => void;
   premiumUpdate: (status: PremiumUpdatePayload) => void;
 }

@@ -5,13 +5,16 @@ import { app } from '../../app';
 import * as answerUtil from '../../services/answer.service';
 import * as databaseUtil from '../../utils/database.util';
 import * as badgeUtil from '../../services/badge.service';
+import * as notificationService from '../../services/notification.service';
 import { setupMockAuth } from '../../utils/mocks.util';
+import { DatabaseNotification } from '@fake-stack-overflow/shared/types/notification';
 
 jest.mock('../../middleware/token.middleware');
 
 const saveAnswerSpy = jest.spyOn(answerUtil, 'saveAnswer');
 const addAnswerToQuestionSpy = jest.spyOn(answerUtil, 'addAnswerToQuestion');
 const popDocSpy = jest.spyOn(databaseUtil, 'populateDocument');
+const sendNotificationSpy = jest.spyOn(notificationService, 'sendNotification');
 
 describe('POST /addAnswer', () => {
   beforeEach(() => {
@@ -73,6 +76,18 @@ describe('POST /addAnswer', () => {
       community: null,
       premiumStatus: false,
     });
+
+    const notification: DatabaseNotification = {
+      _id: new ObjectId(),
+      title: `New Answer from ${mockAnswer.ansBy}`,
+      msg: mockAnswer.text,
+      dateTime: mockAnswer.ansDateTime,
+      sender: mockAnswer.ansBy,
+      contextId: validQid,
+      type: 'answer',
+    };
+
+    sendNotificationSpy.mockResolvedValue(notification);
 
     const response = await supertest(app).post('/api/answer/addAnswer').send(mockReqBody);
 

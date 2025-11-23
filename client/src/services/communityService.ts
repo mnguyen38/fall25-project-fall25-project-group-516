@@ -1,6 +1,7 @@
 import { ObjectId } from 'mongodb';
 import api from './config';
 import { Community, DatabaseCommunity } from '../types/types';
+import { DatabaseNotification, Notification } from '@fake-stack-overflow/shared/types/notification';
 
 const COMMUNITIES_API_URL = `/api/community`;
 
@@ -118,6 +119,21 @@ const toggleBan = async (communityId: string, username: string): Promise<Databas
   return res.data;
 };
 
+const sendAnnouncement = async (
+  communityId: string,
+  managerUsername: string,
+  announcement: Notification,
+): Promise<DatabaseNotification> => {
+  const data = { communityId, managerUsername, announcement };
+  const res = await api.post(`${COMMUNITIES_API_URL}/announcement`, data);
+
+  if (res.status !== 200) {
+    throw new Error('Error when sending PSA');
+  }
+
+  return res.data;
+};
+
 export {
   changeCommunityMembership,
   getCommunities,
@@ -126,4 +142,5 @@ export {
   deleteCommunity,
   toggleModerator,
   toggleBan,
+  sendAnnouncement,
 };

@@ -2,7 +2,7 @@ import { JSX, useState, useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './layout';
 import Login from './auth/login';
-import { FakeSOSocket, SafeDatabaseUser } from '../types/types';
+import { FakeSOSocket, PopulatedSafeDatabaseUser } from '../types/types';
 import LoginContext from '../contexts/LoginContext';
 import UserContext from '../contexts/UserContext';
 import { verifyStoredToken } from '../services/userService';
@@ -25,13 +25,14 @@ import AllCollectionsPage from './main/collections/allCollectionsPage';
 import CollectionPage from './main/collections/collectionPage';
 import NewCollectionPage from './main/collections/newCollectionPage';
 import AuthCallbackPage from './auth/callback';
+import Notifications from './notificationsPage';
 
 const ProtectedRoute = ({
   user,
   socket,
   children,
 }: {
-  user: SafeDatabaseUser | null;
+  user: PopulatedSafeDatabaseUser | null;
   socket: FakeSOSocket | null;
   children: JSX.Element;
 }) => {
@@ -62,7 +63,7 @@ const ProtectedRoute = ({
  * It manages the state for search terms and the main title.
  */
 const FakeStackOverflow = ({ socket }: { socket: FakeSOSocket | null }) => {
-  const [user, setUser] = useState<SafeDatabaseUser | null>(null);
+  const [user, setUser] = useState<PopulatedSafeDatabaseUser | null>(null);
   const [loading, setLoading] = useState(true);
 
   // Check for stored token on mount and auto-login if valid
@@ -140,6 +141,7 @@ const FakeStackOverflow = ({ socket }: { socket: FakeSOSocket | null }) => {
             <Route path='/communities' element={<AllCommunitiesPage />} />
             <Route path='/new/community' element={<NewCommunityPage />} />
             <Route path='/communities/:communityID' element={<CommunityPage />} />
+            <Route path='/notifications' element={<Notifications />} />
           </Route>
         }
       </Routes>

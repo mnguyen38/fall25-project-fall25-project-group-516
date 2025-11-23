@@ -10,7 +10,7 @@ import {
   updateShowLoginStreak,
 } from '../services/userService';
 import { getUserBadges, updateDisplayedBadges } from '../services/badgeService';
-import { SafeDatabaseUser, BadgeWithProgress } from '../types/types';
+import { PopulatedSafeDatabaseUser, BadgeWithProgress } from '../types/types';
 import useUserContext from './useUserContext';
 import useHeader from './useHeader';
 
@@ -23,7 +23,7 @@ const useProfileSettings = () => {
   const { handleSignOut } = useHeader();
 
   // Local state
-  const [userData, setUserData] = useState<SafeDatabaseUser | null>(null);
+  const [userData, setUserData] = useState<PopulatedSafeDatabaseUser | null>(null);
   const [loading, setLoading] = useState(false);
   const [editBioMode, setEditBioMode] = useState(false);
   const [newBio, setNewBio] = useState('');
@@ -38,6 +38,8 @@ const useProfileSettings = () => {
   const [bannerImageUrl, setBannerImageUrl] = useState<string | null>(null);
   const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
   const [bannerImageFile, setBannerImageFile] = useState<File | null>(null);
+
+  // toggle login streak visibility
   const [showLoginStreak, setShowLoginStreak] = useState<boolean>(true);
 
   const canEditProfile =

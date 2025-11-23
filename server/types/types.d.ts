@@ -31,7 +31,6 @@ declare module 'express-serve-static-core' {
     user?: {
       _id: string;
       username: string;
-      email?: string;
     };
   }
 }

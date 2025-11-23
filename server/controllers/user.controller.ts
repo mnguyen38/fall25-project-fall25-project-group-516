@@ -8,6 +8,7 @@ import {
   UpdateBiographyRequest,
   TransactionRequest,
   UpdateShowLoginStreakRequest,
+  ReadNotificationRequest,
   UpdateStatusRequest,
 } from '../types/types';
 import {
@@ -16,6 +17,7 @@ import {
   getUsersList,
   loginUser,
   makeTransaction,
+  readNotifications,
   saveUser,
   updateUser,
   updateUserStatus,
@@ -23,8 +25,8 @@ import {
 import { upload, processProfilePicture, processBannerImage } from '../utils/upload';
 import { generateToken } from '../utils/jwt.util';
 import protect from '../middleware/token.middleware';
-import { getCachedUser } from '../utils/cache.util';
 import { checkAndAwardBadges } from '../services/badge.service';
+import { populateUser } from '../utils/database.util';
 
 const userController = (socket: FakeSOSocket) => {
   const router: Router = express.Router();
@@ -581,9 +583,9 @@ const userController = (socket: FakeSOSocket) => {
       const { _id: userId } = req.user;
 
       // Get user data from database using the decoded username
-      const user = await getCachedUser(userId);
+      const user = await populateUser(userId);
 
-      if ('error' in user) {
+      if (!user) {
         res.status(404).json({ error: 'User not found' });
         return;
       }
@@ -745,6 +747,120 @@ const userController = (socket: FakeSOSocket) => {
     }
   };
 
+  const readNotificationsRoute = async (
+    req: ReadNotificationRequest,
+    res: Response,
+  ): Promise<void> => {
+    try {
+      const { username, notificationIds } = req.body;
+
+      const updatedUser = await readNotifications(username, notificationIds);
+
+      if ('error' in updatedUser) {
+        throw new Error(updatedUser.error);
+      }
+
+      socket.emit('userUpdate', {
+        user: updatedUser,
+        type: 'updated',
+      });
+
+      res.json(updatedUser);
+    } catch (error) {
+      res.status(500).json({ error: (error as Error).message });
+    }
+  };
+
+  /**
+   * Toggles a user's community notification setting.
+   * @param req The request containing the username in the body.
+   * @param res The response, either confirming the update or returning an error.
+   * @returns A promise resolving to void.
+   */
+  const toggleCommunityNotifs = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { username } = req.body;
+
+      if (!username) {
+        res.status(400).send('Username must be provided');
+        return;
+      }
+
+      // Get current user to toggle the community notification status
+      const currentUser = await getUserByUsername(username);
+
+      if ('error' in currentUser) {
+        throw new Error(currentUser.error);
+      }
+
+      const newCommNotif =
+        typeof currentUser.communityNotifs == 'boolean' ? !currentUser.communityNotifs : false;
+
+      // Toggle the communityNotifs field
+      const updatedUser = await updateUser(username, {
+        communityNotifs: newCommNotif,
+      });
+
+      if ('error' in updatedUser) {
+        throw new Error(updatedUser.error);
+      }
+
+      socket.emit('userUpdate', {
+        user: updatedUser,
+        type: 'updated',
+      });
+
+      res.status(200).json(updatedUser);
+    } catch (error) {
+      res.status(500).send(`Error toggling notifications for communities: ${error}`);
+    }
+  };
+
+  /**
+   * Toggles a user's message notification setting.
+   * @param req The request containing the username in the body.
+   * @param res The response, either confirming the update or returning an error.
+   * @returns A promise resolving to void.
+   */
+  const toggleMessageNotifs = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { username } = req.body;
+
+      if (!username) {
+        res.status(400).send('Username must be provided');
+        return;
+      }
+
+      // Get current user to toggle the messages notification status
+      const currentUser = await getUserByUsername(username);
+
+      if ('error' in currentUser) {
+        throw new Error(currentUser.error);
+      }
+
+      const newMsgNotif =
+        typeof currentUser.messageNotifs == 'boolean' ? !currentUser.messageNotifs : false;
+
+      // Toggle the messageNotifs field
+      const updatedUser = await updateUser(username, {
+        messageNotifs: newMsgNotif,
+      });
+
+      if ('error' in updatedUser) {
+        throw new Error(updatedUser.error);
+      }
+
+      socket.emit('userUpdate', {
+        user: updatedUser,
+        type: 'updated',
+      });
+
+      res.status(200).json(updatedUser);
+    } catch (error) {
+      res.status(500).send(`Error toggling notifications for all messages: ${error}`);
+    }
+  };
+
   // Define routes for the user-related operations.
   router.post('/signup', createUser);
   router.post('/login', userLogin);
@@ -770,7 +886,10 @@ const userController = (socket: FakeSOSocket) => {
   router.patch('/updateStatus', protect, updateStatus);
   router.patch('/addCoins', protect, addCoinTransaction);
   router.patch('/reduceCoins', protect, reduceCoinTransaction);
+  router.patch('/readNotifications', readNotificationsRoute);
   router.patch('/resetLoginStreak', protect, resetLoginStreak);
+  router.patch('/toggleCommunityNotifs', protect, toggleCommunityNotifs);
+  router.patch('/toggleMessageNotifs', protect, toggleMessageNotifs);
 
   return router;
 };

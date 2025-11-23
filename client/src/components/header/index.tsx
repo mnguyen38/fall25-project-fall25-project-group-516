@@ -1,3 +1,4 @@
+import { FiBell } from 'react-icons/fi';
 import useHeader from '../../hooks/useHeader';
 import './index.css';
 
@@ -11,7 +12,14 @@ interface HeaderProps {
  * when they press Enter.
  */
 const Header = ({ openTransactionWindow }: HeaderProps) => {
-  const { val, handleInputChange, handleKeyDown, coins } = useHeader();
+  const {
+    val,
+    handleInputChange,
+    handleKeyDown,
+    coins,
+    unreadNotifications,
+    handleNotifPageRedirect,
+  } = useHeader();
 
   const handleCoinClick = async () => {
     openTransactionWindow();
@@ -40,9 +48,35 @@ const Header = ({ openTransactionWindow }: HeaderProps) => {
         <div id='text' text-align='center' justify-content='center'>
           {coins}
         </div>
+        <div id='text'></div>
+      </button>
+      <button className='notifications-btn' onClick={() => handleNotifPageRedirect()}>
+        <div style={{ position: 'relative', display: 'inline-block' }}>
+          <FiBell size={20}></FiBell>
+          {unreadNotifications > 0 && (
+            <span
+              style={{
+                position: 'absolute',
+                top: '-8px',
+                right: '-8px',
+                backgroundColor: '#ef4444',
+                color: 'white',
+                borderRadius: '50%',
+                width: '18px',
+                height: '18px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '11px',
+                fontWeight: 'bold',
+                border: '2px solid white',
+              }}>
+              {unreadNotifications > 99 ? '99+' : unreadNotifications}
+            </span>
+          )}
+        </div>
       </button>
     </div>
   );
 };
-
 export default Header;

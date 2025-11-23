@@ -29,6 +29,8 @@ import badgeController from './controllers/badge.controller';
 import reportController from './controllers/report.controller';
 import openAuthorizationController from './controllers/authorization.controller';
 import protect from './middleware/token.middleware';
+import notificationController from './controllers/notifications.controller';
+import userSocketMap from './utils/socketMap.util';
 
 const MONGO_URL = `${process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017'}/fake_so`;
 const PORT = parseInt(process.env.PORT || '8000');
@@ -56,7 +58,6 @@ function startServer() {
 }
 
 // Track user-to-socket mapping for status management
-const userSocketMap = new Map<string, string>(); // username -> socket.id
 
 socket.on('connection', socket => {
   console.log('A user connected ->', socket.id);
@@ -158,10 +159,11 @@ app.use('/api/user', userController(socket));
 app.use('/api/chat', protect, chatController(socket));
 app.use('/api/games', protect, gameController(socket));
 app.use('/api/collection', protect, collectionController(socket));
-app.use('/api/community', protect, communityController(socket));
+app.use('/api/community', communityController(socket));
 app.use('/api/badge', protect, badgeController(socket));
 app.use('/api/report', protect, reportController(socket));
 app.use('/api/auth', openAuthorizationController());
+app.use('/api/notifications', notificationController(socket));
 
 const openApiDocument = yaml.parse(fs.readFileSync('./openapi.yaml', 'utf8'));
 app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(openApiDocument));

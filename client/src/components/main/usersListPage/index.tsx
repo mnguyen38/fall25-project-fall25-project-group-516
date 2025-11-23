@@ -3,14 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import UserCardView from './userCard';
 import UsersListHeader from './header';
 import useUsersListPage from '../../../hooks/useUsersListPage';
-import { SafeDatabaseUser } from '../../../types/types';
+import { PopulatedSafeDatabaseUser } from '../../../types/types';
 
 /**
  * Interface representing the props for the UsersListPage component.
  * handleUserSelect - The function to handle the click event on the user card.
  */
 interface UserListPageProps {
-  handleUserSelect?: (user: SafeDatabaseUser) => void;
+  handleUserSelect?: (user: PopulatedSafeDatabaseUser) => void;
 }
 
 /**
@@ -28,7 +28,7 @@ const UsersListPage = (props: UserListPageProps) => {
    * If handleUserSelect is provided, it calls the handleUserSelect function.
    * Otherwise, it navigates to the user's profile page.
    */
-  const handleUserCardViewClickHandler = (user: SafeDatabaseUser): void => {
+  const handleUserCardViewClickHandler = (user: PopulatedSafeDatabaseUser): void => {
     if (handleUserSelect) {
       handleUserSelect(user);
     } else if (user.username) {
