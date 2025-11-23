@@ -5,6 +5,7 @@ import {
   DatabaseCommunity,
   DatabaseQuestion,
   DatabaseTag,
+  DatabaseUser,
   OrderType,
   PopulatedDatabaseAnswer,
   PopulatedDatabaseQuestion,
@@ -24,6 +25,7 @@ import {
   sortQuestionsByNewest,
   sortQuestionsByUnanswered,
 } from '../utils/sort.util';
+import UserModel from '../models/users.model';
 
 /**
  * Checks if keywords exist in a question's title or text.
@@ -229,6 +231,12 @@ export const addVoteToQuestion = async (
   }
 
   try {
+    const before: DatabaseQuestion | null = await QuestionModel.findById({ _id: qid });
+
+    if (!before) {
+      return { error: 'Question not found!' };
+    }
+
     const result: DatabaseQuestion | null = await QuestionModel.findOneAndUpdate(
       { _id: qid },
       updateOperation,
@@ -237,6 +245,68 @@ export const addVoteToQuestion = async (
 
     if (!result) {
       return { error: 'Question not found!' };
+    }
+
+    // updates lifeUpvotes. handles for if previously downvoted is being upvoted | if prev upvoted is being downvoted
+
+    let userUpdate: QueryOptions;
+
+    if (voteType === 'upvote') {
+      userUpdate = result.upVotes.includes(username)
+        ? [
+            {
+              $set: {
+                lifeUpvotes: {
+                  $cond: {
+                    if: before.downVotes.includes(username),
+                    then: { $add: [2, '$lifeUpvotes'] },
+                    else: { $add: [1, '$lifeUpvotes'] },
+                  },
+                },
+              },
+            },
+          ]
+        : [
+            {
+              $set: {
+                lifeUpvotes: {
+                  $subtract: ['$lifeUpvotes', 1],
+                },
+              },
+            },
+          ];
+    } else {
+      userUpdate = result.downVotes.includes(username)
+        ? [
+            {
+              $set: {
+                $cond: {
+                  if: before.upVotes.includes(username),
+                  then: { $subtract: [2, '$lifeUpvotes'] },
+                  else: { $subtract: [1, '$lifeUpvotes'] },
+                },
+              },
+            },
+          ]
+        : [
+            {
+              $set: {
+                lifeUpvotes: {
+                  $subtract: ['$lifeUpvotes', 1],
+                },
+              },
+            },
+          ];
+    }
+
+    const updatedUser: DatabaseUser | null = await UserModel.findOneAndUpdate(
+      { username },
+      userUpdate,
+      { new: true },
+    );
+
+    if (!updatedUser) {
+      return { error: 'User lifetime upvotes failed to update!' };
     }
 
     let msg = '';

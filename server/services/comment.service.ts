@@ -78,5 +78,3 @@ export const addComment = async (
     return { error: `Error when adding comment: ${(error as Error).message}` };
   }
 };
-
-export update
