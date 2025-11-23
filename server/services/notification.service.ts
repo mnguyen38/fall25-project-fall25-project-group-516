@@ -41,7 +41,6 @@ export const addNotificationToUsers = async (
   if (isInternalSession) {
     session.startTransaction();
   }
-
   try {
     // Validate fields
     if (!notif || !notif.msg || !notif.sender || !notif.dateTime || !notif.title) {
@@ -53,41 +52,51 @@ export const addNotificationToUsers = async (
     if (notif.type == 'community') {
       result = await UserModel.updateMany(
         {
-          username: { $in: notif.recipients },
+          username: { $in: recipients },
           communityNotifs: true,
         },
-        {  $push: {
-          notifications: {
-            $each: [{ notification: notif._id, read: false }], // Correct structure
-            $position: 0,
+        {
+          $push: {
+            notifications: {
+              $each: [{ notification: notif._id, read: false }], // Correct structure
+              $position: 0,
+            },
           },
-        }, },
+        },
       ).session(session);
     } else if (notif.type == 'message') {
       result = await UserModel.updateMany(
         {
-          username: { $in: notif.recipients },
+          username: { $in: recipients },
           messageNotifs: true,
         },
-        {  $push: {
-          notifications: {
-            $each: [{ notification: notif._id, read: false }], // Correct structure
-            $position: 0,
+        {
+          $push: {
+            notifications: {
+              $each: [{ notification: notif._id, read: false }], // Correct structure
+              $position: 0,
+            },
           },
-        }, },
+        },
       ).session(session);
     } else {
       result = await UserModel.updateMany(
         {
-          username: { $in: notif.recipients },
+          username: { $in: recipients },
         },
-        { $push: {
-          notifications: {
-            $each: [{ notification: notif._id, read: false }], // Correct structure
-            $position: 0,
+        {
+          $push: {
+            notifications: {
+              $each: [{ notification: notif._id, read: false }], // Correct structure
+              $position: 0,
+            },
           },
-        }, },
+        },
       ).session(session);
+    }
+
+    if (!result) {
+      throw new Error('Update failed');
     }
 
     if (isInternalSession) {

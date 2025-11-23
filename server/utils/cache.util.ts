@@ -116,12 +116,12 @@ export const getCachedUser = async (userId: string): Promise<UserResponse> => {
 
     const cachedUser = await cache.get(`user:${userId}`);
 
-  if (cachedUser !== null) {
-    const parsedUser: PopulatedSafeDatabaseUser = JSON.parse(cachedUser);
-    return parsedUser;
-  }
+    if (cachedUser !== null) {
+      const parsedUser: PopulatedSafeDatabaseUser = JSON.parse(cachedUser);
+      return parsedUser;
+    }
 
-  const user = await populateUser(userId);
+    const user = await populateUser(userId);
 
     if (!user) {
       throw new Error('User not found');

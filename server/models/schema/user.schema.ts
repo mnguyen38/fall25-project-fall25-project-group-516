@@ -111,13 +111,16 @@ const userSchema: Schema = new Schema(
       type: Boolean,
       default: false,
     },
-    notifications: [
-      {
-        notification: { type: Schema.Types.ObjectId, ref: 'Notification' },
-        read: { type: Boolean, default: false },
-        _id: false,
-      },
-    ],
+    notifications: {
+      type: [
+        {
+          notification: { type: Schema.Types.ObjectId, ref: 'Notification' },
+          read: { type: Boolean, default: false },
+          _id: false,
+        },
+      ],
+      default: [],
+    },
     premiumProfile: {
       type: Boolean,
       default: false,

@@ -3,9 +3,7 @@ import api from './config';
 
 const NOTIFICATIONS_API_URL = `/api/notifications`;
 
-export const sendNotification = async (
-  notification: Notification,
-): Promise<DatabaseNotification> => {
+const sendNotification = async (notification: Notification): Promise<DatabaseNotification> => {
   const res = await api.post(`${NOTIFICATIONS_API_URL}/sendNotification`, notification);
 
   if (res.status !== 200) {
@@ -14,3 +12,5 @@ export const sendNotification = async (
 
   return res.data;
 };
+
+export default sendNotification;

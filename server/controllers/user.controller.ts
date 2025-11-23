@@ -762,7 +762,7 @@ const userController = (socket: FakeSOSocket) => {
 
       socket.emit('userUpdate', {
         user: updatedUser,
-        type: 'update',
+        type: 'updated',
       });
 
       res.json(updatedUser);

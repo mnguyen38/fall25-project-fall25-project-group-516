@@ -130,6 +130,7 @@ export interface PopulatedSafeDatabaseUser extends Omit<DatabaseUser, 'password 
   notifications?: PopulatedUserNotificationStatus[];
 }
 
+
 /**
  * Represents the a user object that only includes roles and tokenVersion.
  */

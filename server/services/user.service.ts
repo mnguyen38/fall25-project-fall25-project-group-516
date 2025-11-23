@@ -59,15 +59,19 @@ export const saveUser = async (user: User): Promise<UserResponse> => {
  */
 export const getUserByUsername = async (username: string): Promise<UserResponse> => {
   try {
-    const user: PopulatedSafeDatabaseUser | null = await UserModel.findOne({ username }).select(
-      '-password',
-    );
+    const user = await UserModel.findOne({ username }).select('_id');
 
     if (!user) {
       throw Error('User not found');
     }
 
-    return user;
+    const populatedUser: PopulatedSafeDatabaseUser | null = await populateUser(user._id.toString());
+
+    if (!populatedUser) {
+      throw Error('User not found');
+    }
+
+    return populatedUser;
   } catch (error) {
     return { error: `Error occurred when finding user: ${error}` };
   }

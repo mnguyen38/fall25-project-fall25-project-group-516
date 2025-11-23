@@ -2,63 +2,58 @@ import { DatabaseNotification } from '@fake-stack-overflow/shared/types/notifica
 import {
   PopulatedUserNotificationStatus,
   PopulatedSafeDatabaseUser,
+  NotificationPayload,
+  UserUpdatePayload,
 } from '@fake-stack-overflow/shared';
 import { useEffect, useState } from 'react';
 import useUserContext from './useUserContext';
 import { useNavigate } from 'react-router-dom';
-import { readAllNotifications, readNotification } from '../services/userService';
 import {
   getUserByUsername,
+  readAllNotifications,
+  readNotification,
   toggleCommunityNotifs,
   toggleMessageNotifs,
 } from '../services/userService';
 
 const useNotificationsPage = () => {
-  const { user } = useUserContext();
+  const { user, socket } = useUserContext();
   const navigate = useNavigate();
 
-  const [notificationsList, setNotificationsList] = useState<PopulatedUserNotificationStatus[]>(
-    user.notifications ?? [],
-  );
-
+  // Initialize with empty, we will sync in the Effect below
+  const [notificationsList, setNotificationsList] = useState<PopulatedUserNotificationStatus[]>([]);
   const [isTabOpen, setisTabOpen] = useState<boolean>(false);
-
   const [userData, setUserData] = useState<PopulatedSafeDatabaseUser | null>(null);
 
   /**
-   * Toggles community notification settings when button is clicked
+   * Helper to sort notifications by date (newest first)
    */
+  const sortNotifications = (notifs: PopulatedUserNotificationStatus[]) => {
+    return [...notifs].sort((a, b) => {
+      const dateA = new Date(a.notification.dateTime || 0).getTime();
+      const dateB = new Date(b.notification.dateTime || 0).getTime();
+      return dateB - dateA;
+    });
+  };
+
+  // ... [Keep existing handlers: handleToggleCommunityNotifs, etc.] ...
   const handleToggleCommunityNotifs = async (): Promise<void> => {
     try {
       if (!user.username) return;
-      console.log(user.communityNotifs);
       const updatedUser = await toggleCommunityNotifs(user.username);
-
-      if (!updatedUser) {
-        throw new Error();
-      }
-
-      setUserData(updatedUser);
+      if (updatedUser) setUserData(updatedUser);
     } catch (error) {
-      // nothing
+      /* handle error */
     }
   };
 
-  /**
-   * Toggles message notification settings when button is clicked
-   */
   const handleToggleMessageNotifs = async (): Promise<void> => {
     try {
       if (!user.username) return;
       const updatedUser = await toggleMessageNotifs(user.username);
-
-      if (!updatedUser) {
-        throw new Error();
-      }
-
-      setUserData(updatedUser);
+      if (updatedUser) setUserData(updatedUser);
     } catch (error) {
-      // nothing to be done
+      /* handle error */
     }
   };
 
@@ -88,32 +83,58 @@ const useNotificationsPage = () => {
   };
 
   useEffect(() => {
-    const sortNotifications = async () => {
-      const sortedResult = [...notificationsList].sort((a, b) => {
-        const dateA = new Date(a.notification.dateTime || 0).getTime();
-        const dateB = new Date(b.notification.dateTime || 0).getTime();
-
-        return dateB - dateA;
-      });
-
-      setNotificationsList(sortedResult);
+    const fetchFreshNotifications = async () => {
+      if (!user.username) return;
+      try {
+        const freshUser = await getUserByUsername(user.username);
+        if (freshUser && freshUser.notifications) {
+          setNotificationsList(sortNotifications(freshUser.notifications));
+        }
+      } catch (e) {
+        // nothing
+      }
     };
 
-    sortNotifications();
-  }, [notificationsList]);
+    fetchFreshNotifications();
+  }, [user.username]);
+
+  useEffect(() => {
+    const handleNotificationUpdate = (payload: NotificationPayload) => {
+      setNotificationsList(prev => {
+        const newList = [payload.notificationStatus, ...prev];
+        return sortNotifications(newList);
+      });
+    };
+
+    const handleUserUpdate = (payload: UserUpdatePayload) => {
+      if (payload.type === 'updated') {
+        if (payload.user.notifications) {
+          setNotificationsList(sortNotifications(payload.user.notifications));
+        }
+
+        setUserData(payload.user);
+      }
+    };
+
+    socket.on('notificationUpdate', handleNotificationUpdate);
+    socket.on('userUpdate', handleUserUpdate);
+
+    return () => {
+      socket.off('notificationUpdate', handleNotificationUpdate);
+      socket.off('userUpdate', handleUserUpdate);
+    };
+  }, [socket, user.username]);
 
   useEffect(() => {
     if (!user.username) return;
-
     const fetchUserData = async () => {
       try {
         const data = await getUserByUsername(user.username);
         setUserData(data);
       } catch (error) {
-        // nothing
+        /* nothing */
       }
     };
-
     fetchUserData();
   }, [user.username]);
 

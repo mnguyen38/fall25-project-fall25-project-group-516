@@ -60,7 +60,7 @@ export interface ChatUpdatePayload {
 }
 
 export interface NotificationPayload {
-  notification: DatabaseUserNotificationStatus;
+  notificationStatus: PopulatedUserNotificationStatus;
 }
 
 /**

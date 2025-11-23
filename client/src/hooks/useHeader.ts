@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import useLoginContext from './useLoginContext';
 import { removeAuthToken } from '../services/userService';
 import useUserContext from './useUserContext';
-import { TransactionEventPayload } from '@fake-stack-overflow/shared';
+import { NotificationPayload, TransactionEventPayload } from '@fake-stack-overflow/shared';
 
 /**
  * Custom hook to manage the state and logic for a header input field.
@@ -57,41 +57,41 @@ const useHeader = () => {
   };
 
   useEffect(() => {
-    /**
-     * Sets coin display based on user's current amount of coins.
-     */
-    const fetchCurrentCoins = () => {
-      if (user.coins) {
-        setCoins(user.coins);
-      } else {
-        setCoins(0);
-      }
-    };
+    if (user.coins) {
+      setCoins(user.coins);
+    } else {
+      setCoins(0);
+    }
 
-    const fetchUnreadNotifications = () => {
-      if (user.notifications) {
-        const unread = user.notifications.filter(({ read }) => !read);
-        setUnreadNotifications(unread.length);
-      } else {
-        setUnreadNotifications(0);
-      }
-    };
+    if (user.notifications) {
+      const unread = user.notifications.filter(({ read }) => !read);
+      setUnreadNotifications(unread.length);
+    } else {
+      setUnreadNotifications(0);
+    }
+  }, [user.coins, user.notifications]);
 
+  useEffect(() => {
     const handleCoinUpdate = async (payload: TransactionEventPayload) => {
       if (payload.username == user.username) {
         setCoins(payload.amount);
       }
     };
 
-    fetchCurrentCoins();
-    fetchUnreadNotifications();
+    const handleNotificationUpdate = async (payload: NotificationPayload) => {
+      if (!payload.notificationStatus.read) {
+        setUnreadNotifications(prev => prev + 1);
+      }
+    };
 
     socket.on('transactionEvent', handleCoinUpdate);
+    socket.on('notificationUpdate', handleNotificationUpdate);
 
     return () => {
       socket.off('transactionEvent', handleCoinUpdate);
+      socket.off('notificationUpdate', handleNotificationUpdate);
     };
-  }, [socket, user.coins, user.username, user.notifications]);
+  }, [socket, user.username]);
 
   /**
    * Signs the user out by clearing the user context, removing the auth token, and navigating to the landing page.

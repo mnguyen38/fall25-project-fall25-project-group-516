@@ -30,6 +30,7 @@ import reportController from './controllers/report.controller';
 import openAuthorizationController from './controllers/authorization.controller';
 import protect from './middleware/token.middleware';
 import notificationController from './controllers/notifications.controller';
+import userSocketMap from './utils/socketMap.util';
 
 const MONGO_URL = `${process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017'}/fake_so`;
 const PORT = parseInt(process.env.PORT || '8000');
@@ -57,7 +58,6 @@ function startServer() {
 }
 
 // Track user-to-socket mapping for status management
-const userSocketMap = new Map<string, string>(); // username -> socket.id
 
 socket.on('connection', socket => {
   console.log('A user connected ->', socket.id);

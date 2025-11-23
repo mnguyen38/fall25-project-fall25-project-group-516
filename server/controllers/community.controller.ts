@@ -17,6 +17,7 @@ import {
   toggleModerator,
   toggleBanUser,
   sendCommunityAnnouncement,
+  sendNotificationUpdates,
 } from '../services/community.service';
 
 /**
@@ -273,6 +274,12 @@ const communityController = (socket: FakeSOSocket) => {
           res.status(500).json({ error: communityAnnouncement.error });
         }
         return;
+      }
+
+      const result = await sendNotificationUpdates(communityId, socket, communityAnnouncement);
+
+      if (result && 'error' in result) {
+        throw new Error(result.error);
       }
 
       res.json(communityAnnouncement);

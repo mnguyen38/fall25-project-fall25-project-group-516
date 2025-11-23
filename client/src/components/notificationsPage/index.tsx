@@ -1,4 +1,3 @@
-// eslint-disable-next-line import/no-extraneous-dependencies
 import { FiCheckSquare, FiMessageSquare, FiSettings } from 'react-icons/fi';
 import useNotificationsPage from '../../hooks/useNotificationsPage';
 import './index.css';

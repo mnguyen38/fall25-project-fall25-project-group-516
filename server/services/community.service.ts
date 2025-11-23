@@ -1,8 +1,20 @@
-import { Notification, NotificationResponse } from '@fake-stack-overflow/shared/types/notification';
+import {
+  DatabaseNotification,
+  Notification,
+  NotificationResponse,
+} from '@fake-stack-overflow/shared/types/notification';
 import CommunityModel from '../models/community.model';
-import { Community, CommunityResponse, CommunityRole, DatabaseCommunity } from '../types/types';
+import {
+  Community,
+  CommunityResponse,
+  CommunityRole,
+  DatabaseCommunity,
+  FakeSOSocket,
+} from '../types/types';
 import mongoose from 'mongoose';
 import { addNotificationToUsers, saveNotification } from './notification.service';
+import UserModel from '../models/users.model';
+import userSocketMap from '../utils/socketMap.util';
 
 /**
  * Retrieves a community by its ID.
@@ -325,5 +337,39 @@ export const sendCommunityAnnouncement = async (
     return { error: (error as Error).message };
   } finally {
     await session.endSession();
+  }
+};
+
+export const sendNotificationUpdates = async (
+  communityId: string,
+  socket: FakeSOSocket,
+  notification: DatabaseNotification,
+): Promise<void | { error: string }> => {
+  try {
+    const community = await getCommunity(communityId);
+
+    if ('error' in community) {
+      throw new Error(community.error);
+    }
+
+    const recipients = await UserModel.find({
+      username: { $in: community.participants },
+      communityNotifs: true,
+    });
+
+    const socketIds = recipients
+      .map(rec => userSocketMap.get(rec.username))
+      .filter((id): id is string => id !== undefined);
+
+    // 2. Iterate and emit to specific sockets
+    socketIds.forEach(socketId => {
+      socket
+        .to(socketId) // Targets the specific client
+        .emit('notificationUpdate', {
+          notificationStatus: { notification, read: false },
+        });
+    });
+  } catch (error) {
+    return { error: (error as Error).message };
   }
 };
