@@ -218,4 +218,5 @@ export const safeUser: PopulatedSafeDatabaseUser = {
   _id: new ObjectId(),
   username: 'user1',
   dateJoined: new Date('2024-12-03'),
+  notifications: [],
 };

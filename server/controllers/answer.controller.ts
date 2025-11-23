@@ -64,11 +64,9 @@ const answerController = (socket: FakeSOSocket) => {
       const socketId = userSocketMap.get(status.askedBy);
 
       if (socketId) {
-        socket
-          .to(socketId)
-          .emit('notificationUpdate', {
-            notificationStatus: { notification: notificationData, read: false },
-          });
+        socket.to(socketId).emit('notificationUpdate', {
+          notificationStatus: { notification: notificationData, read: false },
+        });
       }
       // Populates the fields of the answer that was added and emits the new object
       socket.emit('answerUpdate', {

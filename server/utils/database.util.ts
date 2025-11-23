@@ -155,7 +155,7 @@ const populateNotification = async (
   return result;
 };
 
-export const populateUser = async (userId: string): Promise<PopulatedSafeDatabaseUser | null> => {
+export const populateUser = async (userId: string): Promise<PopulatedSafeDatabaseUser> => {
   const user = await UserModel.findById(userId).select('-password');
 
   if (!user) {
@@ -175,7 +175,7 @@ export const populateUser = async (userId: string): Promise<PopulatedSafeDatabas
   );
 
   const populatedUser: PopulatedSafeDatabaseUser = {
-    ...user.toObject(),
+    ...user,
     notifications: populatedNotifications,
   };
 
