@@ -12,14 +12,14 @@ import {
  */
 const useStreakRecoveryWindow = () => {
   const { user } = useUserContext();
-  const [showRecoveryWindow, setShowRecoveryWindow] = useState(false);
-  const [hasPasses, setHasPasses] = useState(false);
-  const [hasCoins, setHasCoins] = useState(false);
+  const [showRecoveryWindow, setShowRecoveryWindow] = useState<boolean>(false);
+  const [hasPasses, setHasPasses] = useState<boolean>(false);
+  const [hasCoins, setHasCoins] = useState<boolean>(false);
   const [loginStreak, setLoginStreak] = useState(1);
-  const [recoveryCost, setRecoveryCost] = useState(0);
-  const [error, setError] = useState('');
-  const [submitting, setSubmitting] = useState(false);
-  const [cancelStreak, setCancelStreak] = useState(true);
+  const [recoveryCost, setRecoveryCost] = useState<number>(0);
+  const [error, setError] = useState<string>('');
+  const [submitting, setSubmitting] = useState<boolean>(false);
+  const [cancelStreak, setCancelStreak] = useState<boolean>(false);
 
   /**
    * Upon log-in, if streak has been held for user sets up recoveryWindow states.
@@ -52,15 +52,12 @@ const useStreakRecoveryWindow = () => {
    */
   const handleRecoverStreak = async (usePass: boolean) => {
     try {
-      setCancelStreak(false);
       // pay for streak recovery
       if (usePass) {
         await decrementStreakPasses(user.username);
       } else {
         await reduceCoins(user.username, recoveryCost);
       }
-      // if payment successful, release hold
-      await toggleStreakHold(user.username);
       handleOnClose();
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
@@ -76,17 +73,32 @@ const useStreakRecoveryWindow = () => {
    */
   const handleOnClose = async () => {
     try {
-      if (cancelStreak) {
-        await resetLoginStreak(user.username);
-      }
       await toggleStreakHold(user.username);
       setShowRecoveryWindow(false);
-      setCancelStreak(true);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       setError(message);
     }
   };
+
+  /**
+   * If streak is set to be canceled then it does, if not nothing happens/ streak is retained
+   */
+  useEffect(() => {
+    const cancelHeldStreak = async () => {
+      try {
+        if (cancelStreak) {
+          await resetLoginStreak(user.username);
+          setCancelStreak(!cancelStreak);
+        }
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        setError(message);
+      }
+    };
+
+    cancelHeldStreak();
+  }, [cancelStreak]);
 
   return {
     showRecoveryWindow,
@@ -98,6 +110,7 @@ const useStreakRecoveryWindow = () => {
     handleOnClose,
     error,
     submitting,
+    setCancelStreak,
   };
 };
 

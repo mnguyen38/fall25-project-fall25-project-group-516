@@ -18,7 +18,12 @@ const StreakRecoveryWindow = () => {
   } = useStreakRecoveryWindow();
 
   return (
-    <Modal isOpen={showRecoveryWindow} onClose={handleOnClose} title='Recover Login Streak'>
+    <Modal
+      isOpen={showRecoveryWindow}
+      onClose={() => {
+        handleOnClose();
+      }}
+      title='Recover Login Streak'>
       <div className='transaction-modal'>
         {error.length > 0 && (
           <div className='transaction-error'>
