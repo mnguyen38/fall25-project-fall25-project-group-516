@@ -48,7 +48,7 @@ const CommunityPage = () => {
 
           {community.admin !== username && <CommunityMembershipButton community={community} />}
 
-          {community.admin === username && (
+          {(community.admin === username || community.moderators?.includes(username)) && (
             <button className='mod-tools-trigger-btn' onClick={() => setIsModalOpen(true)}>
               🛠️ Mod Tools
             </button>

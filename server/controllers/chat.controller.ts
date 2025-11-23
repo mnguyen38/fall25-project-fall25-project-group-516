@@ -17,6 +17,9 @@ import {
   PopulatedDatabaseChat,
 } from '../types/types';
 import { saveMessage } from '../services/message.service';
+import { sendNotification } from '../services/notification.service';
+import { Notification } from '@fake-stack-overflow/shared/types/notification';
+import MessageModel from '../models/messages.model';
 
 /*
  * This controller handles chat-related routes.
@@ -86,6 +89,30 @@ const chatController = (socket: FakeSOSocket) => {
 
       if ('error' in updatedChat) {
         throw new Error(updatedChat.error);
+      }
+
+      const message = await MessageModel.findById(newMessage._id.toString());
+
+      if (!message) {
+        throw new Error('Message not found');
+      }
+
+      const otherParticipants = [...updatedChat.participants].filter(
+        name => name !== message.msgFrom,
+      );
+      const notificationData: Notification = {
+        title: `New Message from ${message.msgFrom}`,
+        msg: message.msg,
+        dateTime: message.msgDateTime,
+        sender: message.msgFrom,
+        contextId: updatedChat._id,
+        type: 'message',
+      };
+
+      const notification = await sendNotification(otherParticipants, notificationData);
+
+      if ('error' in notification) {
+        throw new Error(notification.error);
       }
 
       // Enrich the updated chat for the response

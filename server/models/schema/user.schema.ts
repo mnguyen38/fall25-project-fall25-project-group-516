@@ -22,6 +22,8 @@ import { Schema } from 'mongoose';
  * - `coins`: User's coin count.
  * - `premiumProfile`: Whether the user has a premium profile.
  * - `streakPass`: How many chances user has to recover streak.
+ * - `communityNotifs`: Whether notifications are enabled for all communities.
+ * - `messageNotifs`: Whether notifications are enabled for all messages.
  */
 const userSchema: Schema = new Schema(
   {
@@ -109,6 +111,16 @@ const userSchema: Schema = new Schema(
       type: Boolean,
       default: false,
     },
+    notifications: {
+      type: [
+        {
+          notification: { type: Schema.Types.ObjectId, ref: 'Notification' },
+          read: { type: Boolean, default: false },
+          _id: false,
+        },
+      ],
+      default: [],
+    },
     premiumProfile: {
       type: Boolean,
       default: false,
@@ -134,6 +146,14 @@ const userSchema: Schema = new Schema(
       type: String,
       default: '',
       maxlength: 100,
+    },
+    communityNotifs: {
+      type: Boolean,
+      default: true,
+    },
+    messageNotifs: {
+      type: Boolean,
+      default: true,
     },
   },
   { collection: 'User' },

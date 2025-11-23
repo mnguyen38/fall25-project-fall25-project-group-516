@@ -1,8 +1,8 @@
 import { RedisClientType } from '@redis/client';
 import { createClient } from 'redis';
-import UserModel from '../models/users.model';
-import { SafeDatabaseUser, UserResponse } from '@fake-stack-overflow/shared';
+import { PopulatedSafeDatabaseUser, UserResponse } from '@fake-stack-overflow/shared';
 import { getUserRolesById } from '../services/user.service';
+import { populateUser } from './database.util';
 
 type Cache = RedisClientType | null;
 
@@ -117,21 +117,17 @@ export const getCachedUser = async (userId: string): Promise<UserResponse> => {
     const cachedUser = await cache.get(`user:${userId}`);
 
     if (cachedUser !== null) {
-      const parsedUser: SafeDatabaseUser = JSON.parse(cachedUser);
+      const parsedUser: PopulatedSafeDatabaseUser = JSON.parse(cachedUser);
       return parsedUser;
     }
 
-    const user = await UserModel.findById(userId).select('-password');
+    const user = await populateUser(userId);
 
     if (!user) {
       throw new Error('User not found');
     }
 
-    const userObject = user.toObject() as SafeDatabaseUser;
-
-    await cache.setEx(`user:${userId}`, DEFAULT_ROLE_EXPIRATION, JSON.stringify(userObject));
-
-    return userObject;
+    return user;
   } catch (error) {
     // Fallback to direct database query if cache fails
     const user = await UserModel.findById(userId).select('-password');

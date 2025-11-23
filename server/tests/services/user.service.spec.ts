@@ -9,7 +9,7 @@ import {
   saveUser,
   updateUser,
 } from '../../services/user.service';
-import { DatabaseUser, SafeDatabaseUser, User, UserCredentials } from '../../types/types';
+import { DatabaseUser, PopulatedSafeDatabaseUser, User, UserCredentials } from '../../types/types';
 import { user, safeUser } from '../mockData.models';
 
 describe('User model', () => {
@@ -24,7 +24,7 @@ describe('User model', () => {
         _id: new mongoose.Types.ObjectId(),
       } as unknown as ReturnType<typeof UserModel.create<User>>);
 
-      const savedUser = (await saveUser(user)) as SafeDatabaseUser;
+      const savedUser = (await saveUser(user)) as PopulatedSafeDatabaseUser;
 
       expect(savedUser._id).toBeDefined();
       expect(savedUser.username).toEqual(user.username);
@@ -64,7 +64,7 @@ describe('getUserByUsername', () => {
       return query;
     });
 
-    const retrievedUser = (await getUserByUsername(user.username)) as SafeDatabaseUser;
+    const retrievedUser = (await getUserByUsername(user.username)) as PopulatedSafeDatabaseUser;
 
     expect(retrievedUser.username).toEqual(user.username);
     expect(retrievedUser.dateJoined).toEqual(user.dateJoined);
@@ -81,7 +81,7 @@ describe('getUserByUsername', () => {
   it('should return error when findOne returns null with select', async () => {
     jest.spyOn(UserModel, 'findOne').mockReturnValue({
       select: jest.fn().mockResolvedValue(null),
-    } as unknown as Query<SafeDatabaseUser, typeof UserModel>);
+    } as unknown as Query<PopulatedSafeDatabaseUser, typeof UserModel>);
 
     const getUserError = await getUserByUsername(user.username);
 
@@ -91,7 +91,7 @@ describe('getUserByUsername', () => {
   it('should throw an error if there is an error while searching the database', async () => {
     jest.spyOn(UserModel, 'findOne').mockReturnValue({
       select: jest.fn().mockRejectedValue(new Error('Error finding document')),
-    } as unknown as Query<SafeDatabaseUser, typeof UserModel>);
+    } as unknown as Query<PopulatedSafeDatabaseUser, typeof UserModel>);
 
     const getUserError = await getUserByUsername(user.username);
 
@@ -107,9 +107,9 @@ describe('getUsersList', () => {
   it('should return the users', async () => {
     jest.spyOn(UserModel, 'find').mockReturnValue({
       select: jest.fn().mockResolvedValue([safeUser]),
-    } as unknown as Query<SafeDatabaseUser[], typeof UserModel>);
+    } as unknown as Query<PopulatedSafeDatabaseUser[], typeof UserModel>);
 
-    const retrievedUsers = (await getUsersList()) as SafeDatabaseUser[];
+    const retrievedUsers = (await getUsersList()) as PopulatedSafeDatabaseUser[];
 
     expect(retrievedUsers[0].username).toEqual(safeUser.username);
     expect(retrievedUsers[0].dateJoined).toEqual(safeUser.dateJoined);
@@ -118,7 +118,7 @@ describe('getUsersList', () => {
   it('should throw an error if the users cannot be found', async () => {
     jest.spyOn(UserModel, 'find').mockReturnValue({
       select: jest.fn().mockResolvedValue(null),
-    } as unknown as Query<SafeDatabaseUser[], typeof UserModel>);
+    } as unknown as Query<PopulatedSafeDatabaseUser[], typeof UserModel>);
 
     const getUsersError = await getUsersList();
 
@@ -128,7 +128,7 @@ describe('getUsersList', () => {
   it('should throw an error if there is an error while searching the database', async () => {
     jest.spyOn(UserModel, 'find').mockReturnValue({
       select: jest.fn().mockRejectedValue(new Error('Error finding documents')),
-    } as unknown as Query<SafeDatabaseUser[], typeof UserModel>);
+    } as unknown as Query<PopulatedSafeDatabaseUser[], typeof UserModel>);
 
     const getUsersError = await getUsersList();
 
@@ -170,7 +170,7 @@ describe('loginUser', () => {
       password: user.password,
     };
 
-    const loggedInUser = (await loginUser(credentials)) as SafeDatabaseUser;
+    const loggedInUser = (await loginUser(credentials)) as PopulatedSafeDatabaseUser;
 
     expect(loggedInUser.username).toEqual(user.username);
     expect(loggedInUser.dateJoined).toEqual(user.dateJoined);
@@ -236,7 +236,7 @@ describe('deleteUserByUsername', () => {
       return query;
     });
 
-    const deletedUser = (await deleteUserByUsername(user.username)) as SafeDatabaseUser;
+    const deletedUser = (await deleteUserByUsername(user.username)) as PopulatedSafeDatabaseUser;
 
     expect(deletedUser.username).toEqual(user.username);
     expect(deletedUser.dateJoined).toEqual(user.dateJoined);
@@ -253,7 +253,7 @@ describe('deleteUserByUsername', () => {
   it('should return error when findOneAndDelete returns null with select', async () => {
     jest.spyOn(UserModel, 'findOneAndDelete').mockReturnValue({
       select: jest.fn().mockResolvedValue(null),
-    } as unknown as Query<SafeDatabaseUser, typeof UserModel>);
+    } as unknown as Query<PopulatedSafeDatabaseUser, typeof UserModel>);
 
     const deletedError = await deleteUserByUsername(user.username);
 
@@ -263,7 +263,7 @@ describe('deleteUserByUsername', () => {
   it('should throw an error if a database error while deleting', async () => {
     jest.spyOn(UserModel, 'findOneAndDelete').mockReturnValue({
       select: jest.fn().mockRejectedValue(new Error('Error deleting document')),
-    } as unknown as Query<SafeDatabaseUser, typeof UserModel>);
+    } as unknown as Query<PopulatedSafeDatabaseUser, typeof UserModel>);
 
     const deletedError = await deleteUserByUsername(user.username);
 
@@ -277,7 +277,7 @@ describe('updateUser', () => {
     password: 'newPassword',
   };
 
-  const safeUpdatedUser: SafeDatabaseUser = {
+  const safeUpdatedUser: PopulatedSafeDatabaseUser = {
     _id: new mongoose.Types.ObjectId(),
     username: user.username,
     dateJoined: user.dateJoined,
@@ -299,7 +299,7 @@ describe('updateUser', () => {
       return query;
     });
 
-    const result = (await updateUser(user.username, updates)) as SafeDatabaseUser;
+    const result = (await updateUser(user.username, updates)) as PopulatedSafeDatabaseUser;
 
     expect(result.username).toEqual(user.username);
     expect(result.username).toEqual(updatedUser.username);
@@ -318,7 +318,7 @@ describe('updateUser', () => {
   it('should return error when findOneAndUpdate returns null with select', async () => {
     jest.spyOn(UserModel, 'findOneAndUpdate').mockReturnValue({
       select: jest.fn().mockResolvedValue(null),
-    } as unknown as Query<SafeDatabaseUser, typeof UserModel>);
+    } as unknown as Query<PopulatedSafeDatabaseUser, typeof UserModel>);
 
     const updatedError = await updateUser(user.username, updates);
 
@@ -328,7 +328,7 @@ describe('updateUser', () => {
   it('should throw an error if a database error while deleting', async () => {
     jest.spyOn(UserModel, 'findOneAndUpdate').mockReturnValue({
       select: jest.fn().mockRejectedValue(new Error('Error updating document')),
-    } as unknown as Query<SafeDatabaseUser, typeof UserModel>);
+    } as unknown as Query<PopulatedSafeDatabaseUser, typeof UserModel>);
 
     const updatedError = await updateUser(user.username, updates);
 
@@ -374,16 +374,17 @@ describe('makeTransaction', () => {
     ...user,
     _id: new mongoose.Types.ObjectId(),
     coins: 10,
+    notifications: [],
   };
 
-  const safeUpdatedUser: SafeDatabaseUser = {
+  const safeUpdatedUser: PopulatedSafeDatabaseUser = {
     _id: new mongoose.Types.ObjectId(),
     username: user.username,
     dateJoined: user.dateJoined,
     coins: 20,
   };
 
-  const safeUpdatedUser2: SafeDatabaseUser = {
+  const safeUpdatedUser2: PopulatedSafeDatabaseUser = {
     _id: new mongoose.Types.ObjectId(),
     username: user.username,
     dateJoined: user.dateJoined,
@@ -537,7 +538,7 @@ describe('makeTransaction', () => {
 
     jest.spyOn(UserModel, 'findOneAndUpdate').mockReturnValue({
       select: jest.fn().mockResolvedValue(null),
-    } as unknown as Query<SafeDatabaseUser, typeof UserModel>);
+    } as unknown as Query<PopulatedSafeDatabaseUser, typeof UserModel>);
 
     const transactionError = await makeTransaction(user.username, 10, 'add');
 
@@ -565,7 +566,7 @@ describe('makeTransaction', () => {
 
     jest.spyOn(UserModel, 'findOneAndUpdate').mockReturnValue({
       select: jest.fn().mockRejectedValue(new Error('Error finding user')),
-    } as unknown as Query<SafeDatabaseUser, typeof UserModel>);
+    } as unknown as Query<PopulatedSafeDatabaseUser, typeof UserModel>);
 
     const transactionError = await makeTransaction(user.username, 10, 'add');
 

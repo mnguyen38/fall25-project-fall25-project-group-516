@@ -22,6 +22,12 @@ const ModToolsModal = ({
     handleDeleteCommunity,
     handleToggleModerator,
     handleToggleBan,
+    announcementTitle,
+    setAnnouncementTitle,
+    announcementMsg,
+    setAnnouncementMsg,
+    handleSendAnnouncement,
+    announcementStatus,
   } = useModToolsModal(community);
 
   const handleContentClick = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -37,7 +43,7 @@ const ModToolsModal = ({
     setConfirmAction(null);
   };
 
-  const toggleSection = (section: 'users' | 'danger') => {
+  const toggleSection = (section: 'users' | 'danger' | 'announcement') => {
     setExpandedSection(expandedSection === section ? null : section);
   };
 
@@ -217,6 +223,58 @@ const ModToolsModal = ({
                       </div>
                     );
                   })}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Announcement Section */}
+          <div className='collapsible-section'>
+            <button
+              className='section-header'
+              onClick={() => toggleSection('announcement')}
+              type='button'>
+              <div className='section-header-content'>
+                <span className='section-icon'>📢</span>
+                <h4 className='section-title'>Make Announcement</h4>
+              </div>
+              <span className={`chevron ${expandedSection === 'announcement' ? 'expanded' : ''}`}>
+                ▼
+              </span>
+            </button>
+
+            {expandedSection === 'announcement' && (
+              <div className='section-content'>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <input
+                    type='text'
+                    className='mod-search-input'
+                    placeholder='Announcement Title'
+                    value={announcementTitle}
+                    onChange={e => setAnnouncementTitle(e.target.value)}
+                  />
+                  <textarea
+                    className='mod-search-input'
+                    placeholder='Message'
+                    value={announcementMsg}
+                    onChange={e => setAnnouncementMsg(e.target.value)}
+                    rows={4}
+                    style={{ resize: 'vertical' }}
+                  />
+                  <button className='btn btn-add-mod' onClick={handleSendAnnouncement}>
+                    Send Announcement
+                  </button>
+                  {announcementStatus && (
+                    <p
+                      style={{
+                        margin: 0,
+                        color: announcementStatus.includes('Failed') ? '#dc2626' : '#15803d',
+                        fontWeight: 600,
+                        fontSize: '14px',
+                      }}>
+                      {announcementStatus}
+                    </p>
+                  )}
                 </div>
               </div>
             )}

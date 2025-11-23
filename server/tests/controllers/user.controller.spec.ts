@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 import { app } from '../../app';
 import * as util from '../../services/user.service';
 import * as badgeUtil from '../../services/badge.service';
-import { SafeDatabaseUser, User } from '../../types/types';
+import { PopulatedSafeDatabaseUser, User } from '../../types/types';
 import { setupMockAuth } from '../../utils/mocks.util';
 
 jest.mock('../../middleware/token.middleware');
@@ -14,7 +14,7 @@ const mockUser: User = {
   dateJoined: new Date('2024-12-03'),
 };
 
-const mockSafeUser: SafeDatabaseUser = {
+const mockSafeUser: PopulatedSafeDatabaseUser = {
   _id: new mongoose.Types.ObjectId(),
   username: 'user1',
   dateJoined: new Date('2024-12-03'),
@@ -521,7 +521,7 @@ describe('Test userController', () => {
     });
   });
 
-  const mockSafeUserCoins: SafeDatabaseUser = {
+  const mockSafeUserCoins: PopulatedSafeDatabaseUser = {
     _id: new mongoose.Types.ObjectId(),
     username: 'user1',
     dateJoined: new Date('2024-12-03'),

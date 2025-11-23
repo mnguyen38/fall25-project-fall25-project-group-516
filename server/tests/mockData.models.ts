@@ -5,7 +5,7 @@ import {
   DatabaseQuestion,
   DatabaseTag,
   PopulatedDatabaseQuestion,
-  SafeDatabaseUser,
+  PopulatedSafeDatabaseUser,
   User,
 } from '../types/types';
 
@@ -214,7 +214,7 @@ export const user: User = {
   dateJoined: new Date('2024-12-03'),
 };
 
-export const safeUser: SafeDatabaseUser = {
+export const safeUser: PopulatedSafeDatabaseUser = {
   _id: new ObjectId(),
   username: 'user1',
   dateJoined: new Date('2024-12-03'),
