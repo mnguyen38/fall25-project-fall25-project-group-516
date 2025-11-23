@@ -1,4 +1,8 @@
-import { downvoteQuestion, upvoteQuestion } from '../../../services/questionService';
+import {
+  addInterestedUserToQuestion,
+  downvoteQuestion,
+  upvoteQuestion,
+} from '../../../services/questionService';
 import './index.css';
 import useUserContext from '../../../hooks/useUserContext';
 import { PopulatedDatabaseQuestion } from '../../../types/types';
@@ -14,7 +18,7 @@ interface VoteComponentProps {
 }
 
 /**
- * A Vote component that allows users to upvote or downvote a question.
+ * A Vote component that allows users to upvote or downvote a question or add themselves as interested (will recieve notifactions upon question update).
  *
  * @param question - The question object containing voting information.
  */
@@ -41,19 +45,41 @@ const VoteComponent = ({ question }: VoteComponentProps) => {
     }
   };
 
+  const handleClickNotify = async () => {
+    try {
+      const updatedQuestion = await addInterestedUserToQuestion(question._id, user.username);
+      if (!updatedQuestion) {
+        throw Error('User did not update');
+      }
+    } catch (error) {
+      // Handle error
+    }
+  };
+
   return (
-    <div className='vote-container'>
-      <button
-        className={`vote-button ${voted === 1 ? 'vote-button-upvoted' : ''}`}
-        onClick={() => handleVote('upvote')}>
-        Upvote
-      </button>
-      <button
-        className={`vote-button ${voted === -1 ? 'vote-button-downvoted' : ''}`}
-        onClick={() => handleVote('downvote')}>
-        Downvote
-      </button>
-      <span className='vote-count'>{count}</span>
+    <div className='vote-interest-container'>
+      <div className='vote-container'>
+        <button
+          className={`vote-button ${voted === 1 ? 'vote-button-upvoted' : ''}`}
+          onClick={() => handleVote('upvote')}>
+          Upvote
+        </button>
+        <button
+          className={`vote-button ${voted === -1 ? 'vote-button-downvoted' : ''}`}
+          onClick={() => handleVote('downvote')}>
+          Downvote
+        </button>
+        <span className='vote-count'>{count}</span>
+      </div>
+      <div className='interest-container'>
+        <button
+          className={`interest-button ${question.interestedUsers.includes(user.username) ? 'interested' : ''}`}
+          onClick={handleClickNotify}>
+          {question.interestedUsers.includes(user.username)
+            ? 'You will be notified when this question recieves new answers'!
+            : 'Notify me'}
+        </button>
+      </div>
     </div>
   );
 };
