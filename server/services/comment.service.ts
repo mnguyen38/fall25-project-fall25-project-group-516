@@ -10,6 +10,7 @@ import {
 import AnswerModel from '../models/answers.model';
 import QuestionModel from '../models/questions.model';
 import CommentModel from '../models/comments.model';
+import { getUserIfTopContributor } from './user.service';
 
 /**
  * Saves a new comment to the database.
@@ -18,7 +19,17 @@ import CommentModel from '../models/comments.model';
  */
 export const saveComment = async (comment: Comment): Promise<CommentResponse> => {
   try {
-    const result: DatabaseComment = await CommentModel.create(comment);
+    const commenter = await getUserIfTopContributor(comment.commentBy);
+    let newComment;
+    if (!commenter) {
+      newComment = comment;
+    } else {
+      newComment = {
+        ...comment,
+        topContributor: true,
+      };
+    }
+    const result: DatabaseComment = await CommentModel.create(newComment);
     return result;
   } catch (error) {
     return { error: 'Error when saving a comment' };
@@ -67,3 +78,5 @@ export const addComment = async (
     return { error: `Error when adding comment: ${(error as Error).message}` };
   }
 };
+
+export update

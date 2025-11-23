@@ -6,11 +6,13 @@ import { ObjectId } from 'mongodb';
  * - `text`: The content of the comment.
  * - `commentBy`: The author of the comment.
  * - `commentDateTime`: The timestamp when the comment was made.
+ * - `topContributor`: Whether the commentor is a top contributor (based on lifeUpvotes).
  */
 export interface Comment {
   text: string;
   commentBy: string;
   commentDateTime: Date;
+  topContributor?: boolean;
 }
 
 /**

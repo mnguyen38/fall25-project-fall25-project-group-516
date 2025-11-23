@@ -64,6 +64,9 @@ const CommentSection = ({ comments, handleAddComment }: CommentSectionProps) => 
                   <div className='comment-text'>
                     <Markdown remarkPlugins={[remarkGfm]}>{comment.text}</Markdown>
                   </div>
+                  {comment.topContributor === true && (
+                    <small className='comment-status'>{`#Top Contributor`}</small>
+                  )}
                   <small className='comment-meta'>
                     {comment.commentBy}, {getMetaData(new Date(comment.commentDateTime))}
                   </small>

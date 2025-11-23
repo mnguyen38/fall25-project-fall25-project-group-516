@@ -8,6 +8,7 @@ import { Schema } from 'mongoose';
  * - `text`: The content of the comment.
  * - `commentBy`: The username of the user who commented.
  * - `commentDateTime`: The date and time when the comment was posted.
+ * - `topContributor`: Whether the commentor is a top contributor (based on lifeUpvotes).
  */
 const commentSchema: Schema = new Schema(
   {
@@ -19,6 +20,10 @@ const commentSchema: Schema = new Schema(
     },
     commentDateTime: {
       type: Date,
+    },
+    topContributor: {
+      type: Boolean,
+      default: false,
     },
   },
   { collection: 'Comment' },

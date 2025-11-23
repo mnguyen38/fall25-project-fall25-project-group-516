@@ -38,6 +38,13 @@
   border: 1px solid #ddd;
 }
 
+.comment-status {
+  background-color: #f8db00;
+  padding: 4px;
+  border-radius: 10px;
+  margin-right: 5px;
+}
+
 .comment-text {
   font-size: 0.85rem;
   margin-bottom: 0.25em;

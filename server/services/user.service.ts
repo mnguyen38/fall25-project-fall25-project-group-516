@@ -413,3 +413,52 @@ export const updateUserStatus = async (
     return { error: `Error occurred when updating user status: ${error}` };
   }
 };
+
+/**
+ * If user is a top contributor returns user. Else returns null.
+ * @param {string} username - The username of the user to update.
+ * @returns {Promise<UserResponse>} - Resolves with the user object or an error message.
+ */
+export const getUserIfTopContributor = async (username: string): Promise<UserResponse | null> => {
+  try {
+    interface AverageResult {
+      _id: null;
+      averageValue: number;
+    }
+    const pipeline = [{ $group: { _id: null, averageValue: { $avg: '$lifetimeUpvotes' } } }];
+
+    const avgResult = await UserModel.aggregate<AverageResult>(pipeline).exec();
+
+    if (!avgResult) {
+      throw Error('Error finding average lifetimeUpvote score');
+    }
+
+    // average lifetimeUpvote value
+    let average;
+    // Access the result
+    if (avgResult.length > 0) {
+      average = avgResult[0].averageValue;
+    } else {
+      throw Error('Could not find average lifetimeUpvote score');
+    }
+
+    const user: DatabaseUser | null = (await UserModel.find({
+      username: username,
+      lifetimeUpvotes: { $gt: { average } },
+    })) as unknown as DatabaseUser | null;
+
+    if (!user) {
+      return null;
+    }
+
+    if ('error' in user) {
+      throw Error('Failed to find user');
+    }
+
+    return user;
+  } catch (error) {
+    return {
+      error: `Error occurred when finding users with above average lifetime upvotes: ${error}`,
+    };
+  }
+};
