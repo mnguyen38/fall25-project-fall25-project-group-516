@@ -40,6 +40,7 @@ export interface UserCredentials {
  * - `customStatus`: Custom status message.
  * - `communityNotifs`: Whether notifications are enabled for all communities.
  * - `messageNotifs`: Whether notifications are enabled for all users.
+ * - `blockedUsers`: Array of usernames that this user has blocked.
  */
 export interface User extends UserCredentials {
   dateJoined: Date;
@@ -55,7 +56,6 @@ export interface User extends UserCredentials {
   lastLogin?: Date;
   showLoginStreak?: boolean;
   email?: string;
-  roles?: Map<string, string>;
   lifeUpvotes?: number;
   coins?: number;
   profilePrivate?: boolean;
@@ -69,6 +69,7 @@ export interface User extends UserCredentials {
   notifications?: Notification[];
   communityNotifs?: boolean;
   messageNotifs?: boolean;
+  blockedUsers?: string[];
 }
 
 /**
@@ -133,7 +134,7 @@ export interface PopulatedSafeDatabaseUser extends Omit<DatabaseUser, 'password 
 /**
  * Represents the a user object that only includes roles and tokenVersion.
  */
-export type UserRoles = Pick<DatabaseUser, 'roles'>;
+// export type UserRoles = Pick<DatabaseUser, 'roles'>;
 /**
  * Represents the response for user-related operations.
  * - `PopulatedSafeDatabaseUser`: A user object without sensitive data if the operation is successful.
@@ -146,7 +147,7 @@ export type UserResponse = PopulatedSafeDatabaseUser | { error: string };
  * - `UserRoles` a user object that only includes roles and tokenVersion.
  * - `error`: An error message if the operation fails.
  */
-export type UserRolesResponse = UserRoles | { error: string };
+// export type UserRolesResponse = UserRoles | { error: string };
 
 /**
  * Represents the response for multiple user-related operations.

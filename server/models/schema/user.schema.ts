@@ -24,6 +24,7 @@ import { Schema } from 'mongoose';
  * - `streakPass`: How many chances user has to recover streak.
  * - `communityNotifs`: Whether notifications are enabled for all communities.
  * - `messageNotifs`: Whether notifications are enabled for all messages.
+ * - `blockedUsers`: Array of usernames that this user has blocked.
  */
 const userSchema: Schema = new Schema(
   {
@@ -94,11 +95,6 @@ const userSchema: Schema = new Schema(
       unique: true,
       sparse: true,
     },
-    roles: {
-      type: Map,
-      of: String,
-      default: {},
-    },
     lifeUpvotes: {
       type: Number,
       default: 0,
@@ -154,6 +150,10 @@ const userSchema: Schema = new Schema(
     messageNotifs: {
       type: Boolean,
       default: true,
+    },
+    blockedUsers: {
+      type: [String],
+      default: [],
     },
   },
   { collection: 'User' },

@@ -123,6 +123,59 @@ export const filterQuestionsBySearch = (
 };
 
 /**
+ * Filters questions based on blocking relationships.
+ * Removes questions where:
+ * - The viewing user has blocked the question author
+ * - The question author has blocked the viewing user
+ * @param {PopulatedDatabaseQuestion[]} qlist - The list of questions
+ * @param {string} viewingUsername - The username of the user viewing the questions
+ * @returns {Promise<PopulatedDatabaseQuestion[]>} - Filtered list of questions
+ */
+export const filterQuestionsByBlocking = async (
+  qlist: PopulatedDatabaseQuestion[],
+  viewingUsername?: string,
+): Promise<PopulatedDatabaseQuestion[]> => {
+  if (!viewingUsername) {
+    return qlist;
+  }
+
+  try {
+    // Get the viewing user's blocked list
+    const viewingUser = await UserModel.findOne({ username: viewingUsername });
+    if (!viewingUser) {
+      return qlist;
+    }
+
+    // Get all question authors and their blocked lists
+    const authorUsernames = [...new Set(qlist.map(q => q.askedBy))];
+    const authors = await UserModel.find({ username: { $in: authorUsernames } });
+    const authorBlockedMap = new Map<string, string[]>();
+    authors.forEach(author => {
+      authorBlockedMap.set(author.username, author.blockedUsers || []);
+    });
+
+    // Filter questions based on blocking
+    return qlist.filter(q => {
+      // Filter if viewing user has blocked the question author
+      if (viewingUser.blockedUsers && viewingUser.blockedUsers.includes(q.askedBy)) {
+        return false;
+      }
+
+      // Filter if question author has blocked the viewing user
+      const authorBlockedUsers = authorBlockedMap.get(q.askedBy) || [];
+      if (authorBlockedUsers.includes(viewingUsername)) {
+        return false;
+      }
+
+      return true;
+    });
+  } catch (error) {
+    // If there's an error, return the original list
+    return qlist;
+  }
+};
+
+/**
  * Fetches a question by ID and increments its view count.
  * @param {string} qid - The question ID
  * @param {string} username - The username requesting the question

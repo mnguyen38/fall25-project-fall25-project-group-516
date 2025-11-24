@@ -14,6 +14,7 @@ import {
   addVoteToQuestion,
   fetchAndIncrementQuestionViewsById,
   filterQuestionsByAskedBy,
+  filterQuestionsByBlocking,
   filterQuestionsBySearch,
   getCommunityQuestions,
   getQuestionsByOrder,
@@ -23,6 +24,7 @@ import { processTags } from '../services/tag.service';
 import { populateDocument } from '../utils/database.util';
 import { checkAndAwardBadges } from '../services/badge.service';
 import QuestionModel from '../models/questions.model';
+import protect from '../middleware/token.middleware';
 
 const questionController = (socket: FakeSOSocket) => {
   const router = express.Router();
@@ -48,7 +50,14 @@ const questionController = (socket: FakeSOSocket) => {
         qlist = filterQuestionsByAskedBy(qlist, askedBy);
       }
 
-      const resqlist: PopulatedDatabaseQuestion[] = filterQuestionsBySearch(qlist, search);
+      // Filter by search keyword and tags
+      let resqlist: PopulatedDatabaseQuestion[] = filterQuestionsBySearch(qlist, search);
+
+      // Apply blocking filter using authenticated user
+      if (req.user?.username) {
+        resqlist = await filterQuestionsByBlocking(resqlist, req.user.username);
+      }
+
       res.json(resqlist);
     } catch (err: unknown) {
       if (err instanceof Error) {
@@ -250,7 +259,8 @@ const questionController = (socket: FakeSOSocket) => {
     }
   };
 
-  router.get('/getQuestion', getQuestionsByFilter);
+  // add appropriate HTTP verbs and their endpoints to the router
+  router.get('/getQuestion', protect, getQuestionsByFilter);
   router.get('/getQuestionById/:qid', getQuestionById);
   router.post('/addQuestion', addQuestion);
   router.post('/upvoteQuestion', upvoteQuestion);

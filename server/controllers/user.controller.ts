@@ -12,13 +12,16 @@ import {
   UpdateStatusRequest,
 } from '../types/types';
 import {
+  blockUser,
   deleteUserByUsername,
+  getBlockedUsers,
   getUserByUsername,
   getUsersList,
   loginUser,
   makeTransaction,
   readNotifications,
   saveUser,
+  unblockUser,
   updateUser,
   updateUserStatus,
 } from '../services/user.service';
@@ -861,6 +864,109 @@ const userController = (socket: FakeSOSocket) => {
     }
   };
 
+  /**
+   * Blocks a user by adding them to the current user's blocked list.
+   * @param req The request containing username and targetUsername in the body.
+   * @param res The response, either confirming the block or returning an error.
+   * @returns A promise resolving to void.
+   */
+  const blockUserRoute = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { username, targetUsername } = req.body;
+
+      if (!username || !targetUsername) {
+        res.status(400).send('Username and targetUsername must be provided');
+        return;
+      }
+
+      const result = await blockUser(username, targetUsername);
+
+      if ('error' in result) {
+        const errorMsg = result.error;
+        if (errorMsg.includes('cannot block yourself')) {
+          res.status(400).json({ error: errorMsg });
+        } else if (errorMsg.includes('not found')) {
+          res.status(404).json({ error: errorMsg });
+        } else if (errorMsg.includes('already blocked')) {
+          res.status(409).json({ error: errorMsg });
+        } else {
+          res.status(500).json({ error: errorMsg });
+        }
+        return;
+      }
+
+      socket.emit('userUpdate', {
+        user: result,
+        type: 'updated',
+      });
+
+      res.status(200).json(result);
+    } catch (error) {
+      res.status(500).send(`Error blocking user: ${error}`);
+    }
+  };
+
+  /**
+   * Unblocks a user by removing them from the current user's blocked list.
+   * @param req The request containing username and targetUsername in the body.
+   * @param res The response, either confirming the unblock or returning an error.
+   * @returns A promise resolving to void.
+   */
+  const unblockUserRoute = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { username, targetUsername } = req.body;
+
+      if (!username || !targetUsername) {
+        res.status(400).send('Username and targetUsername must be provided');
+        return;
+      }
+
+      const result = await unblockUser(username, targetUsername);
+
+      if ('error' in result) {
+        res.status(500).json({ error: result.error });
+        return;
+      }
+
+      socket.emit('userUpdate', {
+        user: result,
+        type: 'updated',
+      });
+
+      res.status(200).json(result);
+    } catch (error) {
+      res.status(500).send(`Error unblocking user: ${error}`);
+    }
+  };
+
+  /**
+   * Gets the list of blocked users for a given user.
+   * @param req The request containing username parameter.
+   * @param res The response, either returning the user with blockedUsers or an error.
+   * @returns A promise resolving to void.
+   */
+  const getBlockedUsersRoute = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { username } = req.params;
+
+      if (!username) {
+        res.status(400).send('Username must be provided');
+        return;
+      }
+
+      const result = await getBlockedUsers(username);
+
+      if ('error' in result) {
+        res.status(404).json({ error: result.error });
+        return;
+      }
+
+      res.status(200).json(result);
+    } catch (error) {
+      res.status(500).send(`Error getting blocked users: ${error}`);
+    }
+  };
+
   // Define routes for the user-related operations.
   router.post('/signup', createUser);
   router.post('/login', userLogin);
@@ -890,6 +996,9 @@ const userController = (socket: FakeSOSocket) => {
   router.patch('/resetLoginStreak', protect, resetLoginStreak);
   router.patch('/toggleCommunityNotifs', protect, toggleCommunityNotifs);
   router.patch('/toggleMessageNotifs', protect, toggleMessageNotifs);
+  router.patch('/blockUser', protect, blockUserRoute);
+  router.patch('/unblockUser', protect, unblockUserRoute);
+  router.get('/blockedUsers/:username', protect, getBlockedUsersRoute);
 
   return router;
 };

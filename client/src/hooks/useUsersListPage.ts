@@ -11,7 +11,7 @@ import { getUsers } from '../services/userService';
  * @returns setUserFilter - Function to set the filtering value of the user search.
  */
 const useUsersListPage = () => {
-  const { socket } = useUserContext();
+  const { socket, user } = useUserContext();
 
   const [userFilter, setUserFilter] = useState<string>('');
   const [userList, setUserList] = useState<PopulatedSafeDatabaseUser[]>([]);
@@ -91,7 +91,18 @@ const useUsersListPage = () => {
     };
   }, [socket]);
 
-  const filteredUserlist = userList.filter(user => user.username.includes(userFilter));
+  const filteredUserlist = userList.filter(u => {
+    // Filter by search term
+    if (!u.username.includes(userFilter)) return false;
+
+    // Filter out blocked users
+    if (user?.blockedUsers && user.blockedUsers.includes(u.username)) return false;
+
+    // Filter out users who blocked current user
+    if (u.blockedUsers && user?.username && u.blockedUsers.includes(user.username)) return false;
+
+    return true;
+  });
   return { userList: filteredUserlist, setUserFilter };
 };
 

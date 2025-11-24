@@ -20,7 +20,13 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { useNavigate } from 'react-router-dom';
 import useLoginContext from '../../hooks/useLoginContext';
-import { removeAuthToken, toggleProfilePrivacy, updateStatus } from '../../services/userService';
+import {
+  blockUser,
+  removeAuthToken,
+  toggleProfilePrivacy,
+  unblockUser,
+  updateStatus,
+} from '../../services/userService';
 import { getQuestionsByUser } from '../../services/questionService';
 import Question from '../main/questionPage/question';
 import { PopulatedDatabaseQuestion } from '../../types/types';
@@ -76,8 +82,13 @@ const ProfileSettings: React.FC = () => {
   const [displayShowLoginStreak, setDisplayShowLoginStreak] = React.useState<boolean>(
     userData?.showLoginStreak ?? false,
   );
+  const [blockingUser, setBlockingUser] = React.useState(false);
+  const [isBlocked, setIsBlocked] = React.useState(false);
   const settingsDropdownRef = React.useRef<HTMLDivElement>(null);
   const statusDropdownRef = React.useRef<HTMLDivElement>(null);
+
+  // Get current user from context
+  const currentUser = AuserContext?.user;
 
   const handleLogout = async () => {
     // Set status to away before logging out
@@ -119,6 +130,40 @@ const ProfileSettings: React.FC = () => {
     }
   };
 
+  const handleBlockToggle = async () => {
+    if (!userData?.username || !currentUser?.username) return;
+
+    const confirmMessage = isBlocked
+      ? `Unblock ${userData.username}?`
+      : `Block ${userData.username}? They won't be able to see your content or interact with you.`;
+
+    if (!window.confirm(confirmMessage)) return;
+
+    setBlockingUser(true);
+    try {
+      let updatedUser;
+      if (isBlocked) {
+        updatedUser = await unblockUser(currentUser.username, userData.username);
+      } else {
+        updatedUser = await blockUser(currentUser.username, userData.username);
+      }
+
+      // Update the current user in context with the new blockedUsers list
+      if (updatedUser && 'blockedUsers' in updatedUser) {
+        setUser(updatedUser);
+
+        // If we just blocked the user, navigate away from their profile
+        if (!isBlocked) {
+          navigate('/home');
+        }
+      }
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Failed to update block status');
+    } finally {
+      setBlockingUser(false);
+    }
+  };
+
   const getStatusDisplay = () => {
     if (!currentStatus) return null;
 
@@ -150,6 +195,13 @@ const ProfileSettings: React.FC = () => {
       setDisplayShowLoginStreak(userData.showLoginStreak ?? false);
     }
   }, [userData]);
+
+  // Check if viewing user's profile is blocked
+  React.useEffect(() => {
+    if (currentUser?.blockedUsers && userData?.username) {
+      setIsBlocked(currentUser.blockedUsers.includes(userData.username));
+    }
+  }, [currentUser?.blockedUsers, userData?.username]);
 
   // Listen for real-time status updates via socket
   React.useEffect(() => {
@@ -279,6 +331,10 @@ const ProfileSettings: React.FC = () => {
     );
   }
 
+  // If viewer has blocked this profile, they can still see it but with limited info
+  const hasViewerBlockedProfile =
+    currentUser && currentUser.blockedUsers && currentUser.blockedUsers.includes(userData.username);
+
   return (
     <div className='profile-settings'>
       <div className='profile-container'>
@@ -325,7 +381,7 @@ const ProfileSettings: React.FC = () => {
                           {userData.loginStreak} day login streak
                         </p>
                       )}
-                    <p>{userData.lifeUpvotes}</p>
+                    <p className='profile-date'>{userData.lifeUpvotes || 0} lifetime upvotes</p>
                     {userData.dateJoined && (
                       <p className='profile-date'>
                         Joined{' '}
@@ -404,6 +460,23 @@ const ProfileSettings: React.FC = () => {
                           </div>
                         )}
                       </div>
+                    )}
+
+                    {/* Block/Unblock Button for other users' profiles */}
+                    {!canEditProfile && currentUser && (
+                      <button
+                        className='button button-secondary'
+                        onClick={handleBlockToggle}
+                        disabled={blockingUser}
+                        style={{ marginTop: '12px' }}>
+                        {blockingUser
+                          ? isBlocked
+                            ? 'Unblocking...'
+                            : 'Blocking...'
+                          : isBlocked
+                            ? 'Unblock User'
+                            : 'Block User'}
+                      </button>
                     )}
                   </div>
                 </div>
@@ -729,7 +802,9 @@ const ProfileSettings: React.FC = () => {
               )}
             </div>
 
-            {!editBioMode ? (
+            {hasViewerBlockedProfile ? (
+              <p className='private-message'>You have blocked this user.</p>
+            ) : !editBioMode ? (
               <div className='bio-section'>
                 <div className='bio-content'>
                   <Markdown remarkPlugins={[remarkGfm]}>
@@ -759,7 +834,14 @@ const ProfileSettings: React.FC = () => {
         </div>
 
         {/* Badges Section */}
-        {userData.profilePrivate && !canEditProfile ? (
+        {hasViewerBlockedProfile ? (
+          <div className='profile-card'>
+            <div className='profile-section'>
+              <h2 className='section-title'>Badges & Achievements</h2>
+              <p className='private-message'>You have blocked this user.</p>
+            </div>
+          </div>
+        ) : userData.profilePrivate && !canEditProfile ? (
           <div className='profile-card'>
             <div className='profile-section'>
               <h2 className='section-title'>Badges & Achievements</h2>
@@ -788,9 +870,13 @@ const ProfileSettings: React.FC = () => {
           <div className='profile-section'>
             <h2 className='section-title'>
               Questions Posted{' '}
-              {!userData.profilePrivate || canEditProfile ? `(${userQuestions.length})` : ''}
+              {!hasViewerBlockedProfile && (!userData.profilePrivate || canEditProfile)
+                ? `(${userQuestions.length})`
+                : ''}
             </h2>
-            {userData.profilePrivate && !canEditProfile ? (
+            {hasViewerBlockedProfile ? (
+              <p className='private-message'>You have blocked this user.</p>
+            ) : userData.profilePrivate && !canEditProfile ? (
               <p className='private-message'>This user account is private</p>
             ) : questionsLoading ? (
               <p>Loading questions...</p>

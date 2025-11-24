@@ -4,7 +4,7 @@ import {
   deleteUserByUsername,
   findOrCreateOAuthUser,
   getUserByUsername,
-  getUserRolesById,
+  // getUserRolesById, // Commented out - roles system removed
   getUsersList,
   loginUser,
   makeTransaction,
@@ -237,7 +237,9 @@ describe('loginUser - Streak Logic', () => {
       .spyOn(UserModel, 'updateOne')
       .mockResolvedValue({ acknowledged: true } as any);
     jest.spyOn(UserModel, 'findById').mockReturnValue({
-      select: jest.fn().mockResolvedValue(safeUser),
+      select: jest.fn().mockReturnValue({
+        lean: jest.fn().mockResolvedValue(safeUser),
+      }),
     } as any);
 
     await loginUser({ username: user.username, password: user.password });
@@ -272,7 +274,9 @@ describe('loginUser - Streak Logic', () => {
       .spyOn(UserModel, 'updateOne')
       .mockResolvedValue({ acknowledged: true } as any);
     jest.spyOn(UserModel, 'findById').mockReturnValue({
-      select: jest.fn().mockResolvedValue(safeUser),
+      select: jest.fn().mockReturnValue({
+        lean: jest.fn().mockResolvedValue(safeUser),
+      }),
     } as any);
 
     await loginUser({ username: user.username, password: user.password });
@@ -307,7 +311,9 @@ describe('loginUser - Streak Logic', () => {
       .spyOn(UserModel, 'updateOne')
       .mockResolvedValue({ acknowledged: true } as any);
     jest.spyOn(UserModel, 'findById').mockReturnValue({
-      select: jest.fn().mockResolvedValue(safeUser),
+      select: jest.fn().mockReturnValue({
+        lean: jest.fn().mockResolvedValue(safeUser),
+      }),
     } as any);
 
     await loginUser({ username: user.username, password: user.password });
@@ -338,7 +344,9 @@ describe('loginUser - Streak Logic', () => {
       .spyOn(UserModel, 'updateOne')
       .mockResolvedValue({ acknowledged: true } as any);
     jest.spyOn(UserModel, 'findById').mockReturnValue({
-      select: jest.fn().mockResolvedValue(safeUser),
+      select: jest.fn().mockReturnValue({
+        lean: jest.fn().mockResolvedValue(safeUser),
+      }),
     } as any);
 
     await loginUser({ username: user.username, password: user.password });
@@ -358,7 +366,9 @@ describe('loginUser - Streak Logic', () => {
     jest.spyOn(UserModel, 'updateOne').mockResolvedValue({ acknowledged: true } as any);
 
     jest.spyOn(UserModel, 'findById').mockReturnValue({
-      select: jest.fn().mockResolvedValue(null),
+      select: jest.fn().mockReturnValue({
+        lean: jest.fn().mockResolvedValue(null),
+      }),
     } as any);
 
     const result = await loginUser({ username: 'test', password: 'pw' });
@@ -455,26 +465,27 @@ describe('findOrCreateOAuthUser', () => {
   });
 });
 
-describe('getUserRolesById', () => {
-  it('should return roles if user found', async () => {
-    const rolesData = { roles: ['admin'] };
-    jest.spyOn(UserModel, 'findById').mockReturnValue({
-      select: jest.fn().mockResolvedValue(rolesData),
-    } as any);
+// Commented out - roles system removed
+// describe('getUserRolesById', () => {
+//   it('should return roles if user found', async () => {
+//     const rolesData = { roles: ['admin'] };
+//     jest.spyOn(UserModel, 'findById').mockReturnValue({
+//       select: jest.fn().mockResolvedValue(rolesData),
+//     } as any);
 
-    const result = await getUserRolesById('user-id');
-    expect(result).toEqual(rolesData);
-  });
+//     const result = await getUserRolesById('user-id');
+//     expect(result).toEqual(rolesData);
+//   });
 
-  it('should return error if user not found', async () => {
-    jest.spyOn(UserModel, 'findById').mockReturnValue({
-      select: jest.fn().mockResolvedValue(null),
-    } as any);
+//   it('should return error if user not found', async () => {
+//     jest.spyOn(UserModel, 'findById').mockReturnValue({
+//       select: jest.fn().mockResolvedValue(null),
+//     } as any);
 
-    const result = await getUserRolesById('user-id');
-    expect('error' in result).toBe(true);
-  });
-});
+//     const result = await getUserRolesById('user-id');
+//     expect('error' in result).toBe(true);
+//   });
+// });
 describe('loginUser', () => {
   beforeEach(() => {
     jest.resetAllMocks();
