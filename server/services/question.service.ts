@@ -358,19 +358,39 @@ export const getCommunityQuestions = async (communityId: string): Promise<Databa
 };
 
 /**
- * Fetches a question by ID and adds a user to interestedUsers.
+ * Fetches a question by ID, adding user to interestedUsers if they weren't there and removing them if they were.
  * @param {string} qid - The question ID
  * @param {string} username - The username requesting the question
  * @returns {Promise<QuestionResponse | null>} - The question with updated or error message
  */
-export const addInterestedUserToQuestion = async (
+export const toggleUserInterest = async (
   qid: string,
   username: string,
 ): Promise<PopulatedDatabaseQuestion | { error: string }> => {
   try {
     const q: PopulatedDatabaseQuestion | null = await QuestionModel.findOneAndUpdate(
       { _id: new ObjectId(qid) },
-      { $addToSet: { interestedUsers: username } },
+      [
+        {
+          $set: {
+            interestedUsers: {
+              $cond: [
+                { $ne: ['$interestedUsers', undefined] },
+                {
+                  $cond: {
+                    if: { $in: [username, '$interestedUsers'] },
+                    then: {
+                      $setDifference: ['$interestedUsers', [username]],
+                    },
+                    else: { $concatArrays: ['$interestedUsers', [username]] },
+                  },
+                },
+                [username],
+              ],
+            },
+          },
+        },
+      ],
       { new: true },
     );
 

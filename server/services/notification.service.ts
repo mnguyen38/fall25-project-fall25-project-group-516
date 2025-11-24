@@ -132,20 +132,20 @@ export const sendNotification = async (
     const savedNotification = await saveNotification(notification, session);
 
     if ('error' in savedNotification) {
-      throw new Error(savedNotification.error);
+      throw new Error(`1: ${savedNotification.error}`);
     }
 
     const addStatus = await addNotificationToUsers(recipients, savedNotification, session);
 
     if (addStatus && 'error' in addStatus) {
-      throw new Error(addStatus.error);
+      throw new Error(`2: ${addStatus.error}`);
     }
 
     await session.commitTransaction();
     return savedNotification;
   } catch (error) {
     await session.abortTransaction();
-    return { error: (error as Error).message };
+    return { error: `3: ${(error as Error).message}` };
   } finally {
     await session.endSession();
   }

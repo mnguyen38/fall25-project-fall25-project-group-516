@@ -325,7 +325,6 @@ const ProfileSettings: React.FC = () => {
                           {userData.loginStreak} day login streak
                         </p>
                       )}
-                    <p>{userData.lifeUpvotes}</p>
                     {userData.dateJoined && (
                       <p className='profile-date'>
                         Joined{' '}

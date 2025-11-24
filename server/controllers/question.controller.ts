@@ -11,7 +11,6 @@ import {
   CommunityQuestionsRequest,
 } from '../types/types';
 import {
-  addInterestedUserToQuestion,
   addVoteToQuestion,
   fetchAndIncrementQuestionViewsById,
   filterQuestionsByAskedBy,
@@ -19,6 +18,7 @@ import {
   getCommunityQuestions,
   getQuestionsByOrder,
   saveQuestion,
+  toggleUserInterest,
 } from '../services/question.service';
 import { processTags } from '../services/tag.service';
 import { populateDocument } from '../utils/database.util';
@@ -262,11 +262,11 @@ const questionController = (socket: FakeSOSocket) => {
    *
    * @returns A Promise that resolves to void.
    */
-  const addInterestedUserRoute = async (req: VoteRequest, res: Response): Promise<void> => {
+  const toggleUserInterestRoute = async (req: VoteRequest, res: Response): Promise<void> => {
     const { qid, username } = req.body;
 
     try {
-      const q = await addInterestedUserToQuestion(qid, username);
+      const q = await toggleUserInterest(qid, username);
 
       if (q && 'error' in q) {
         throw new Error(q.error);
@@ -278,7 +278,7 @@ const questionController = (socket: FakeSOSocket) => {
     } catch (err) {
       res
         .status(500)
-        .send(`Error when trying to add an interested user: ${(err as Error).message}`);
+        .send(`Error when trying to toggle user's interest: ${(err as Error).message}`);
     }
   };
 
@@ -289,7 +289,7 @@ const questionController = (socket: FakeSOSocket) => {
   router.post('/upvoteQuestion', upvoteQuestion);
   router.post('/downvoteQuestion', downvoteQuestion);
   router.get('/getCommunityQuestions/:communityId', getCommunityQuestionsRoute);
-  router.patch('/addInterestedUserToQuestion', addInterestedUserRoute);
+  router.patch('/toggleUserInterestInQuestion', toggleUserInterestRoute);
 
   return router;
 };
