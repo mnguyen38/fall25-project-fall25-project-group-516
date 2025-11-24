@@ -55,7 +55,13 @@ const CommunityPage = () => {
           )}
 
           <div className='community-members'>
-            <h3 className='section-heading'>Members</h3>
+            <h3 className='section-heading'>
+              Members ({community.participants.length})
+            </h3>
+            <p className='members-stats'>
+              Premium: {community.premiumCount ?? 0} | Non-Premium:{' '}
+              {community.nonPremiumCount ?? 0}
+            </p>
             <ul className='members-list'>
               {community?.participants.map(participantUsername => {
                 const isAdmin = community.admin === participantUsername;
