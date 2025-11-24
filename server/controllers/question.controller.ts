@@ -46,7 +46,6 @@ const questionController = (socket: FakeSOSocket) => {
     try {
       let qlist: PopulatedDatabaseQuestion[] = await getQuestionsByOrder(order);
 
-      // Filter by askedBy if provided
       if (askedBy) {
         qlist = filterQuestionsByAskedBy(qlist, askedBy);
       }
@@ -130,13 +129,16 @@ const questionController = (socket: FakeSOSocket) => {
       const result = await saveQuestion(questionswithtags);
 
       if ('error' in result) {
-        throw new Error(result.error);
+        if (result.error.includes('Unauthorized')) {
+          res.status(403).json({ error: result.error });
+        } else {
+          res.status(500).json({ error: result.error });
+        }
+        return;
       }
 
-      // Check and award badges to the user
       await checkAndAwardBadges(question.askedBy);
 
-      // Populates the fields of the question that was added, and emits the new object
       const populatedQuestion = await populateDocument(result._id.toString(), 'question');
 
       if ('error' in populatedQuestion) {
@@ -183,16 +185,13 @@ const questionController = (socket: FakeSOSocket) => {
         throw new Error(status.error);
       }
 
-      // Check and award badges to the question owner if this was an upvote
       if (type === 'upvote') {
-        // Get the question to find the owner (without incrementing views)
         const question = await QuestionModel.findById(qid);
         if (question) {
           await checkAndAwardBadges(question.askedBy);
         }
       }
 
-      // Emit the updated vote counts to all connected clients
       socket.emit('voteUpdate', { qid, upVotes: status.upVotes, downVotes: status.downVotes });
       res.json(status);
     } catch (err) {

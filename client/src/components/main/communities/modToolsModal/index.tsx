@@ -22,6 +22,9 @@ const ModToolsModal = ({
     handleDeleteCommunity,
     handleToggleModerator,
     handleToggleBan,
+    handleToggleMute,
+    actionError, // Destructure error state from hook
+    setActionError, // Destructure error setter/clearer from hook
     announcementTitle,
     setAnnouncementTitle,
     announcementMsg,
@@ -34,11 +37,16 @@ const ModToolsModal = ({
     e.stopPropagation();
   };
 
-  const handleConfirmAction = (action: 'mod' | 'ban', username: string) => {
+  const handleConfirmAction = (action: 'mod' | 'ban' | 'mute', username: string) => {
+    // Clear any previous errors before attempting a new action
+    if (setActionError) setActionError(null);
+
     if (action === 'ban') {
       handleToggleBan(username);
     } else if (action === 'mod') {
       handleToggleModerator(username);
+    } else if (action === 'mute') {
+      handleToggleMute(username);
     }
     setConfirmAction(null);
   };
@@ -64,6 +72,43 @@ const ModToolsModal = ({
 
         {/* Body */}
         <div className='modal-body'>
+          {/* Global Action Error Banner */}
+          {actionError && (
+            <div
+              className='error-banner'
+              style={{
+                backgroundColor: '#fee2e2',
+                color: '#991b1b',
+                padding: '12px',
+                borderRadius: '8px',
+                marginBottom: '16px',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                fontSize: '14px',
+                fontWeight: 500,
+                border: '1px solid #fecaca',
+              }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span>⚠️</span>
+                <span>{actionError}</span>
+              </div>
+              <button
+                onClick={() => setActionError && setActionError(null)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontSize: '18px',
+                  color: '#991b1b',
+                  padding: '0 4px',
+                }}
+                aria-label='Dismiss error'>
+                &times;
+              </button>
+            </div>
+          )}
+
           {/* Manage Users Section */}
           <div className='collapsible-section'>
             <button className='section-header' onClick={() => toggleSection('users')} type='button'>
@@ -111,6 +156,7 @@ const ModToolsModal = ({
                     const isModerator = community.moderators?.includes(user.username);
                     const isParticipant = community.participants.includes(user.username);
                     const isBanned = community.banned?.includes(user.username);
+                    const isMuted = community.muted?.includes(user.username);
                     const isUserExpanded = expandedUser === user.username;
 
                     return (
@@ -125,6 +171,9 @@ const ModToolsModal = ({
                               <span className='badge badge-moderator'>MODERATOR</span>
                             )}
                             {isBanned && <span className='badge badge-banned'>BANNED</span>}
+                            {isMuted && !isBanned && (
+                              <span className='badge badge-muted'>MUTED</span>
+                            )}
                             {!isParticipant && (
                               <span className='badge badge-non-member'>NOT A MEMBER</span>
                             )}
@@ -168,10 +217,59 @@ const ModToolsModal = ({
                                   ) : (
                                     <button
                                       onClick={() =>
-                                        setConfirmAction({ action: 'mod', username: user.username })
+                                        setConfirmAction({
+                                          action: 'mod',
+                                          username: user.username,
+                                        })
                                       }
                                       className={`btn ${isModerator ? 'btn-remove-mod' : 'btn-add-mod'}`}>
                                       {isModerator ? 'Remove Moderator' : 'Make Moderator'}
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Mute Controls */}
+                            {isParticipant && !isBanned && (
+                              <div
+                                className={`action-section ${isMuted ? 'action-section-muted' : 'action-section-mute'}`}>
+                                <div className='action-content'>
+                                  <div>
+                                    <div className='action-title'>
+                                      {isMuted ? '🔇 User Muted' : '🔇 Mute User'}
+                                    </div>
+                                    <div className='action-description'>
+                                      {isMuted
+                                        ? 'User cannot post or comment in this community'
+                                        : 'Prevents user from posting or commenting in this community.'}
+                                    </div>
+                                  </div>
+                                  {confirmAction?.action === 'mute' &&
+                                  confirmAction?.username === user.username ? (
+                                    <div className='confirm-actions'>
+                                      <span className='confirm-text'>Sure?</span>
+                                      <button
+                                        onClick={() => handleConfirmAction('mute', user.username)}
+                                        className={`btn ${isMuted ? 'btn-confirm-unmute' : 'btn-confirm-mute'}`}>
+                                        Yes
+                                      </button>
+                                      <button
+                                        onClick={() => setConfirmAction(null)}
+                                        className={`btn ${isMuted ? 'btn-cancel-muted' : 'btn-cancel-mute'}`}>
+                                        No
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <button
+                                      onClick={() =>
+                                        setConfirmAction({
+                                          action: 'mute',
+                                          username: user.username,
+                                        })
+                                      }
+                                      className={`btn ${isMuted ? 'btn-unmute' : 'btn-mute'}`}>
+                                      {isMuted ? '✓ Unmute User' : 'Mute User'}
                                     </button>
                                   )}
                                 </div>
@@ -210,7 +308,10 @@ const ModToolsModal = ({
                                 ) : (
                                   <button
                                     onClick={() =>
-                                      setConfirmAction({ action: 'ban', username: user.username })
+                                      setConfirmAction({
+                                        action: 'ban',
+                                        username: user.username,
+                                      })
                                     }
                                     className={`btn ${isBanned ? 'btn-unban' : 'btn-ban'}`}>
                                     {isBanned ? '✓ Unban User' : 'Ban User'}
@@ -245,7 +346,12 @@ const ModToolsModal = ({
 
             {expandedSection === 'announcement' && (
               <div className='section-content'>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '12px',
+                  }}>
                   <input
                     type='text'
                     className='mod-search-input'

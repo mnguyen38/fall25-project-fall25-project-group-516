@@ -101,6 +101,12 @@ paths:
                 $ref: '#/components/schemas/PopulatedQuestion'
         '400':
           $ref: '#/components/responses/ValidationError'
+        '403':
+          description: Forbidden (user is muted).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SimpleErrorBody'
         '500':
           $ref: '#/components/responses/ErrorResponse'
 
@@ -198,6 +204,12 @@ paths:
                 $ref: '#/components/schemas/DatabaseAnswer'
         '400':
           $ref: '#/components/responses/ValidationError'
+        '403':
+          description: Forbidden (user is muted).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SimpleErrorBody'
         '500':
           $ref: '#/components/responses/ErrorResponse'
 
@@ -274,6 +286,12 @@ paths:
                 $ref: '#/components/schemas/DatabaseComment'
         '400':
           $ref: '#/components/responses/ValidationError'
+        '403':
+          description: Forbidden (user is muted).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SimpleErrorBody'
         '500':
           $ref: '#/components/responses/ErrorResponse'
 

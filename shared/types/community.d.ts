@@ -19,6 +19,7 @@ export interface Community {
   admin: string;
   moderators?: string[];
   banned?: string[];
+  muted?: string[];
 }
 
 /**
@@ -65,10 +66,10 @@ export interface ToggleMembershipRequest extends Request {
   };
 }
 
-export interface ToggleModeratorRequest extends Request {
+export interface ToggleRequest extends Request {
   body: {
     communityId: string;
-    adminUsername: string;
+    managerUsername: string;
     username: string;
   };
 }
