@@ -9,6 +9,8 @@ import {
 } from '../types/types';
 import AnswerModel from '../models/answers.model';
 import QuestionModel from '../models/questions.model';
+import { isAllowedToPostInCommunity } from './community.service';
+import { isAllowedToPostOnQuestion } from './question.service';
 
 /**
  * Records the most recent answer time for a given question based on its answers.
@@ -59,6 +61,12 @@ export const addAnswerToQuestion = async (
       throw new Error('Invalid answer');
     }
 
+    const isAllowed = await isAllowedToPostOnQuestion(qid, ans.ansBy);
+
+    if (!isAllowed) {
+      throw new Error('Unauthorized: User is not allowed to answer');
+    }
+
     const result: DatabaseQuestion | null = await QuestionModel.findOneAndUpdate(
       { _id: qid },
       { $push: { answers: { $each: [ans._id], $position: 0 } } },
@@ -70,6 +78,25 @@ export const addAnswerToQuestion = async (
     }
     return result;
   } catch (error) {
-    return { error: 'Error when adding answer to question' };
+    return { error: (error as Error).message };
   }
+};
+
+export const isAllowedToPostOnAnswer = async (
+  answerId: string,
+  username: string,
+): Promise<boolean> => {
+  const question: DatabaseQuestion | null = await QuestionModel.findOne({
+    answers: { $in: [answerId] },
+  }).select('community');
+
+  if (!question) {
+    throw new Error('Answer not found');
+  }
+
+  const isAllowed = question.community
+    ? await isAllowedToPostInCommunity(question.community.toString(), username)
+    : true;
+
+  return isAllowed;
 };

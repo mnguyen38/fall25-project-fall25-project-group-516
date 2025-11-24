@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import { UserCredentials, PopulatedSafeDatabaseUser } from '../types/types';
 import api from './config';
 import { setAuthToken, getAuthToken, removeAuthToken } from '../utils/auth';
@@ -490,6 +490,82 @@ const toggleMessageNotifs = async (username: string): Promise<PopulatedSafeDatab
   return res.data;
 };
 
+/**
+ * Blocks a user by adding them to the current user's blocked list.
+ * @param username The unique username of the user doing the blocking
+ * @param targetUsername The username of the user to block
+ * @returns A promise resolving to the updated user
+ * @throws Error if the request fails
+ */
+const blockUser = async (
+  username: string,
+  targetUsername: string,
+): Promise<PopulatedSafeDatabaseUser> => {
+  try {
+    const res = await api.patch(`${USER_API_URL}/blockUser`, {
+      username,
+      targetUsername,
+    });
+    return res.data;
+  } catch (error) {
+    if (error instanceof AxiosError && error.response?.data?.error) {
+      const serverMessage = error.response.data.error;
+      if (serverMessage.includes('cannot block yourself')) {
+        throw new Error('You cannot block yourself.');
+      } else if (serverMessage.includes('not found')) {
+        throw new Error('User not found.');
+      } else if (serverMessage.includes('already blocked')) {
+        throw new Error('You have already blocked this user.');
+      }
+      throw new Error(serverMessage);
+    }
+    throw new Error('Unable to block user. Please try again.');
+  }
+};
+
+/**
+ * Unblocks a user by removing them from the current user's blocked list.
+ * @param username The unique username of the user doing the unblocking
+ * @param targetUsername The username of the user to unblock
+ * @returns A promise resolving to the updated user
+ * @throws Error if the request fails
+ */
+const unblockUser = async (
+  username: string,
+  targetUsername: string,
+): Promise<PopulatedSafeDatabaseUser> => {
+  try {
+    const res = await api.patch(`${USER_API_URL}/unblockUser`, {
+      username,
+      targetUsername,
+    });
+    return res.data;
+  } catch (error) {
+    if (error instanceof AxiosError && error.response?.data?.error) {
+      throw new Error(error.response.data.error);
+    }
+    throw new Error('Unable to unblock user. Please try again.');
+  }
+};
+
+/**
+ * Gets the list of blocked users for a given user.
+ * @param username The unique username of the user
+ * @returns A promise resolving to the user object containing blockedUsers
+ * @throws Error if the request fails
+ */
+const getBlockedUsers = async (username: string): Promise<PopulatedSafeDatabaseUser> => {
+  try {
+    const res = await api.get(`${USER_API_URL}/blockedUsers/${username}`);
+    return res.data;
+  } catch (error) {
+    if (error instanceof AxiosError && error.response?.data?.error) {
+      throw new Error(error.response.data.error);
+    }
+    throw new Error('Unable to fetch blocked users. Please try again.');
+  }
+};
+
 export {
   getUsers,
   getUserByUsername,
@@ -515,4 +591,7 @@ export {
   updateStatus,
   toggleCommunityNotifs,
   toggleMessageNotifs,
+  blockUser,
+  unblockUser,
+  getBlockedUsers,
 };

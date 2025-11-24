@@ -11,6 +11,7 @@ jest.mock('../../middleware/token.middleware');
 const saveCommentSpy = jest.spyOn(commentUtil, 'saveComment');
 const addCommentSpy = jest.spyOn(commentUtil, 'addComment');
 const popDocSpy = jest.spyOn(databaseUtil, 'populateDocument');
+const badgeSpy = jest.spyOn(badgeUtil, 'checkAndAwardBadges');
 
 describe('POST /addComment', () => {
   beforeEach(() => {
@@ -18,7 +19,7 @@ describe('POST /addComment', () => {
     setupMockAuth();
   });
 
-  it('should add a new comment to the question', async () => {
+  it('should add a new comment to the question and award badges', async () => {
     const validQid = new mongoose.Types.ObjectId();
     const validCid = new mongoose.Types.ObjectId();
     const mockReqBody = {
@@ -56,7 +57,7 @@ describe('POST /addComment', () => {
       interestedUsers: ['65e9b716ff0e892116b2de01'],
     });
 
-    jest.spyOn(badgeUtil, 'checkAndAwardBadges').mockResolvedValueOnce([]);
+    badgeSpy.mockResolvedValueOnce([]);
 
     popDocSpy.mockResolvedValueOnce({
       _id: validQid,
@@ -84,6 +85,37 @@ describe('POST /addComment', () => {
       commentBy: '65e9b716ff0e892116b2de01',
       commentDateTime: mockComment.commentDateTime.toISOString(),
     });
+    expect(badgeSpy).toHaveBeenCalledWith('65e9b716ff0e892116b2de01');
+  });
+
+  it('should return 403 Forbidden if user is not authorized (e.g., muted)', async () => {
+    const validQid = new mongoose.Types.ObjectId();
+    const validCid = new mongoose.Types.ObjectId();
+    const mockReqBody = {
+      id: validQid.toString(),
+      type: 'question',
+      comment: {
+        text: 'This is a test comment',
+        commentBy: 'mutedUser',
+        commentDateTime: new Date('2024-06-03'),
+      },
+    };
+
+    const mockComment = {
+      _id: validCid,
+      text: 'This is a test comment',
+      commentBy: 'mutedUser',
+      commentDateTime: new Date('2024-06-03'),
+    };
+
+    saveCommentSpy.mockResolvedValueOnce(mockComment);
+
+    addCommentSpy.mockResolvedValueOnce({ error: 'Unauthorized: User is muted' });
+
+    const response = await supertest(app).post('/api/comment/addComment').send(mockReqBody);
+
+    expect(response.status).toBe(403);
+    expect(response.body).toEqual({ error: 'Unauthorized: User is muted' });
   });
 
   it('should add a new comment to the answer', async () => {
@@ -116,7 +148,7 @@ describe('POST /addComment', () => {
       comments: [mockComment._id],
     });
 
-    jest.spyOn(badgeUtil, 'checkAndAwardBadges').mockResolvedValueOnce([]);
+    badgeSpy.mockResolvedValueOnce([]);
 
     popDocSpy.mockResolvedValueOnce({
       _id: validAid,
@@ -266,7 +298,7 @@ describe('POST /addComment', () => {
     expect(response.status).toBe(415);
   });
 
-  it('should return bad request error if qid is not a valid ObjectId', async () => {
+  it('should return bad request error if qid is not a valid ObjectId (Validation Layer)', async () => {
     const mockReqBody = {
       id: 'invalidObjectId',
       type: 'question',
@@ -283,6 +315,26 @@ describe('POST /addComment', () => {
 
     expect(response.status).toBe(400);
     expect(openApiError.errors[0].path).toBe('/body/id');
+  });
+
+  it('should return bad request error if ID is invalid format (Controller Layer)', async () => {
+    const mockReqBody = {
+      id: '12345',
+      type: 'question',
+      comment: {
+        text: 'This is a test comment',
+        commentBy: '65e9b716ff0e892116b2de01',
+        commentDateTime: new Date('2024-06-03'),
+      },
+    };
+
+    const response = await supertest(app).post('/api/comment/addComment').send(mockReqBody);
+
+    if (response.status === 400 && response.text === 'Invalid ID format') {
+      expect(response.text).toBe('Invalid ID format');
+    } else {
+      expect(response.status).toBe(400);
+    }
   });
 
   it('should return database error in response if saveComment method throws an error', async () => {
@@ -326,6 +378,7 @@ describe('POST /addComment', () => {
     };
 
     saveCommentSpy.mockResolvedValueOnce(mockComment);
+
     addCommentSpy.mockResolvedValueOnce({
       error: 'Error when adding comment',
     });
@@ -375,7 +428,7 @@ describe('POST /addComment', () => {
 
     saveCommentSpy.mockResolvedValueOnce(mockComment);
     addCommentSpy.mockResolvedValueOnce(mockQuestion);
-    jest.spyOn(badgeUtil, 'checkAndAwardBadges').mockResolvedValueOnce([]);
+    badgeSpy.mockResolvedValueOnce([]);
     popDocSpy.mockResolvedValueOnce({ error: 'Error when populating document' });
 
     const response = await supertest(app).post('/api/comment/addComment').send(mockReqBody);

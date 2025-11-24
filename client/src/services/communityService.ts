@@ -94,12 +94,12 @@ const deleteCommunity = async (communityId: string, username: string): Promise<v
 
 const toggleModerator = async (
   communityId: string,
-  adminUsername: string,
+  managerUsername: string,
   username: string,
 ): Promise<DatabaseCommunity> => {
   const res = await api.post(`${COMMUNITIES_API_URL}/toggleModerator`, {
     communityId,
-    adminUsername,
+    managerUsername,
     username,
   });
 
@@ -110,12 +110,38 @@ const toggleModerator = async (
   return res.data;
 };
 
-const toggleBan = async (communityId: string, username: string): Promise<DatabaseCommunity> => {
-  const res = await api.post(`${COMMUNITIES_API_URL}/toggleBanUser`, { communityId, username });
+const toggleBan = async (
+  communityId: string,
+  managerUsername: string,
+  username: string,
+): Promise<DatabaseCommunity> => {
+  const res = await api.post(`${COMMUNITIES_API_URL}/toggleBanUser`, {
+    communityId,
+    managerUsername,
+    username,
+  });
 
   if (res.status !== 200) {
     throw new Error('Error while toggling ban');
   }
+  return res.data;
+};
+
+const toggleMute = async (
+  communityId: string,
+  managerUsername: string,
+  username: string,
+): Promise<DatabaseCommunity> => {
+  const res = await api.post(`${COMMUNITIES_API_URL}/toggleMute`, {
+    communityId,
+    managerUsername,
+    username,
+  });
+
+  if (res.status !== 200) {
+    throw new Error('Error while toggling mute');
+  }
+
   return res.data;
 };
 
@@ -142,5 +168,6 @@ export {
   deleteCommunity,
   toggleModerator,
   toggleBan,
+  toggleMute,
   sendAnnouncement,
 };

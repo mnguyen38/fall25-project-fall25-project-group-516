@@ -7,7 +7,7 @@ import {
   UserResponse,
   UsersResponse,
   OAuthUserProfile,
-  UserRolesResponse,
+  // UserRolesResponse,
 } from '../types/types';
 import { populateUser } from '../utils/database.util';
 import mongoose from 'mongoose';
@@ -176,7 +176,6 @@ export const loginUser = async (loginCredentials: UserCredentials): Promise<User
     if (!updatedUser) {
       throw Error('Failed to retrieve updated user');
     }
-
     return updatedUser as PopulatedSafeDatabaseUser;
   } catch (error) {
     return { error: `Error occurred when authenticating user: ${error}` };
@@ -311,17 +310,17 @@ export const findOrCreateOAuthUser = async (
 /**
  *
  */
-export const getUserRolesById = async (id: string): Promise<UserRolesResponse> => {
-  try {
-    const roles = await UserModel.findById(id).select('roles');
-    if (!roles) {
-      throw new Error('User not found');
-    }
-    return roles;
-  } catch (error) {
-    return { error: `Error occured while the user's roles: ${error}` };
-  }
-};
+// export const getUserRolesById = async (id: string): Promise<UserRolesResponse> => {
+//   try {
+//     const roles = await UserModel.findById(id).select('roles');
+//     if (!roles) {
+//       throw new Error('User not found');
+//     }
+//     return roles;
+//   } catch (error) {
+//     return { error: `Error occured while the user's roles: ${error}` };
+//   }
+// };
 
 /** Adds or removes coins from specified account.
  * @param username User to whom coins will be allocated/ redacted
@@ -499,5 +498,106 @@ export const getUserIfTopContributor = async (username: string): Promise<UserRes
     return {
       error: `Error occurred when finding users with above average lifetime upvotes: ${error}`,
     };
+  }
+};
+
+/**
+ * Blocks a user by adding them to the current user's blocked list.
+ *
+ * @param {string} username - The username of the user doing the blocking.
+ * @param {string} targetUsername - The username of the user to block.
+ * @returns {Promise<UserResponse>} - Resolves with the updated user object or an error message.
+ */
+export const blockUser = async (
+  username: string,
+  targetUsername: string,
+): Promise<UserResponse> => {
+  try {
+    // Prevent self-blocking
+    if (username === targetUsername) {
+      return { error: 'You cannot block yourself' };
+    }
+
+    // Check if target user exists
+    const targetUser = await UserModel.findOne({ username: targetUsername });
+    if (!targetUser) {
+      return { error: 'User not found' };
+    }
+
+    // Check if already blocked
+    const currentUser: DatabaseUser | null = await UserModel.findOne({ username });
+    if (!currentUser) {
+      return { error: 'User not found' };
+    }
+
+    if (currentUser.blockedUsers?.includes(targetUsername)) {
+      return { error: 'User is already blocked' };
+    }
+
+    // Add to blocked list
+    const updatedUser: PopulatedSafeDatabaseUser | null = await UserModel.findOneAndUpdate(
+      { username },
+      { $addToSet: { blockedUsers: targetUsername } },
+      { new: true },
+    ).select('-password');
+
+    if (!updatedUser) {
+      throw Error('Error blocking user');
+    }
+
+    return updatedUser;
+  } catch (error) {
+    return { error: `Error occurred when blocking user: ${error}` };
+  }
+};
+
+/**
+ * Unblocks a user by removing them from the current user's blocked list.
+ *
+ * @param {string} username - The username of the user doing the unblocking.
+ * @param {string} targetUsername - The username of the user to unblock.
+ * @returns {Promise<UserResponse>} - Resolves with the updated user object or an error message.
+ */
+export const unblockUser = async (
+  username: string,
+  targetUsername: string,
+): Promise<UserResponse> => {
+  try {
+    // Remove from blocked list
+    const updatedUser: PopulatedSafeDatabaseUser | null = await UserModel.findOneAndUpdate(
+      { username },
+      { $pull: { blockedUsers: targetUsername } },
+      { new: true },
+    ).select('-password');
+
+    if (!updatedUser) {
+      throw Error('Error unblocking user');
+    }
+
+    return updatedUser;
+  } catch (error) {
+    return { error: `Error occurred when unblocking user: ${error}` };
+  }
+};
+
+/**
+ * Gets the list of blocked users for a given user.
+ *
+ * @param {string} username - The username to get blocked users for.
+ * @returns {Promise<UserResponse>} - Resolves with the user object containing blockedUsers or an error message.
+ */
+export const getBlockedUsers = async (username: string): Promise<UserResponse> => {
+  try {
+    const user: PopulatedSafeDatabaseUser | null = await UserModel.findOne({ username }).select(
+      '-password',
+    );
+
+    if (!user) {
+      throw Error('User not found');
+    }
+
+    return user;
+  } catch (error) {
+    return { error: `Error occurred when getting blocked users: ${error}` };
   }
 };

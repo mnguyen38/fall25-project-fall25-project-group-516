@@ -13,6 +13,6 @@ export type ModToolSections = 'users' | 'danger' | 'announcement' | null;
 export type ModToolConfirmation = ModToolAction | null;
 
 export interface ModToolAction {
-  action: 'mod' | 'ban';
+  action: 'mod' | 'ban' | 'mute';
   username: string;
 }

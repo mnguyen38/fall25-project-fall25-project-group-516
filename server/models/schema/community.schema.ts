@@ -48,6 +48,11 @@ const communitySchema = new Schema(
       required: true,
       default: [],
     },
+    muted: {
+      type: [String],
+      required: true,
+      default: [],
+    },
   },
   {
     collection: 'Community',

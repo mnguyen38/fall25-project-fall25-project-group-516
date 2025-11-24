@@ -56,6 +56,7 @@ const Login = () => {
         <button type='submit' className='login-button'>
           Submit
         </button>
+        <div className='oauth-divider'>or continue with</div>
         <button type='button' className='github-button' onClick={handleGitHubOAuth}>
           <svg aria-hidden='true' viewBox='0 0 24 24'>
             <path

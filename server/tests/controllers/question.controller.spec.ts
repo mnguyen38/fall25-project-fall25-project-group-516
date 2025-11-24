@@ -24,6 +24,10 @@ const filterQuestionsBySearchSpy: jest.SpyInstance = jest.spyOn(
   questionUtil,
   'filterQuestionsBySearch',
 );
+const filterQuestionsByBlockingSpy: jest.SpyInstance = jest.spyOn(
+  questionUtil,
+  'filterQuestionsByBlocking',
+);
 const getCommunityQuestionsSpy: jest.SpyInstance = jest.spyOn(
   questionUtil,
   'getCommunityQuestions',
@@ -837,6 +841,7 @@ describe('Test questionController', () => {
     it('should return the result of filterQuestionsBySearch as response even if request parameters of order and search are absent', async () => {
       getQuestionsByOrderSpy.mockResolvedValueOnce(MOCK_POPULATED_QUESTIONS);
       filterQuestionsBySearchSpy.mockReturnValueOnce(MOCK_POPULATED_QUESTIONS);
+      filterQuestionsByBlockingSpy.mockResolvedValueOnce(MOCK_POPULATED_QUESTIONS);
       // Making the request
       const response = await supertest(app).get('/api/question/getQuestion');
 
@@ -853,6 +858,7 @@ describe('Test questionController', () => {
       getQuestionsByOrderSpy.mockResolvedValueOnce(MOCK_POPULATED_QUESTIONS);
       jest.spyOn(questionUtil, 'filterQuestionsByAskedBy').mockReturnValueOnce(filteredQuestions);
       filterQuestionsBySearchSpy.mockReturnValueOnce(filteredQuestions);
+      filterQuestionsByBlockingSpy.mockResolvedValueOnce(filteredQuestions);
 
       const response = await supertest(app).get('/api/question/getQuestion').query({
         askedBy: 'question1_user',
@@ -869,6 +875,7 @@ describe('Test questionController', () => {
       getQuestionsByOrderSpy.mockResolvedValueOnce(MOCK_POPULATED_QUESTIONS);
       jest.spyOn(questionUtil, 'filterQuestionsByAskedBy').mockReturnValueOnce(askedByFiltered);
       filterQuestionsBySearchSpy.mockReturnValueOnce(finalFiltered);
+      filterQuestionsByBlockingSpy.mockResolvedValueOnce(finalFiltered);
 
       const response = await supertest(app).get('/api/question/getQuestion').query({
         order: 'newest',
@@ -883,6 +890,7 @@ describe('Test questionController', () => {
     it('should handle empty search string parameter', async () => {
       getQuestionsByOrderSpy.mockResolvedValueOnce(MOCK_POPULATED_QUESTIONS);
       filterQuestionsBySearchSpy.mockReturnValueOnce(MOCK_POPULATED_QUESTIONS);
+      filterQuestionsByBlockingSpy.mockResolvedValueOnce(MOCK_POPULATED_QUESTIONS);
 
       const response = await supertest(app).get('/api/question/getQuestion').query({
         order: 'newest',
@@ -897,6 +905,7 @@ describe('Test questionController', () => {
       getQuestionsByOrderSpy.mockResolvedValueOnce(MOCK_POPULATED_QUESTIONS);
       jest.spyOn(questionUtil, 'filterQuestionsByAskedBy').mockReturnValueOnce([]);
       filterQuestionsBySearchSpy.mockReturnValueOnce([]);
+      filterQuestionsByBlockingSpy.mockResolvedValueOnce([]);
 
       const response = await supertest(app).get('/api/question/getQuestion').query({
         askedBy: 'non_existent_user',
@@ -915,6 +924,7 @@ describe('Test questionController', () => {
 
       getQuestionsByOrderSpy.mockResolvedValueOnce(MOCK_POPULATED_QUESTIONS);
       filterQuestionsBySearchSpy.mockReturnValueOnce(MOCK_POPULATED_QUESTIONS);
+      filterQuestionsByBlockingSpy.mockResolvedValueOnce(MOCK_POPULATED_QUESTIONS);
 
       // Making the request
       const response = await supertest(app).get('/api/question/getQuestion').query(mockReqQuery);

@@ -1,31 +1,41 @@
+/* Transaction modal container - overrides base modal styles */
+.transaction-modal-container {
+  width: auto !important;
+  max-width: 500px !important;
+  height: auto !important;
+  max-height: none !important;
+  overflow: hidden !important;
+  display: block !important;
+  scrollbar-width: none !important; /* Firefox */
+  -ms-overflow-style: none !important; /* IE and Edge */
+}
+
+.transaction-modal-container::-webkit-scrollbar {
+  display: none !important;
+}
+
 .transaction-modal {
-  --color-bg: #f3f2ef62;
-  --color-card-bg: #ffffff;
-  --color-border: #e0e0e0;
-  --color-primary: #0a66c2;
-  --color-primary-hover: #004182;
+  --color-primary: #8B5A3C;
+  --color-primary-hover: #6B4423;
   --color-danger: #dc2626;
   --color-danger-hover: #991b1b;
-  --color-text-primary: #000000e6;
-  --color-text-secondary: #00000099;
+  --color-text-primary: #3D2817;
+  --color-text-secondary: #6B4423;
   --radius: 8px;
 
-  background-color: var(--color-bg);
-  padding: 2rem;
-  display: flex;
-  justify-content: center;
-  min-height: 100%;
-  width: 100%;
+  display: block;
   color: var(--color-text-primary);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell,
     sans-serif;
+  padding: 0;
+  margin: 0;
 }
 
 .container-container {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding-bottom: 15px;
+  padding: 12px 0;
 }
 
 .coin-container {
@@ -54,46 +64,112 @@
   width: 125px;
 }
 
-.transaction-description h3 {
-  white-space: pre-wrap;
+.transaction-description {
+  text-align: center;
+  margin-bottom: 12px;
 }
 
-.transaction-modal {
-  display: flex;
-  flex-direction: column;
+.transaction-description h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0 0 4px 0;
+  letter-spacing: -0.3px;
+}
+
+.transaction-description h3 {
+  white-space: pre-wrap;
+  font-size: 1rem;
+  font-weight: 400;
+  color: var(--color-text-secondary);
+  margin: 4px 0 0 0;
+  line-height: 1.4;
 }
 
 .transaction-modal .button {
-  padding: 10px 20px;
+  padding: 12px 28px;
   border: none;
-  border-radius: 24px;
-  font-size: 14px;
+  border-radius: 8px;
+  font-size: 15px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
-  margin-right: 8px;
   font-family: inherit;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  min-width: 120px;
 }
 
 .transaction-modal .button-primary {
-  background-color: var(--color-primary);
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%);
   color: white;
-  border: 1px solid var(--color-primary);
+  border: none;
 }
 
 .transaction-modal .button-primary:hover {
-  background-color: var(--color-primary-hover);
-  border-color: var(--color-primary-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(139, 90, 60, 0.25);
+}
+
+.transaction-modal .button-primary:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(139, 90, 60, 0.2);
 }
 
 .transaction-modal .button-secondary {
-  background-color: transparent;
+  background-color: white;
   color: var(--color-primary);
-  border: 1px solid var(--color-primary);
+  border: 2px solid var(--color-primary);
 }
 
-.transaction-modal.button-secondary:hover {
-  background-color: #eef3f8;
-  box-shadow: inset 0 0 0 1px var(--color-primary);
+.transaction-modal .button-secondary:hover {
+  background-color: #FFF5E6;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(139, 90, 60, 0.15);
 }
 
+.transaction-modal .button-secondary:active {
+  transform: translateY(0);
+}
+
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  align-items: center;
+  padding-top: 0;
+  width: 100%;
+}
+
+/* Error display styling */
+.transaction-error {
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  background-color: #FEF2F2;
+  border: 1px solid #FCA5A5;
+  border-radius: 8px;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.transaction-error .warning-icon {
+  width: 24px;
+  height: 24px;
+  color: var(--color-danger);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.transaction-error .error-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #991B1B;
+  margin: 0 0 4px 0;
+}
+
+.transaction-error .error-text {
+  font-size: 0.875rem;
+  color: #DC2626;
+  margin: 0;
+  line-height: 1.4;
+}

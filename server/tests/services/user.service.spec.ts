@@ -4,7 +4,7 @@ import {
   deleteUserByUsername,
   findOrCreateOAuthUser,
   getUserByUsername,
-  getUserRolesById,
+  // getUserRolesById, // Commented out - roles system removed
   getUsersList,
   loginUser,
   makeTransaction,
@@ -232,7 +232,9 @@ describe('User model', () => {
         .spyOn(UserModel, 'updateOne')
         .mockResolvedValue({ acknowledged: true } as any);
       jest.spyOn(UserModel, 'findById').mockReturnValue({
-        select: jest.fn().mockResolvedValue(safeUser),
+        select: jest.fn().mockResolvedValue({
+          lean: jest.fn().mockResolvedValue(safeUser),
+        }
       } as any);
 
       await loginUser({ username: user.username, password: user.password });
@@ -267,7 +269,9 @@ describe('User model', () => {
         .spyOn(UserModel, 'updateOne')
         .mockResolvedValue({ acknowledged: true } as any);
       jest.spyOn(UserModel, 'findById').mockReturnValue({
-        select: jest.fn().mockResolvedValue(safeUser),
+        select: jest.fn().mockResolvedValue({
+          lean: jest.fn().mockResolvedValue(safeUser),
+        }
       } as any);
 
       await loginUser({ username: user.username, password: user.password });
@@ -302,7 +306,9 @@ describe('User model', () => {
         .spyOn(UserModel, 'updateOne')
         .mockResolvedValue({ acknowledged: true } as any);
       jest.spyOn(UserModel, 'findById').mockReturnValue({
-        select: jest.fn().mockResolvedValue(safeUser),
+        select: jest.fn().mockResolvedValue({
+          lean: jest.fn().mockResolvedValue(safeUser),
+        }),
       } as any);
 
       await loginUser({ username: user.username, password: user.password });
@@ -333,7 +339,9 @@ describe('User model', () => {
         .spyOn(UserModel, 'updateOne')
         .mockResolvedValue({ acknowledged: true } as any);
       jest.spyOn(UserModel, 'findById').mockReturnValue({
-        select: jest.fn().mockResolvedValue(safeUser),
+        select: jest.fn().mockResolvedValue({
+          lean: jest.fn().mockResolvedValue(safeUser),
+        }),
       } as any);
 
       await loginUser({ username: user.username, password: user.password });

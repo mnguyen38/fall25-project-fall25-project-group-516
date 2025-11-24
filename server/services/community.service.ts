@@ -17,32 +17,67 @@ import UserModel from '../models/users.model';
 import userSocketMap from '../utils/socketMap.util';
 
 /**
- * Retrieves a community by its ID.
+ * Retrieves a community by its ID with premium member counts.
  *
  * @param communityId - The ID of the community to retrieve
- * @returns A Promise resolving to the community document or an error object
+ * @returns A Promise resolving to the community document with member counts or an error object
  */
 export const getCommunity = async (communityId: string): Promise<CommunityResponse> => {
   try {
-    const community = await CommunityModel.findById(communityId);
+    const community = await CommunityModel.findById(communityId).lean();
     if (!community) {
       return { error: 'Community not found' };
     }
-    return community;
+
+    // Count premium and non-premium participants
+    const premiumCount = await UserModel.countDocuments({
+      username: { $in: community.participants },
+      premiumProfile: true,
+    });
+
+    const nonPremiumCount = community.participants.length - premiumCount;
+
+    return {
+      ...community,
+      premiumCount,
+      nonPremiumCount,
+    } as DatabaseCommunity & { premiumCount: number; nonPremiumCount: number };
   } catch (err) {
     return { error: (err as Error).message };
   }
 };
 
 /**
- * Retrieves all communities from the database.
+ * Retrieves all communities from the database with premium member counts.
  *
- * @returns A Promise resolving to an array of community documents or an error object
+ * @returns A Promise resolving to an array of community documents with member counts or an error object
  */
 export const getAllCommunities = async (): Promise<DatabaseCommunity[] | { error: string }> => {
   try {
-    const communities = await CommunityModel.find({});
-    return communities;
+    const communities = await CommunityModel.find({}).lean();
+
+    // Add premium/non-premium counts for each community
+    const communitiesWithCounts = await Promise.all(
+      communities.map(async community => {
+        const premiumCount = await UserModel.countDocuments({
+          username: { $in: community.participants },
+          premiumProfile: true,
+        });
+
+        const nonPremiumCount = community.participants.length - premiumCount;
+
+        return {
+          ...community,
+          premiumCount,
+          nonPremiumCount,
+        };
+      }),
+    );
+
+    return communitiesWithCounts as (DatabaseCommunity & {
+      premiumCount: number;
+      nonPremiumCount: number;
+    })[];
   } catch (err) {
     return { error: (err as Error).message };
   }
@@ -170,7 +205,11 @@ export const deleteCommunity = async (
   }
 };
 
-export const toggleBanUser = async (communityId: string, username: string) => {
+export const toggleBanUser = async (
+  communityId: string,
+  managerUsername: string,
+  username: string,
+) => {
   try {
     const community = await CommunityModel.findById(communityId);
 
@@ -178,31 +217,40 @@ export const toggleBanUser = async (communityId: string, username: string) => {
       return { error: 'Community not found' };
     }
 
+    const role = await getCommunityRole(communityId, managerUsername);
+
+    if (role === 'participant') {
+      throw new Error('Unauthorized: User does not have permission to ban');
+    }
+
+    // 1. Prevent banning the Community Admin
     if (community.admin === username) {
       return {
         error:
-          'Community admins or moderators cannot be banned. Please transfer ownership or delete the community instead.',
+          'Community admins cannot be banned. Please transfer ownership or delete the community instead.',
       };
+    }
+
+    const isTargetModerator = community.moderators?.includes(username);
+
+    // 2. Prevent Moderators from banning other Moderators
+    if (role === 'moderator' && isTargetModerator) {
+      return { error: 'Moderators cannot ban other moderators' };
     }
 
     if (!community.banned) {
       community.banned = [];
     }
 
-    const isMember = community.participants.includes(username);
-    const isModerator = community.moderators?.includes(username);
-    const isBanned = community.banned?.includes(username);
+    const isBanned = community.banned.includes(username);
 
+    // Optimized logic: Unban removes from 'banned', Ban adds to 'banned' and removes from 'participants'/'moderators'
     const communityUpdateOp = isBanned
       ? { $pull: { banned: username } }
-      : !isMember
-        ? { $addToSet: { banned: username } }
-        : !isModerator
-          ? { $addToSet: { banned: username }, $pull: { participants: username } }
-          : {
-              $addToSet: { banned: username },
-              $pull: { participants: username, moderators: username },
-            };
+      : {
+          $addToSet: { banned: username },
+          $pull: { participants: username, moderators: username },
+        };
 
     const updatedCommunity = await CommunityModel.findByIdAndUpdate(
       communityId,
@@ -222,7 +270,7 @@ export const toggleBanUser = async (communityId: string, username: string) => {
 
 export const toggleModerator = async (
   communityId: string,
-  adminUsername: string,
+  managerUsername: string,
   username: string,
 ): Promise<CommunityResponse> => {
   try {
@@ -232,7 +280,7 @@ export const toggleModerator = async (
       return { error: 'Community not found' };
     }
 
-    if (community.admin !== adminUsername) {
+    if (community.admin !== managerUsername) {
       return { error: 'Unauthorized: Only the admin can change roles' };
     }
 
@@ -371,5 +419,74 @@ export const sendNotificationUpdates = async (
     });
   } catch (error) {
     return { error: (error as Error).message };
+  }
+};
+
+export const toggleMuteCommunityUser = async (
+  communityId: string,
+  managerUsername: string,
+  username: string,
+): Promise<CommunityResponse> => {
+  try {
+    const community = await CommunityModel.findById(communityId);
+
+    if (!community) {
+      throw new Error('Community not found');
+    }
+
+    const hasPermission =
+      community.admin === managerUsername || community.moderators?.includes(managerUsername);
+
+    if (!hasPermission) {
+      throw new Error('Unauthorized: User does not have proper permissions');
+    }
+
+    const isMuted = community.muted?.includes(username);
+
+    const operation = isMuted ? { $pull: { muted: username } } : { $addToSet: { muted: username } };
+
+    const updatedCommunity = await CommunityModel.findByIdAndUpdate(communityId, operation, {
+      new: true,
+    });
+
+    if (!updatedCommunity) {
+      throw new Error('Count not update muted users');
+    }
+
+    return updatedCommunity;
+  } catch (error) {
+    return { error: (error as Error).message };
+  }
+};
+
+/**
+ * Checks if a user is allowed to post content in a specific community.
+ * Enforces that the user must be a participant and not muted.
+ *
+ * @param communityId - The ID of the community
+ * @param username - The username of the user
+ * @returns {Promise<boolean>} - True if allowed, false otherwise
+ */
+export const isAllowedToPostInCommunity = async (
+  communityId: string,
+  username: string,
+): Promise<boolean> => {
+  try {
+    if (!communityId) {
+      return true;
+    }
+
+    const isAllowed = await CommunityModel.findOne({
+      _id: communityId,
+      participants: { $in: [username] },
+      muted: { $nin: [username] },
+    });
+
+    if (!isAllowed) {
+      return false;
+    }
+    return true;
+  } catch {
+    return false;
   }
 };

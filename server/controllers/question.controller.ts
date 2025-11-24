@@ -14,6 +14,7 @@ import {
   addVoteToQuestion,
   fetchAndIncrementQuestionViewsById,
   filterQuestionsByAskedBy,
+  filterQuestionsByBlocking,
   filterQuestionsBySearch,
   getCommunityQuestions,
   getQuestionsByOrder,
@@ -24,6 +25,7 @@ import { processTags } from '../services/tag.service';
 import { populateDocument } from '../utils/database.util';
 import { checkAndAwardBadges } from '../services/badge.service';
 import QuestionModel from '../models/questions.model';
+import protect from '../middleware/token.middleware';
 
 const questionController = (socket: FakeSOSocket) => {
   const router = express.Router();
@@ -45,13 +47,18 @@ const questionController = (socket: FakeSOSocket) => {
     try {
       let qlist: PopulatedDatabaseQuestion[] = await getQuestionsByOrder(order);
 
-      // Filter by askedBy if provided
       if (askedBy) {
         qlist = filterQuestionsByAskedBy(qlist, askedBy);
       }
 
       // Filter by search keyword and tags
-      const resqlist: PopulatedDatabaseQuestion[] = filterQuestionsBySearch(qlist, search);
+      let resqlist: PopulatedDatabaseQuestion[] = filterQuestionsBySearch(qlist, search);
+
+      // Apply blocking filter using authenticated user
+      if (req.user?.username) {
+        resqlist = await filterQuestionsByBlocking(resqlist, req.user.username);
+      }
+
       res.json(resqlist);
     } catch (err: unknown) {
       if (err instanceof Error) {
@@ -123,13 +130,16 @@ const questionController = (socket: FakeSOSocket) => {
       const result = await saveQuestion(questionswithtags);
 
       if ('error' in result) {
-        throw new Error(result.error);
+        if (result.error.includes('Unauthorized')) {
+          res.status(403).json({ error: result.error });
+        } else {
+          res.status(500).json({ error: result.error });
+        }
+        return;
       }
 
-      // Check and award badges to the user
       await checkAndAwardBadges(question.askedBy);
 
-      // Populates the fields of the question that was added, and emits the new object
       const populatedQuestion = await populateDocument(result._id.toString(), 'question');
 
       if ('error' in populatedQuestion) {
@@ -176,16 +186,13 @@ const questionController = (socket: FakeSOSocket) => {
         throw new Error(status.error);
       }
 
-      // Check and award badges to the question owner if this was an upvote
       if (type === 'upvote') {
-        // Get the question to find the owner (without incrementing views)
         const question = await QuestionModel.findById(qid);
         if (question) {
           await checkAndAwardBadges(question.askedBy);
         }
       }
 
-      // Emit the updated vote counts to all connected clients
       socket.emit('voteUpdate', { qid, upVotes: status.upVotes, downVotes: status.downVotes });
       res.json(status);
     } catch (err) {
@@ -283,7 +290,7 @@ const questionController = (socket: FakeSOSocket) => {
   };
 
   // add appropriate HTTP verbs and their endpoints to the router
-  router.get('/getQuestion', getQuestionsByFilter);
+  router.get('/getQuestion', protect, getQuestionsByFilter);
   router.get('/getQuestionById/:qid', getQuestionById);
   router.post('/addQuestion', addQuestion);
   router.post('/upvoteQuestion', upvoteQuestion);

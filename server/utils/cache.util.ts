@@ -1,13 +1,13 @@
 import { RedisClientType } from '@redis/client';
 import { createClient } from 'redis';
 import { PopulatedSafeDatabaseUser, UserResponse } from '@fake-stack-overflow/shared';
-import { getUserRolesById } from '../services/user.service';
+// import { getUserRolesById } from '../services/user.service';
 import { populateUser } from './database.util';
 import UserModel from '../models/users.model';
 
 type Cache = RedisClientType | null;
 
-const DEFAULT_ROLE_EXPIRATION = 3600;
+// const DEFAULT_ROLE_EXPIRATION = 3600;
 
 let cacheClient: Cache = null;
 
@@ -70,46 +70,46 @@ export const closeCache = async (): Promise<void> => {
   }
 };
 
-export const getCachedUserRoles = async (userId: string): Promise<Map<string, string>> => {
-  try {
-    const cache = await getCache();
+// export const getCachedUserRoles = async (userId: string): Promise<Map<string, string>> => {
+//   try {
+//     const cache = await getCache();
 
-    const cachedUserRoles = await cache.get(`roles:${userId}`);
+//     const cachedUserRoles = await cache.get(`roles:${userId}`);
 
-    if (cachedUserRoles !== null) {
-      const parsedRoles = JSON.parse(cachedUserRoles);
-      const roleMap: Map<string, string> = new Map(Object.entries(parsedRoles));
-      return roleMap;
-    }
+//     if (cachedUserRoles !== null) {
+//       const parsedRoles = JSON.parse(cachedUserRoles);
+//       const roleMap: Map<string, string> = new Map(Object.entries(parsedRoles));
+//       return roleMap;
+//     }
 
-    const result = await getUserRolesById(userId);
+//     const result = await getUserRolesById(userId);
 
-    if ('error' in result) {
-      throw new Error(result.error);
-    }
+//     if ('error' in result) {
+//       throw new Error(result.error);
+//     }
 
-    if (result.roles === undefined || result.roles === null) {
-      throw new Error(`Roles not found`);
-    }
+//     if (result.roles === undefined || result.roles === null) {
+//       throw new Error(`Roles not found`);
+//     }
 
-    await cache.setEx(`roles:${userId}`, DEFAULT_ROLE_EXPIRATION, JSON.stringify(result.roles));
+//     await cache.setEx(`roles:${userId}`, DEFAULT_ROLE_EXPIRATION, JSON.stringify(result.roles));
 
-    return result.roles;
-  } catch (error) {
-    // Fallback to direct database query if cache fails
-    const result = await getUserRolesById(userId);
+//     return result.roles;
+//   } catch (error) {
+//     // Fallback to direct database query if cache fails
+//     const result = await getUserRolesById(userId);
 
-    if ('error' in result) {
-      throw new Error(result.error);
-    }
+//     if ('error' in result) {
+//       throw new Error(result.error);
+//     }
 
-    if (result.roles === undefined || result.roles === null) {
-      throw new Error(`Roles not found`);
-    }
+//     if (result.roles === undefined || result.roles === null) {
+//       throw new Error(`Roles not found`);
+//     }
 
-    return result.roles;
-  }
-};
+//     return result.roles;
+//   }
+// };
 
 export const getCachedUser = async (userId: string): Promise<UserResponse> => {
   try {

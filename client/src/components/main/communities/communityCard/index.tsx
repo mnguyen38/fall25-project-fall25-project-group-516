@@ -24,7 +24,8 @@ const CommunityCard = ({
         <strong>Visibility:</strong> {community.visibility}
       </p>
       <p className='community-card-meta'>
-        <strong>Participants:</strong> {community.participants.length}
+        <strong>Members:</strong> {community.participants.length} (Premium:{' '}
+        {community.premiumCount ?? 0} | Non-Premium: {community.nonPremiumCount ?? 0})
       </p>
       <div className='community-card-actions'>
         <button className='btn-action-community' onClick={handleViewCommunity}>

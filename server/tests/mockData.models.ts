@@ -2,12 +2,14 @@ import { ObjectId } from 'mongodb';
 import {
   DatabaseAnswer,
   DatabaseComment,
+  DatabaseCommunity,
   DatabaseQuestion,
   DatabaseTag,
   PopulatedDatabaseQuestion,
   PopulatedSafeDatabaseUser,
   User,
 } from '../types/types';
+import mongoose from 'mongoose';
 
 export const T1_DESC =
   'React is a JavaScript-based UI development library. Although React is a library rather than a language, it is widely used in web development. The library first appeared in May 2013 and is now one of the most commonly used frontend libraries for web development.';
@@ -227,4 +229,18 @@ export const safeUser: PopulatedSafeDatabaseUser = {
   username: 'user1',
   dateJoined: new Date('2024-12-03'),
   notifications: [],
+};
+
+export const community1: DatabaseCommunity = {
+  _id: new mongoose.Types.ObjectId('65e9b58910afe6e94fc6e6dc'),
+  name: 'Test Community',
+  description: 'Test Description',
+  admin: 'admin_user',
+  participants: ['admin_user', 'user1', 'user2'],
+  moderators: [],
+  muted: [],
+  banned: [],
+  visibility: 'PUBLIC',
+  createdAt: new Date('2024-03-01'),
+  updatedAt: new Date('2024-03-01'),
 };

@@ -43,14 +43,16 @@ const commentController = (socket: FakeSOSocket) => {
       const status = await addComment(id, type, comFromDb);
 
       if (status && 'error' in status) {
+        if (status.error.includes('Unauthorized')) {
+          res.status(403).json({ error: status.error });
+          return;
+        }
+
         throw new Error(status.error);
       }
 
-      // Check and award badges to the user
       await checkAndAwardBadges(comment.commentBy);
 
-      // Populates the fields of the question or answer that this comment
-      // was added to, and emits the updated object
       const populatedDoc = await populateDocument(id, type);
 
       if (populatedDoc && 'error' in populatedDoc) {

@@ -349,6 +349,11 @@
   color: var(--pancake-white);
 }
 
+.badge-muted {
+  background: #57534e; /* Warm Grey */
+  color: var(--pancake-white);
+}
+
 .badge-non-member {
   background: var(--pancake-accent);
   color: var(--pancake-text-dark);
@@ -377,7 +382,17 @@
   border-color: #dc2626;
 }
 
+.action-section-mute {
+  background-color: #f5f5f4; /* Stone-100 */
+  border-color: #57534e; /* Stone-600 */
+}
+
 .action-section-banned {
+  background-color: var(--pancake-bg-light);
+  border-color: var(--pancake-border);
+}
+
+.action-section-muted {
   background-color: var(--pancake-bg-light);
   border-color: var(--pancake-border);
 }
@@ -403,7 +418,12 @@
   color: #991b1b;
 }
 
-.action-section-banned .action-title {
+.action-section-mute .action-title {
+  color: #1c1917; /* Stone-900 */
+}
+
+.action-section-banned .action-title,
+.action-section-muted .action-title {
   color: var(--pancake-text-medium);
 }
 
@@ -421,7 +441,12 @@
   color: #991b1b;
 }
 
-.action-section-banned .action-description {
+.action-section-mute .action-description {
+  color: #44403c; /* Stone-700 */
+}
+
+.action-section-banned .action-description,
+.action-section-muted .action-description {
   color: var(--pancake-text-medium);
 }
 
@@ -447,6 +472,11 @@
 .action-section-ban .confirm-text,
 .action-section-banned .confirm-text {
   color: #991b1b;
+}
+
+.action-section-mute .confirm-text,
+.action-section-muted .confirm-text {
+  color: #44403c;
 }
 
 /* Buttons - Following style guide */
@@ -586,6 +616,77 @@
 }
 
 .btn-cancel-banned:hover {
+  background: var(--pancake-bg-light);
+  border-color: var(--pancake-brown-light);
+}
+
+/* Mute Buttons */
+.btn-mute {
+  background: transparent;
+  color: #57534e;
+  border-color: #57534e;
+}
+
+.btn-mute:hover {
+  background: #e7e5e4;
+  border-color: #44403c;
+}
+
+.btn-unmute {
+  background: #15803d;
+  color: var(--pancake-white);
+  border-color: #15803d;
+}
+
+.btn-unmute:hover {
+  background: #166534;
+  border-color: #166534;
+}
+
+.btn-confirm-mute {
+  padding: 8px 12px;
+  background: #57534e;
+  color: var(--pancake-white);
+  border-color: #57534e;
+}
+
+.btn-confirm-mute:hover {
+  background: #44403c;
+  border-color: #44403c;
+}
+
+.btn-confirm-unmute {
+  padding: 8px 12px;
+  background: #15803d;
+  color: var(--pancake-white);
+  border-color: #15803d;
+}
+
+.btn-confirm-unmute:hover {
+  background: #166534;
+  border-color: #166534;
+}
+
+.btn-cancel-mute {
+  padding: 8px 12px;
+  background: transparent;
+  color: #57534e;
+  border-color: #57534e;
+}
+
+.btn-cancel-mute:hover {
+  background: #e7e5e4;
+  border-color: #44403c;
+}
+
+.btn-cancel-muted {
+  padding: 8px 12px;
+  background: transparent;
+  color: var(--pancake-text-medium);
+  border-color: var(--pancake-border);
+}
+
+.btn-cancel-muted:hover {
   background: var(--pancake-bg-light);
   border-color: var(--pancake-brown-light);
 }
