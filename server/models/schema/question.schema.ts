@@ -16,6 +16,7 @@ import { Schema } from 'mongoose';
  * - `comments`: Comments that have been added to the question by users.
  * - `premiumStatus`: Premium status of user who asked the question.
  * - `isAnonymous`: Whether the question was posted anonymously.
+ * - `interestedUsers`: An array of usernames interested in recieving notifications about updates to question.
  */
 const questionSchema: Schema = new Schema(
   {
@@ -49,6 +50,7 @@ const questionSchema: Schema = new Schema(
       type: Boolean,
       default: false,
     },
+    interestedUsers: [{ type: String }],
   },
   { collection: 'Question' },
 );

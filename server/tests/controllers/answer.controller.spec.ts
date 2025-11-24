@@ -57,6 +57,7 @@ describe('POST /addAnswer', () => {
       comments: [],
       community: null,
       premiumStatus: false,
+      interestedUsers: ['65e9b716ff0e892116b2de01'],
     });
 
     jest.spyOn(badgeUtil, 'checkAndAwardBadges').mockResolvedValueOnce([]);
@@ -75,6 +76,7 @@ describe('POST /addAnswer', () => {
       comments: [],
       community: null,
       premiumStatus: false,
+      interestedUsers: ['65e9b716ff0e892116b2de01'],
     });
 
     const notification: DatabaseNotification = {
@@ -244,6 +246,7 @@ describe('POST /addAnswer', () => {
       comments: [],
       community: null,
       premiumStatus: false,
+      interestedUsers: ['65e9b716ff0e892116b2de01'],
     };
 
     saveAnswerSpy.mockResolvedValueOnce(mockAnswer);

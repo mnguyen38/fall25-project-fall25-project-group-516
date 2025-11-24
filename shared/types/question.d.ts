@@ -28,6 +28,7 @@ export type OrderType = 'newest' | 'unanswered' | 'active' | 'mostViewed';
  * - `comments`: An array of comments related to the question.
  * - `premiumStatus`: Whether the asker has premium.
  * - `isAnonymous`: Whether the question was posted anonymously.
+ * - `interestedUsers`: An array of usernames interested in recieving notifications about updates to question.
  */
 export interface Question {
   title: string;
@@ -43,6 +44,7 @@ export interface Question {
   community: ObjectId | null;
   premiumStatus: boolean;
   isAnonymous?: boolean;
+  interestedUsers: string[];
 }
 
 /**
@@ -131,8 +133,9 @@ export interface AddQuestionRequest extends Request {
 
 /**
  * Interface for the request body when upvoting or downvoting a question.
- * - `qid`: The unique identifier of the question being voted on (body).
- * - `username`: The username of the user casting the vote (body).
+ * Is also used for adding a user as interested user.
+ * - `qid`: The unique identifier of the question being voted on / question of interest (body).
+ * - `username`: The username of the user casting the vote / interested user(body).
  */
 export interface VoteRequest extends Request {
   body: {
