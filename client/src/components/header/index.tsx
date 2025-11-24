@@ -1,7 +1,6 @@
 import { FiBell } from 'react-icons/fi';
 import useHeader from '../../hooks/useHeader';
 import './index.css';
-import useUserContext from '../../hooks/useUserContext';
 
 interface HeaderProps {
   openTransactionWindow: () => void;
@@ -13,8 +12,6 @@ interface HeaderProps {
  * when they press Enter.
  */
 const Header = ({ openTransactionWindow }: HeaderProps) => {
-  const { user } = useUserContext();
-  console.log(user);
   const {
     val,
     handleInputChange,

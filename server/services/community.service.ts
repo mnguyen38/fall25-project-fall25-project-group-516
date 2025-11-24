@@ -11,7 +11,7 @@ import {
   DatabaseCommunity,
   FakeSOSocket,
 } from '../types/types';
-import mongoose, { ObjectId } from 'mongoose';
+import mongoose from 'mongoose';
 import { addNotificationToUsers, saveNotification } from './notification.service';
 import UserModel from '../models/users.model';
 import userSocketMap from '../utils/socketMap.util';
@@ -402,7 +402,6 @@ export const toggleMuteCommunityUser = async (
     const hasPermission =
       community.admin === managerUsername || community.moderators?.includes(managerUsername);
 
-    console.log(managerUsername);
     if (!hasPermission) {
       throw new Error('Unauthorized: User does not have proper permissions');
     }

@@ -44,12 +44,10 @@ const questionController = (socket: FakeSOSocket) => {
     try {
       let qlist: PopulatedDatabaseQuestion[] = await getQuestionsByOrder(order);
 
-      // Filter by askedBy if provided
       if (askedBy) {
         qlist = filterQuestionsByAskedBy(qlist, askedBy);
       }
 
-      // Filter by search keyword and tags
       const resqlist: PopulatedDatabaseQuestion[] = filterQuestionsBySearch(qlist, search);
       res.json(resqlist);
     } catch (err: unknown) {
@@ -108,7 +106,7 @@ const questionController = (socket: FakeSOSocket) => {
    */
   const addQuestion = async (req: AddQuestionRequest, res: Response): Promise<void> => {
     const question: Question = req.body;
-  
+
     try {
       const questionswithtags = {
         ...question,
@@ -130,10 +128,8 @@ const questionController = (socket: FakeSOSocket) => {
         return;
       }
 
-      // Check and award badges to the user
       await checkAndAwardBadges(question.askedBy);
 
-      // Populates the fields of the question that was added, and emits the new object
       const populatedQuestion = await populateDocument(result._id.toString(), 'question');
 
       if ('error' in populatedQuestion) {
@@ -180,16 +176,13 @@ const questionController = (socket: FakeSOSocket) => {
         throw new Error(status.error);
       }
 
-      // Check and award badges to the question owner if this was an upvote
       if (type === 'upvote') {
-        // Get the question to find the owner (without incrementing views)
         const question = await QuestionModel.findById(qid);
         if (question) {
           await checkAndAwardBadges(question.askedBy);
         }
       }
 
-      // Emit the updated vote counts to all connected clients
       socket.emit('voteUpdate', { qid, upVotes: status.upVotes, downVotes: status.downVotes });
       res.json(status);
     } catch (err) {
@@ -257,7 +250,6 @@ const questionController = (socket: FakeSOSocket) => {
     }
   };
 
-  // add appropriate HTTP verbs and their endpoints to the router
   router.get('/getQuestion', getQuestionsByFilter);
   router.get('/getQuestionById/:qid', getQuestionById);
   router.post('/addQuestion', addQuestion);

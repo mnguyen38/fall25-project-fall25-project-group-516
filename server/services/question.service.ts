@@ -177,7 +177,7 @@ export const saveQuestion = async (question: Question): Promise<QuestionResponse
 
     return result;
   } catch (error) {
-    return { error: (error as Error).message};
+    return { error: (error as Error).message };
   }
 };
 

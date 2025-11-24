@@ -8,9 +8,10 @@ import {
   PopulatedSafeDatabaseUser,
 } from '../../types/types';
 import AnswerModel from '../../models/answers.model';
-import { QUESTIONS, ans1, com1, user } from '../mockData.models';
+import { QUESTIONS, ans1, com1, community1, user } from '../mockData.models';
 import CommentModel from '../../models/comments.model';
 import UserModel from '../../models/users.model';
+import CommunityModel from '../../models/community.model';
 
 describe('Comment model', () => {
   beforeEach(() => {
@@ -55,8 +56,11 @@ describe('Comment model', () => {
 
   describe('addComment', () => {
     test('addComment should return the updated question when given `question`', async () => {
-      // mock question to be returned from findOneAndUpdate spy
       const question = { ...QUESTIONS[0], comments: [com1._id] };
+
+      jest.spyOn(QuestionModel, 'findById').mockReturnValue({
+        select: jest.fn().mockResolvedValueOnce({ community: question.community }),
+      } as any);
       jest.spyOn(QuestionModel, 'findOneAndUpdate').mockResolvedValue(question);
       const result = (await addComment(
         question._id.toString() as string,
@@ -68,8 +72,10 @@ describe('Comment model', () => {
     });
 
     test('addComment should return the updated answer when given `answer`', async () => {
-      // mock answer to be returned from findOneAndUpdate spy
       const answer: DatabaseAnswer = { ...ans1, comments: [com1._id] };
+      jest.spyOn(QuestionModel, 'findOne').mockReturnValue({
+        select: jest.fn().mockResolvedValueOnce({ community: QUESTIONS[0].community }),
+      } as any);
       jest.spyOn(AnswerModel, 'findOneAndUpdate').mockResolvedValue(answer);
 
       const result = (await addComment(answer._id.toString(), 'answer', com1)) as DatabaseAnswer;
@@ -80,6 +86,10 @@ describe('Comment model', () => {
 
     test('addComment should return an object with error if findOneAndUpdate throws an error', async () => {
       const question = QUESTIONS[0];
+
+      jest.spyOn(QuestionModel, 'findById').mockReturnValue({
+        select: jest.fn().mockResolvedValueOnce({ community: QUESTIONS[0].community }),
+      } as any);
       jest
         .spyOn(QuestionModel, 'findOneAndUpdate')
         .mockRejectedValue(new Error('Error from findOneAndUpdate'));
@@ -89,6 +99,9 @@ describe('Comment model', () => {
 
     test('addComment should return an object with error if findOneAndUpdate returns null', async () => {
       const answer: DatabaseAnswer = { ...ans1 };
+      jest.spyOn(QuestionModel, 'findOne').mockReturnValue({
+        select: jest.fn().mockResolvedValueOnce({ community: QUESTIONS[0].community }),
+      } as any);
       jest.spyOn(AnswerModel, 'findOneAndUpdate').mockResolvedValue(null);
 
       const result = await addComment(answer._id.toString(), 'answer', com1);
@@ -100,7 +113,7 @@ describe('Comment model', () => {
         _id: new mongoose.Types.ObjectId(),
         commentDateTime: new Date(),
         text: '',
-        commentBy: 'user123', // Missing commentDateTime
+        commentBy: 'user123',
       };
 
       const qid = 'validQuestionId';
@@ -108,6 +121,36 @@ describe('Comment model', () => {
       expect(addComment(qid, 'question', invalidComment)).resolves.toEqual({
         error: `Error when adding comment: Invalid comment`,
       });
+    });
+
+    test('addComment should throw an error if user is not allowed to post on question', async () => {
+      const answer: DatabaseAnswer = { ...ans1 };
+      const question = { ...QUESTIONS[0], community: community1._id };
+
+      jest.spyOn(QuestionModel, 'findOne').mockReturnValue({
+        select: jest.fn().mockResolvedValueOnce({ community: question.community }),
+      } as any);
+
+      jest.spyOn(CommunityModel, 'findOne').mockResolvedValueOnce(null);
+
+      const result = (await addComment(answer._id.toString(), 'answer', com1)) as DatabaseAnswer;
+
+      expect('error' in result).toBe(true);
+    });
+    test('addComment should throw an error if user is not allowed to post on answer', async () => {
+      const question = { ...QUESTIONS[0], community: community1._id, comments: [com1._id] };
+
+      jest.spyOn(QuestionModel, 'findById').mockReturnValue({
+        select: jest.fn().mockResolvedValueOnce({ community: question.community }),
+      } as any);
+      jest.spyOn(CommunityModel, 'findOne').mockResolvedValueOnce(null);
+
+      const result = (await addComment(
+        question._id.toString() as string,
+        'question',
+        com1,
+      )) as DatabaseQuestion;
+      expect('error' in result).toBe(true);
     });
   });
 });

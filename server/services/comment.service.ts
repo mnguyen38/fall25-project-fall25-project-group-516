@@ -10,7 +10,6 @@ import {
 import AnswerModel from '../models/answers.model';
 import QuestionModel from '../models/questions.model';
 import CommentModel from '../models/comments.model';
-import { isAllowedToPostInCommunity } from './community.service';
 import { isAllowedToPostOnQuestion } from './question.service';
 import { isAllowedToPostOnAnswer } from './answer.service';
 import { getUserIfTopContributor } from './user.service';

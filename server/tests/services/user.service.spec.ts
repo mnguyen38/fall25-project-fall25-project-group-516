@@ -66,7 +66,9 @@ describe('getUserByUsername', () => {
     } as any);
 
     jest.spyOn(UserModel, 'findById').mockReturnValue({
-      select: jest.fn().mockResolvedValue(safeUser),
+      select: jest.fn().mockReturnValue({
+        lean: jest.fn().mockResolvedValue(safeUser),
+      }),
     } as any);
 
     const retrievedUser = (await getUserByUsername(user.username)) as PopulatedSafeDatabaseUser;
@@ -160,7 +162,9 @@ describe('readNotifications', () => {
     jest.spyOn(UserModel, 'updateOne').mockResolvedValue({ matchedCount: 1 } as any);
     jest.spyOn(UserModel, 'findOne').mockResolvedValue({ _id: 'some_id' });
     jest.spyOn(UserModel, 'findById').mockReturnValue({
-      select: jest.fn().mockResolvedValue(safeUser),
+      select: jest.fn().mockReturnValue({
+        lean: jest.fn().mockResolvedValue(safeUser),
+      }),
     } as any);
 
     const result = await readNotifications('testuser', ['69234f2ef67e4a8b712d71d0']);
@@ -495,7 +499,9 @@ describe('loginUser', () => {
     } as any);
 
     jest.spyOn(UserModel, 'findById').mockReturnValue({
-      select: jest.fn().mockResolvedValue(safeUser),
+      select: jest.fn().mockReturnValue({
+        lean: jest.fn().mockResolvedValue(safeUser),
+      }),
     } as any);
 
     const credentials: UserCredentials = {

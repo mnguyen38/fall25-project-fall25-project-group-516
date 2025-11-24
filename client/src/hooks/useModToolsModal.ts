@@ -51,8 +51,8 @@ const useModToolsModal = (community: DatabaseCommunity) => {
         // Service throws on error, so we await inside try/catch
         await deleteCommunity(community._id.toString(), user.username);
         navigate('/communities');
-      } catch (e: any) {
-        setActionError(e.message || 'Failed to delete community');
+      } catch (e: unknown) {
+        setActionError((e as Error).message || 'Failed to delete community');
       }
     }
   };
@@ -62,8 +62,8 @@ const useModToolsModal = (community: DatabaseCommunity) => {
     if (community && community.admin === user.username) {
       try {
         await toggleModerator(community._id.toString(), user.username, userToToggle);
-      } catch (e: any) {
-        setActionError(e.message || 'Failed to toggle moderator status');
+      } catch (e: unknown) {
+        setActionError((e as Error).message || 'Failed to toggle moderator status');
       }
     }
   };
@@ -76,8 +76,8 @@ const useModToolsModal = (community: DatabaseCommunity) => {
     ) {
       try {
         await toggleBan(community._id.toString(), user.username, userToBan);
-      } catch (e: any) {
-        setActionError(e.message || 'Failed to toggle ban status');
+      } catch (e: unknown) {
+        setActionError((e as Error).message || 'Failed to toggle ban status');
       }
     }
   };
@@ -90,8 +90,8 @@ const useModToolsModal = (community: DatabaseCommunity) => {
     ) {
       try {
         await toggleMute(community._id.toString(), user.username, userToMute);
-      } catch (e: any) {
-        setActionError(e.message || 'Failed to toggle mute status');
+      } catch (e: unknown) {
+        setActionError((e as Error).message || 'Failed to toggle mute status');
       }
     }
   };

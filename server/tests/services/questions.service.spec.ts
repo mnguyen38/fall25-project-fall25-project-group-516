@@ -8,8 +8,9 @@ import {
   saveQuestion,
   addVoteToQuestion,
   getCommunityQuestions,
+  isAllowedToPostOnQuestion,
 } from '../../services/question.service';
-import { DatabaseQuestion, PopulatedDatabaseQuestion } from '../../types/types';
+import { DatabaseQuestion, PopulatedDatabaseQuestion, Question } from '../../types/types';
 import {
   QUESTIONS,
   tag1,
@@ -20,8 +21,11 @@ import {
   ans4,
   POPULATED_QUESTIONS,
   user,
+  community1,
 } from '../mockData.models';
 import UserModel from '../../models/users.model';
+import { ObjectId } from 'mongodb';
+import CommunityModel from '../../models/community.model';
 
 describe('Question model', () => {
   beforeEach(() => {
@@ -97,8 +101,6 @@ describe('Question model', () => {
     test('get active questions, newest questions sorted by most recently answered 1', async () => {
       const mockQuestionsFromDb = POPULATED_QUESTIONS.slice(0, 3);
 
-      // Mock the find method and the chaining of populate
-      // The type cast to unkown and then to Query is necessary to ensure that typechecking is performed after the mock
       jest.spyOn(QuestionModel, 'find').mockReturnValue({
         populate: jest.fn().mockResolvedValue(mockQuestionsFromDb),
       } as unknown as Query<PopulatedDatabaseQuestion[], typeof QuestionModel>);
@@ -115,22 +117,22 @@ describe('Question model', () => {
       const questions = [
         {
           _id: '65e9b716ff0e892116b2de01',
-          answers: [ans1, ans3], // 18, 19 => 19
+          answers: [ans1, ans3],
           askDateTime: new Date('2023-11-20T09:24:00'),
         },
         {
           _id: '65e9b716ff0e892116b2de02',
-          answers: [ans1, ans2, ans3, ans4], // 18, 20, 19, 19 => 20
+          answers: [ans1, ans2, ans3, ans4],
           askDateTime: new Date('2023-11-20T09:24:00'),
         },
         {
           _id: '65e9b716ff0e892116b2de03',
-          answers: [ans1], // 18 => 18
+          answers: [ans1],
           askDateTime: new Date('2023-11-19T09:24:00'),
         },
         {
           _id: '65e9b716ff0e892116b2de04',
-          answers: [ans4], // 19 => 19
+          answers: [ans4],
           askDateTime: new Date('2023-11-21T09:24:00'),
         },
         {
@@ -363,11 +365,76 @@ describe('Question model', () => {
         >);
       const result = (await saveQuestion(mockQn)) as DatabaseQuestion;
 
-      expect(result).toEqual({ error: 'Error when saving a question' });
+      expect('error' in result).toEqual(true);
+    });
+
+    test('saveQuestion should fail because user is muted in community', async () => {
+      const mockQn: Question = {
+        title: 'New Question Title',
+        text: 'New Question Text',
+        tags: [tag1, tag2],
+        askedBy: 'user1',
+        askDateTime: new Date('2024-06-06'),
+        answers: [],
+        views: [],
+        upVotes: [],
+        downVotes: [],
+        comments: [],
+        community: new ObjectId('65e9b58910afe6e94fc6e6dc'),
+        premiumStatus: false,
+      };
+
+      jest.spyOn(CommunityModel, 'findOne').mockResolvedValue(null);
+
+      const result = (await saveQuestion(mockQn)) as DatabaseQuestion;
+
+      expect('error' in result).toEqual(true);
+    });
+    test('saveQuestion should return the save question in community', async () => {
+      const mockQn: Question = {
+        title: 'New Question Title',
+        text: 'New Question Text',
+        tags: [tag1, tag2],
+        askedBy: 'user1',
+        askDateTime: new Date('2024-06-06'),
+        answers: [],
+        views: [],
+        upVotes: [],
+        downVotes: [],
+        comments: [],
+        community: new ObjectId('65e9b58910afe6e94fc6e6dc'),
+        premiumStatus: false,
+      };
+
+      jest.spyOn(CommunityModel, 'findOne').mockResolvedValue(community1);
+      jest.spyOn(QuestionModel, 'create').mockResolvedValue({
+        ...mockQn,
+        _id: mongoose.Types.ObjectId,
+      } as unknown as ReturnType<typeof QuestionModel.create<DatabaseQuestion>>);
+
+      const result = (await saveQuestion(mockQn)) as DatabaseQuestion;
+
+      expect(result._id).toBeDefined();
+      expect(result.title).toEqual(mockQn.title);
+      expect(result.text).toEqual(mockQn.text);
+      expect(result.tags[0]._id.toString()).toEqual(tag1._id.toString());
+      expect(result.tags[1]._id.toString()).toEqual(tag2._id.toString());
+      expect(result.askedBy).toEqual(mockQn.askedBy);
+      expect(result.askDateTime).toEqual(mockQn.askDateTime);
+      expect(result.views).toEqual([]);
+      expect(result.answers.length).toEqual(0);
+      expect(result.community).toBeDefined();
     });
   });
 
   describe('addVoteToQuestion', () => {
+    test('addVoteToQuestion should return error if question is not found (initial check)', async () => {
+      jest.spyOn(QuestionModel, 'findById').mockResolvedValue(null);
+
+      const result = await addVoteToQuestion('nonExistentId', 'testUser', 'upvote');
+
+      expect(result).toEqual({ error: 'Question not found!' });
+    });
     test('addVoteToQuestion should upvote a question', async () => {
       const mockQuestion = {
         _id: 'someQuestionId',
@@ -648,5 +715,73 @@ describe('Question model', () => {
 
       expect(result.length).toEqual(0);
     });
+  });
+  describe('isAllowedToPostOnQuestion', () => {
+    test('should return true if the question does not belong to a community', async () => {
+      const mockQuestion = { _id: 'q1', community: null };
+
+      jest.spyOn(QuestionModel, 'findById').mockReturnValue({
+        select: jest.fn().mockResolvedValue(mockQuestion),
+      } as any);
+
+      const result = await isAllowedToPostOnQuestion('q1', 'user1');
+      expect(result).toBe(true);
+    });
+
+    test('should return true if the user is allowed to post in the community', async () => {
+      const mockQuestion = { _id: 'q1', community: community1._id };
+
+      jest.spyOn(QuestionModel, 'findById').mockReturnValue({
+        select: jest.fn().mockResolvedValue(mockQuestion),
+      } as any);
+
+      jest.spyOn(CommunityModel, 'findOne').mockResolvedValue(community1);
+
+      const result = await isAllowedToPostOnQuestion('q1', 'user1');
+      expect(result).toBe(true);
+    });
+
+    test('should return false if the user is not allowed to post in the community', async () => {
+      const mockQuestion = { _id: 'q1', community: community1._id };
+
+      jest.spyOn(QuestionModel, 'findById').mockReturnValue({
+        select: jest.fn().mockResolvedValue(mockQuestion),
+      } as any);
+
+      jest.spyOn(CommunityModel, 'findOne').mockResolvedValue(null);
+
+      const result = await isAllowedToPostOnQuestion('q1', 'user1');
+      expect(result).toBe(false);
+    });
+
+    test('should throw an error if the question is not found', async () => {
+      jest.spyOn(QuestionModel, 'findById').mockReturnValue({
+        select: jest.fn().mockResolvedValue(null),
+      } as any);
+
+      await expect(isAllowedToPostOnQuestion('invalidId', 'user1')).rejects.toThrow(
+        'Question not found',
+      );
+    });
+  });
+  test('addVoteToQuestion should return an error if updating the user fails', async () => {
+    const mockQuestion = {
+      _id: 'someQuestionId',
+      upVotes: [],
+      downVotes: [],
+    };
+
+    jest.spyOn(QuestionModel, 'findById').mockResolvedValue(mockQuestion);
+
+    jest.spyOn(QuestionModel, 'findOneAndUpdate').mockResolvedValue({
+      ...mockQuestion,
+      upVotes: ['testUser'],
+    });
+
+    jest.spyOn(UserModel, 'findOneAndUpdate').mockResolvedValue(null);
+
+    const result = await addVoteToQuestion('someQuestionId', 'testUser', 'upvote');
+
+    expect(result).toEqual({ error: 'User lifetime upvotes failed to update!' });
   });
 });

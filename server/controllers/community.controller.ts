@@ -99,7 +99,6 @@ const communityController = (socket: FakeSOSocket) => {
       const result = await toggleCommunityMembership(communityId, username);
 
       if ('error' in result) {
-        // Handle different error types with appropriate status codes
         if (result.error.includes('admins cannot leave')) {
           res.status(403).json({ error: result.error });
         } else if (result.error.includes('not found')) {
@@ -135,7 +134,7 @@ const communityController = (socket: FakeSOSocket) => {
     res: Response,
   ): Promise<void> => {
     const { name, description, admin, visibility = 'PUBLIC', participants = [] } = req.body;
-    // Ensure admin is included in participants list
+
     const allParticipants = participants.includes(admin) ? participants : [...participants, admin];
 
     try {
@@ -226,9 +225,7 @@ const communityController = (socket: FakeSOSocket) => {
 
   const toggleModeratorRoute = async (req: ToggleRequest, res: Response) => {
     const { communityId, managerUsername, username } = req.body;
-    console.log(managerUsername);
 
-    console.log(req.body);
     try {
       const savedCommunity = await toggleModerator(communityId, managerUsername, username);
 
@@ -295,7 +292,6 @@ const communityController = (socket: FakeSOSocket) => {
     const { communityId, managerUsername, username } = req.body;
 
     try {
-
       const savedCommunity = await toggleMuteCommunityUser(communityId, managerUsername, username);
 
       if ('error' in savedCommunity) {
@@ -318,7 +314,7 @@ const communityController = (socket: FakeSOSocket) => {
       res.status(500).json({ error: `Error toggling mute: ${(err as Error).message}` });
     }
   };
-  // Registering routes
+
   router.get('/getCommunity/:communityId', getCommunityRoute);
   router.get('/getAllCommunities', getAllCommunitiesRoute);
   router.post('/toggleMembership', toggleMembershipRoute);

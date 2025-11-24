@@ -176,7 +176,6 @@ export const loginUser = async (loginCredentials: UserCredentials): Promise<User
     if (!updatedUser) {
       throw Error('Failed to retrieve updated user');
     }
-    console.log(updateUser);
     return updatedUser as PopulatedSafeDatabaseUser;
   } catch (error) {
     return { error: `Error occurred when authenticating user: ${error}` };

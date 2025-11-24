@@ -110,8 +110,16 @@ const toggleModerator = async (
   return res.data;
 };
 
-const toggleBan = async (communityId: string, managerUsername: string, username: string): Promise<DatabaseCommunity> => {
-  const res = await api.post(`${COMMUNITIES_API_URL}/toggleBanUser`, { communityId, managerUsername, username });
+const toggleBan = async (
+  communityId: string,
+  managerUsername: string,
+  username: string,
+): Promise<DatabaseCommunity> => {
+  const res = await api.post(`${COMMUNITIES_API_URL}/toggleBanUser`, {
+    communityId,
+    managerUsername,
+    username,
+  });
 
   if (res.status !== 200) {
     throw new Error('Error while toggling ban');
