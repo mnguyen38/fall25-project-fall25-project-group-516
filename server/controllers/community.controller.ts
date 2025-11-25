@@ -10,7 +10,6 @@ import {
   AppealRequest,
   Appeal,
   CommunityDashboardRequest,
-  PopulatedDatabaseCommunity,
   DatabaseAppeal,
   AppealUpdateRequest,
 } from '../types/types';
@@ -379,7 +378,6 @@ const communityController = (socket: FakeSOSocket) => {
     try {
       const { communityId } = req.params;
       const { managerUsername } = req.query;
-      console.log('hit');
 
       const community = await CommunityModel.findOne({ _id: communityId });
 
@@ -405,8 +403,6 @@ const communityController = (socket: FakeSOSocket) => {
           return appeal;
         }) ?? [],
       );
-
-      console.log(populatedAppeals);
 
       res.json(populatedAppeals);
     } catch (error) {

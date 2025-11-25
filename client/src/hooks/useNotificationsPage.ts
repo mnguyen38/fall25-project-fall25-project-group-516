@@ -92,7 +92,9 @@ const useNotificationsPage = () => {
         if (freshUser && freshUser.notifications) {
           setNotificationsList(sortNotifications(freshUser.notifications));
         }
-      } catch (e) {}
+      } catch (e) {
+        // nothing happens
+      }
     };
 
     fetchFreshNotifications();

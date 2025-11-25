@@ -33,7 +33,6 @@ const useCommunityDashboard = () => {
     try {
       const appealsData = await getCommunityAppeals(communityId, user.username);
       setAppeals(appealsData);
-      console.log(appeals);
     } catch (err) {
       setError((err as Error).message);
     }

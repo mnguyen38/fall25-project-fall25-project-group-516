@@ -574,10 +574,10 @@ export const respondToAppeal = async (
       return { error: 'Appeal not found or does not belong to this community' };
     }
 
-    const updateOps: any = { $pull: { appeals: appealId } };
+    const updateOps = { $pull: { appeals: appealId } };
 
     if (status === 'approve') {
-      updateOps.$pull = {
+      (updateOps as { $pull: { appeals: string; banned: string; muted: string } }).$pull = {
         appeals: appealId,
         banned: appeal.username,
         muted: appeal.username,
