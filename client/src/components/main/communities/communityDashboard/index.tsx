@@ -197,14 +197,6 @@ const CommunityDashboard = () => {
               </div>
             </div>
 
-            <div className='quick-actions-card'>
-              <h3 className='quick-actions-title'>Quick Actions</h3>
-              <p className='quick-actions-text'>
-                Manage your community description and settings directly from the community page
-                settings or utilize the tabs on the left to moderate users.
-              </p>
-            </div>
-
             {/* Delete Community Section - Admin Only */}
             {isAdmin && (
               <div className='danger-zone'>
@@ -273,7 +265,9 @@ const CommunityDashboard = () => {
                     <div key={u.username} className='user-row'>
                       <div className='user-info'>
                         <span className='username'>{u.username}</span>
-                        {isMember && !isModerator && <span className='status-tag member'>MEMBER</span>}
+                        {isMember && !isModerator && (
+                          <span className='status-tag member'>MEMBER</span>
+                        )}
                         {isModerator && <span className='status-tag moderator'>MOD</span>}
                         {isBanned && <span className='status-tag banned'>BANNED</span>}
                         {isMuted && <span className='status-tag muted'>MUTED</span>}

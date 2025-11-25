@@ -29,6 +29,8 @@
   --shadow-lg: 0 4px 12px var(--pancake-shadow);
 }
 
+
+
 /* Dashboard Container */
 .dashboard-container {
   display: flex;
@@ -49,8 +51,6 @@
 
 .dashboard-sidebar-header {
   padding: var(--spacing-lg);
-  border-bottom: 1px solid var(--pancake-border);
-  background-color: var(--pancake-cream);
 }
 
 .community-name {
@@ -75,7 +75,7 @@
 }
 
 .dashboard-nav {
-  padding: var(--spacing-md);
+ padding: var(--spacing-md);
   display: flex;
   flex-direction: column;
   gap: var(--spacing-sm);
