@@ -11,12 +11,9 @@ import { getMostRecentAnswerTime } from '../services/answer.service';
 export const sortQuestionsByNewest = (
   qlist: PopulatedDatabaseQuestion[],
 ): PopulatedDatabaseQuestion[] => {
-  const now = new Date();
   return qlist.sort((a, b) => {
-    const diffTime = Math.abs(now.getTime() - a.askDateTime.getTime());
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    const aPremium = a.premiumStatus && diffDays <= 10;
-    const bPremium = b.premiumStatus && diffDays <= 10;
+    const aPremium = a.premiumStatus;
+    const bPremium = b.premiumStatus;
     if (aPremium && !bPremium) {
       return -1;
     }
@@ -66,6 +63,18 @@ export const sortQuestionsByActive = (
   });
 
   return sortQuestionsByNewest(qlist).sort((a, b) => {
+    // Check premium status first
+    const aPremium = a.premiumStatus;
+    const bPremium = b.premiumStatus;
+
+    if (aPremium && !bPremium) {
+      return -1;
+    }
+    if (!aPremium && bPremium) {
+      return 1;
+    }
+
+    // Then sort by answer date
     const adate = mp.get(a._id.toString());
     const bdate = mp.get(b._id.toString());
     if (!adate) {
@@ -94,5 +103,20 @@ export const sortQuestionsByActive = (
  */
 export const sortQuestionsByMostViews = (
   qlist: PopulatedDatabaseQuestion[],
-): PopulatedDatabaseQuestion[] =>
-  sortQuestionsByNewest(qlist).sort((a, b) => b.views.length - a.views.length);
+): PopulatedDatabaseQuestion[] => {
+  return sortQuestionsByNewest(qlist).sort((a, b) => {
+    // Check premium status first
+    const aPremium = a.premiumStatus;
+    const bPremium = b.premiumStatus;
+
+    if (aPremium && !bPremium) {
+      return -1;
+    }
+    if (!aPremium && bPremium) {
+      return 1;
+    }
+
+    // Then sort by view count
+    return b.views.length - a.views.length;
+  });
+};

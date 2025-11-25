@@ -54,15 +54,17 @@ describe('Community Controller', () => {
   });
 
   describe('GET /getCommunity/:communityId', () => {
-    test('should return 403 when user is banned', async () => {
-      getCommunityspy.mockResolvedValueOnce({ ...mockCommunity, banned: ['mockTestUser'] });
+    test('should return 200 and community data when user is banned to allow them to view community for appeals', async () => {
+      const bannedCommunity = { ...mockCommunity, banned: ['mockTestUser'] };
+      getCommunityspy.mockResolvedValueOnce(bannedCommunity);
 
       const response = await supertest(app).get(
         '/api/community/getCommunity/65e9b58910afe6e94fc6e6dc',
       );
 
-      expect(response.status).toBe(403);
-      expect(response.text).toContain('Access denied');
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty('_id');
+      expect(response.body.name).toBe('Test Community');
     });
     test('should return community when found', async () => {
       getCommunityspy.mockResolvedValueOnce(mockCommunity);

@@ -6,6 +6,7 @@ import * as badgeUtil from '../../services/badge.service';
 import { PopulatedSafeDatabaseUser, User } from '../../types/types';
 import { setupMockAuth } from '../../utils/mocks.util';
 import UserModel from '../../models/users.model';
+import * as uploadUtil from '../../utils/upload';
 
 jest.mock('../../middleware/token.middleware');
 
@@ -1272,6 +1273,305 @@ describe('Test userController', () => {
         .send({ username: mockSafeUser.username });
 
       expect(res.status).toBe(500);
+    });
+  });
+
+  describe('POST /uploadProfilePicture', () => {
+    let processProfilePictureSpy: jest.SpyInstance;
+
+    beforeEach(() => {
+      processProfilePictureSpy = jest
+        .spyOn(uploadUtil, 'processProfilePicture')
+        .mockResolvedValue('data:image/jpeg;base64,mockbase64data');
+    });
+
+    afterEach(() => {
+      processProfilePictureSpy.mockRestore();
+    });
+
+    it('should return 400 if no file is uploaded', async () => {
+      const res = await supertest(app)
+        .post('/api/user/uploadProfilePicture')
+        .field('username', 'user1');
+
+      expect(res.status).toBe(400);
+      expect(res.text).toContain('No file uploaded');
+    });
+
+    it('should return 400 if username is missing', async () => {
+      const res = await supertest(app)
+        .post('/api/user/uploadProfilePicture')
+        .attach('profilePicture', Buffer.from('fake-image-data'), 'test.jpg');
+
+      expect(res.status).toBe(400);
+      expect(res.text).toContain('Username is required');
+    });
+
+    it('should successfully upload profile picture without crop data', async () => {
+      updatedUserSpy.mockResolvedValueOnce({ ...mockSafeUser, profilePicture: 'base64data' });
+
+      const res = await supertest(app)
+        .post('/api/user/uploadProfilePicture')
+        .field('username', 'user1')
+        .attach('profilePicture', Buffer.from('fake-image-data'), 'test.jpg');
+
+      expect(res.status).toBe(200);
+      expect(updatedUserSpy).toHaveBeenCalledWith('user1', { profilePicture: expect.any(String) });
+    });
+
+    it('should successfully upload profile picture with crop data', async () => {
+      updatedUserSpy.mockResolvedValueOnce({ ...mockSafeUser, profilePicture: 'base64data' });
+
+      const res = await supertest(app)
+        .post('/api/user/uploadProfilePicture')
+        .field('username', 'user1')
+        .field('cropData', JSON.stringify({ x: 10, y: 20, width: 100, height: 100 }))
+        .attach('profilePicture', Buffer.from('fake-image-data'), 'test.jpg');
+
+      expect(res.status).toBe(200);
+    });
+
+    it('should return 500 if update user fails', async () => {
+      updatedUserSpy.mockResolvedValueOnce({ error: 'Error updating user' });
+
+      const res = await supertest(app)
+        .post('/api/user/uploadProfilePicture')
+        .field('username', 'user1')
+        .attach('profilePicture', Buffer.from('fake-image-data'), 'test.jpg');
+
+      expect(res.status).toBe(500);
+    });
+  });
+
+  describe('POST /uploadBannerImage', () => {
+    let processBannerImageSpy: jest.SpyInstance;
+
+    beforeEach(() => {
+      processBannerImageSpy = jest
+        .spyOn(uploadUtil, 'processBannerImage')
+        .mockResolvedValue('data:image/jpeg;base64,mockbase64data');
+    });
+
+    afterEach(() => {
+      processBannerImageSpy.mockRestore();
+    });
+
+    it('should return 400 if no file is uploaded', async () => {
+      const res = await supertest(app).post('/api/user/uploadBannerImage').field('username', 'user1');
+
+      expect(res.status).toBe(400);
+      expect(res.text).toContain('No file uploaded');
+    });
+
+    it('should return 400 if username is missing', async () => {
+      const res = await supertest(app)
+        .post('/api/user/uploadBannerImage')
+        .attach('bannerImage', Buffer.from('fake-image-data'), 'test.jpg');
+
+      expect(res.status).toBe(400);
+      expect(res.text).toContain('Username is required');
+    });
+
+    it('should successfully upload banner image without crop data', async () => {
+      updatedUserSpy.mockResolvedValueOnce({ ...mockSafeUser, bannerImage: 'base64data' });
+
+      const res = await supertest(app)
+        .post('/api/user/uploadBannerImage')
+        .field('username', 'user1')
+        .attach('bannerImage', Buffer.from('fake-image-data'), 'test.jpg');
+
+      expect(res.status).toBe(200);
+      expect(updatedUserSpy).toHaveBeenCalledWith('user1', { bannerImage: expect.any(String) });
+    });
+
+    it('should successfully upload banner image with crop data', async () => {
+      updatedUserSpy.mockResolvedValueOnce({ ...mockSafeUser, bannerImage: 'base64data' });
+
+      const res = await supertest(app)
+        .post('/api/user/uploadBannerImage')
+        .field('username', 'user1')
+        .field('cropData', JSON.stringify({ x: 50, y: 100, width: 800, height: 200 }))
+        .attach('bannerImage', Buffer.from('fake-image-data'), 'test.jpg');
+
+      expect(res.status).toBe(200);
+    });
+
+    it('should return 500 if update user fails', async () => {
+      updatedUserSpy.mockResolvedValueOnce({ error: 'Error updating user' });
+
+      const res = await supertest(app)
+        .post('/api/user/uploadBannerImage')
+        .field('username', 'user1')
+        .attach('bannerImage', Buffer.from('fake-image-data'), 'test.jpg');
+
+      expect(res.status).toBe(500);
+    });
+  });
+
+  describe('GET /verify-token', () => {
+    it('should return 401 if no user in request', async () => {
+      const mockAuth = jest.requireMock('../../middleware/token.middleware');
+      mockAuth.default.mockImplementationOnce((req: any, res: any, next: any) => {
+        // Don't set req.user
+        next();
+      });
+
+      const res = await supertest(app).get('/api/user/verify-token');
+
+      expect(res.status).toBe(401);
+      expect(res.body.error).toBe('Unauthorized');
+      setupMockAuth(); // Reset mock
+    });
+
+    it('should return 404 if user not found in database', async () => {
+      jest.spyOn(require('../../utils/database.util'), 'populateUser').mockResolvedValueOnce(null);
+
+      const res = await supertest(app).get('/api/user/verify-token');
+
+      expect(res.status).toBe(404);
+      expect(res.body.error).toBe('User not found');
+    });
+
+    it('should return user data if token is valid', async () => {
+      jest
+        .spyOn(require('../../utils/database.util'), 'populateUser')
+        .mockResolvedValueOnce(mockSafeUser);
+
+      const res = await supertest(app).get('/api/user/verify-token');
+
+      expect(res.status).toBe(200);
+      expect(res.body.user).toBeDefined();
+    });
+
+    it('should return 500 if populateUser throws error', async () => {
+      jest
+        .spyOn(require('../../utils/database.util'), 'populateUser')
+        .mockRejectedValueOnce(new Error('Database error'));
+
+      const res = await supertest(app).get('/api/user/verify-token');
+
+      expect(res.status).toBe(500);
+    });
+  });
+
+  describe('PATCH /readNotifications', () => {
+    it('should successfully mark notifications as read', async () => {
+      const mockReqBody = {
+        username: 'user1',
+        notificationIds: ['notif1', 'notif2'],
+      };
+
+      const readNotificationsSpy = jest.spyOn(util, 'readNotifications');
+      readNotificationsSpy.mockResolvedValueOnce(mockSafeUser);
+
+      const res = await supertest(app).patch('/api/user/readNotifications').send(mockReqBody);
+
+      expect(res.status).toBe(200);
+      expect(readNotificationsSpy).toHaveBeenCalledWith('user1', ['notif1', 'notif2']);
+    });
+
+    it('should return 500 if readNotifications returns error', async () => {
+      const mockReqBody = {
+        username: 'user1',
+        notificationIds: ['notif1'],
+      };
+
+      const readNotificationsSpy = jest.spyOn(util, 'readNotifications');
+      readNotificationsSpy.mockResolvedValueOnce({ error: 'Error reading notifications' });
+
+      const res = await supertest(app).patch('/api/user/readNotifications').send(mockReqBody);
+
+      expect(res.status).toBe(500);
+    });
+
+    it('should return 500 if readNotifications throws exception', async () => {
+      const mockReqBody = {
+        username: 'user1',
+        notificationIds: ['notif1'],
+      };
+
+      const readNotificationsSpy = jest.spyOn(util, 'readNotifications');
+      readNotificationsSpy.mockRejectedValueOnce(new Error('Database error'));
+
+      const res = await supertest(app).patch('/api/user/readNotifications').send(mockReqBody);
+
+      expect(res.status).toBe(500);
+    });
+  });
+
+  describe('PATCH /toggleStreakHold - turning OFF streak hold', () => {
+    it('should update lastLogin and missedDays when turning off streak hold', async () => {
+      const mockReqBody = {
+        username: mockSafeUser.username,
+      };
+
+      const userWithStreakHold = {
+        ...mockSafeUser,
+        streakHold: true,
+        missedDays: 5,
+      };
+
+      getUserByUsernameSpy.mockResolvedValueOnce(userWithStreakHold);
+
+      updatedUserSpy.mockResolvedValueOnce({
+        ...mockSafeUser,
+        streakHold: false,
+        missedDays: 0,
+      });
+
+      const res = await supertest(app).patch('/api/user/toggleStreakHold').send(mockReqBody);
+
+      expect(res.status).toBe(200);
+      expect(updatedUserSpy).toHaveBeenCalledWith(
+        mockSafeUser.username,
+        expect.objectContaining({
+          streakHold: false,
+          lastLogin: expect.any(Date),
+          missedDays: 0,
+        }),
+      );
+    });
+  });
+
+  describe('PATCH /updateStatus - error handling', () => {
+    it('should return 500 when updateUserStatus throws error object', async () => {
+      const mockReqBody = { username: mockSafeUser.username, status: 'online' };
+      updateUserStatusSpy.mockResolvedValueOnce({ error: 'Database connection failed' });
+      const res = await supertest(app).patch('/api/user/updateStatus').send(mockReqBody);
+
+      expect(res.status).toBe(500);
+    });
+  });
+
+  describe('PATCH /blockUser - catch block', () => {
+    it('should return 500 when blockUser throws unexpected exception', async () => {
+      const mockReqBody = {
+        username: mockSafeUser.username,
+        targetUsername: 'targetUser',
+      };
+
+      blockUserSpy.mockRejectedValueOnce(new Error('Unexpected error'));
+
+      const res = await supertest(app).patch('/api/user/blockUser').send(mockReqBody);
+
+      expect(res.status).toBe(500);
+      expect(res.text).toContain('Error blocking user');
+    });
+  });
+
+  describe('PATCH /unblockUser - catch block', () => {
+    it('should return 500 when unblockUser throws unexpected exception', async () => {
+      const mockReqBody = {
+        username: mockSafeUser.username,
+        targetUsername: 'targetUser',
+      };
+
+      unblockUserSpy.mockRejectedValueOnce(new Error('Unexpected error'));
+
+      const res = await supertest(app).patch('/api/user/unblockUser').send(mockReqBody);
+
+      expect(res.status).toBe(500);
+      expect(res.text).toContain('Error unblocking user');
     });
   });
 });
