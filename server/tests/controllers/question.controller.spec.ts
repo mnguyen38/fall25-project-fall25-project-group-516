@@ -34,6 +34,8 @@ const getCommunityQuestionsSpy: jest.SpyInstance = jest.spyOn(
 );
 const populateDocumentSpy: jest.SpyInstance = jest.spyOn(databaseUtil, 'populateDocument');
 
+const toggleUserInterestSpy = jest.spyOn(questionUtil, 'toggleUserInterest');
+
 const tag1: Tag = {
   name: 'tag1',
   description: 'tag1 description',
@@ -1029,6 +1031,65 @@ describe('Test questionController', () => {
 
       expect(response.status).toBe(500);
       expect(response.text).toContain('Error when fetching community questions: Database error');
+    });
+  });
+
+  describe('PATCH /toggleUserInterestInQuestion', () => {
+    it('should return question with updated interestedUsers (add user)', async () => {
+      const mockReqBody = {
+        qid: '65e9b5a995b6c7045a30d823',
+        username: 'user123',
+      };
+
+      toggleUserInterestSpy.mockResolvedValueOnce({
+        ...mockPopulatedQuestion,
+        interestedUsers: ['user123'],
+      });
+
+      const response = await supertest(app)
+        .patch('/api/question/toggleUserInterestInQuestion')
+        .send(mockReqBody);
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual(
+        simplifyQuestion({ ...mockPopulatedQuestion, interestedUsers: ['user123'] }),
+      );
+    });
+
+    it('should return question with updated interestedUsers (remove user)', async () => {
+      const mockReqBody = {
+        qid: '65e9b5a995b6c7045a30d823',
+        username: 'user123',
+      };
+
+      toggleUserInterestSpy.mockResolvedValueOnce({
+        ...mockPopulatedQuestion,
+        interestedUsers: [],
+      });
+
+      const response = await supertest(app)
+        .patch('/api/question/toggleUserInterestInQuestion')
+        .send(mockReqBody);
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual(
+        simplifyQuestion({ ...mockPopulatedQuestion, interestedUsers: [] }),
+      );
+    });
+
+    it('should return 500 if toggleUserInterest throws error', async () => {
+      const mockReqBody = {
+        qid: '65e9b5a995b6c7045a30d823',
+        username: 'user123',
+      };
+
+      toggleUserInterestSpy.mockResolvedValueOnce({ error: 'Error toggling user interest' });
+
+      const response = await supertest(app)
+        .patch('/api/question/toggleUserInterestInQuestion')
+        .send(mockReqBody);
+
+      expect(response.status).toBe(500);
     });
   });
 });

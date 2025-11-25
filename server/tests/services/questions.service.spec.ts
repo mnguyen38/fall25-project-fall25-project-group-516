@@ -10,6 +10,7 @@ import {
   getCommunityQuestions,
   isAllowedToPostOnQuestion,
   filterQuestionsByBlocking,
+  toggleUserInterest,
 } from '../../services/question.service';
 import { DatabaseQuestion, PopulatedDatabaseQuestion, Question } from '../../types/types';
 import {
@@ -27,7 +28,6 @@ import {
 import UserModel from '../../models/users.model';
 import { ObjectId } from 'mongodb';
 import CommunityModel from '../../models/community.model';
-import { defaultMockUser } from '../../utils/mocks.util';
 
 describe('Question model', () => {
   beforeEach(() => {
@@ -854,14 +854,150 @@ describe('Question model', () => {
 
     const authors = [mockUser1, mockUser2, mockUser3];
 
-    // it('should return a list of questions that are not asked by blocked users', async () => {
-    //   jest.spyOn(QuestionModel, 'findOne').mockResolvedValueOnce(mockUserWithBlocks);
-    //   jest.spyOn(UserModel, 'find').mockResolvedValueOnce(authors);
+    it('should return a list of questions that are not asked by blocked users', async () => {
+      jest.spyOn(UserModel, 'findOne').mockResolvedValueOnce(mockUserWithBlocks);
+      jest.spyOn(UserModel, 'find').mockResolvedValueOnce(authors);
 
-    //   const response = await filterQuestionsByBlocking(qlist, mockUserWithBlocks.username);
+      const response = await filterQuestionsByBlocking(qlist, mockUserWithBlocks.username);
 
-    //   expect(response).toBeDefined();
-    //   expect(response).toStrictEqual([mockQ3]);
-    // });
+      expect(response).toBeDefined();
+      expect(response).toStrictEqual([mockQ3]);
+    });
+
+    it('should return unfiltered list of questions if no username is given', async () => {
+      const response = await filterQuestionsByBlocking(qlist, undefined);
+
+      expect(response).toBeDefined();
+      expect(response).toStrictEqual(qlist);
+    });
+
+    it('should return a list of questions without people who have blocked viewing user', async () => {
+      jest
+        .spyOn(UserModel, 'findOne')
+        .mockResolvedValueOnce({ ...mockUserWithBlocks, blockedUsers: [] });
+      jest
+        .spyOn(UserModel, 'find')
+        .mockResolvedValueOnce([
+          { ...mockUser1, blockedUsers: [mockUserWithBlocks.username] },
+          mockUser2,
+          { ...mockUser3, blockedUsers: [mockUserWithBlocks.username] },
+        ]);
+
+      const response = await filterQuestionsByBlocking(qlist, mockUserWithBlocks.username);
+
+      expect(response).toBeDefined();
+      expect(response).toStrictEqual([mockQ1]);
+    });
+
+    it('should return unfiltered question list if user cannot be found', async () => {
+      jest.spyOn(UserModel, 'findOne').mockResolvedValueOnce(null);
+
+      const response = await filterQuestionsByBlocking(qlist, mockUserWithBlocks.username);
+
+      expect(response).toBeDefined();
+      expect(response).toStrictEqual(qlist);
+    });
+
+    it('should return unfiltered question list if authors cannot be found & the user has not blocked them', async () => {
+      jest
+        .spyOn(UserModel, 'findOne')
+        .mockResolvedValueOnce({ ...mockUserWithBlocks, blockedUsers: [] });
+      jest.spyOn(UserModel, 'find').mockResolvedValueOnce([]);
+
+      const response = await filterQuestionsByBlocking(qlist, mockUserWithBlocks.username);
+
+      expect(response).toBeDefined();
+      expect(response).toStrictEqual(qlist);
+    });
+
+    it('should return filtered question list even if authors cannot be found if the user has blocked them', async () => {
+      jest.spyOn(UserModel, 'findOne').mockResolvedValueOnce(mockUserWithBlocks);
+      jest.spyOn(UserModel, 'find').mockResolvedValueOnce([]);
+
+      const response = await filterQuestionsByBlocking(qlist, mockUserWithBlocks.username);
+
+      expect(response).toBeDefined();
+      expect(response).toStrictEqual([mockQ3]);
+    });
+
+    it('should return unfiltered question list if error finding user', async () => {
+      jest.spyOn(UserModel, 'findOne').mockRejectedValueOnce({ error: 'Error getting user' });
+
+      const response = await filterQuestionsByBlocking(qlist, mockUserWithBlocks.username);
+
+      expect(response).toBeDefined();
+      expect(response).toStrictEqual(qlist);
+    });
+
+    it('should return unfiltered question list if error finding authors', async () => {
+      jest
+        .spyOn(UserModel, 'findOne')
+        .mockResolvedValueOnce({ ...mockUserWithBlocks, blockedUsers: [] });
+      jest.spyOn(UserModel, 'find').mockRejectedValueOnce({ error: 'Error finding authors' });
+
+      const response = await filterQuestionsByBlocking(qlist, mockUserWithBlocks.username);
+
+      expect(response).toBeDefined();
+      expect(response).toStrictEqual(qlist);
+    });
+  });
+
+  describe('toggleUserInterest', () => {
+    const mockUser1 = { ...user, username: 'user1' };
+
+    const mockQ1: PopulatedDatabaseQuestion = {
+      _id: new mongoose.Types.ObjectId(),
+      title: 'Question 1',
+      text: 'Question 1 text',
+      tags: [tag1, tag2],
+      answers: [],
+      askedBy: 'user2',
+      askDateTime: new Date('2024-06-05'),
+      views: [],
+      upVotes: [],
+      downVotes: [],
+      comments: [],
+      community: community1,
+      premiumStatus: false,
+      interestedUsers: ['user2'],
+    };
+
+    it('should return updated question with new interested user if they were not already interested', async () => {
+      jest
+        .spyOn(QuestionModel, 'findOneAndUpdate')
+        .mockResolvedValueOnce({ ...mockQ1, interestedUsers: ['user2', 'user1'] });
+
+      const response = await toggleUserInterest(mockQ1._id.toString(), mockUser1.username);
+
+      expect(response).toBeDefined();
+      expect(response).toStrictEqual({ ...mockQ1, interestedUsers: ['user2', 'user1'] });
+    });
+
+    it('should return updated question with one less interested user if user was already interested', async () => {
+      jest.spyOn(QuestionModel, 'findOneAndUpdate').mockResolvedValueOnce(mockQ1);
+
+      const response = await toggleUserInterest(mockQ1._id.toString(), mockUser1.username);
+
+      expect(response).toBeDefined();
+      expect(response).toStrictEqual(mockQ1);
+    });
+
+    it('should return error if question not found', async () => {
+      jest.spyOn(QuestionModel, 'findOneAndUpdate').mockResolvedValueOnce(null);
+
+      const response = await toggleUserInterest(mockQ1._id.toString(), mockUser1.username);
+
+      expect('error' in response).toBe(true);
+    });
+
+    it('should return error if question not found', async () => {
+      jest
+        .spyOn(QuestionModel, 'findOneAndUpdate')
+        .mockRejectedValueOnce({ error: 'Error updating user' });
+
+      const response = await toggleUserInterest(mockQ1._id.toString(), mockUser1.username);
+
+      expect('error' in response).toBe(true);
+    });
   });
 });

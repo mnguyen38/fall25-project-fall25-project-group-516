@@ -153,7 +153,7 @@ export const filterQuestionsByBlocking = async (
     authors.forEach(author => {
       authorBlockedMap.set(author.username, author.blockedUsers || []);
     });
-    
+
     // Filter questions based on blocking
     return qlist.filter(q => {
       // Filter if viewing user has blocked the question author
