@@ -6,6 +6,7 @@ import useCommunityPage from '../../../../hooks/useCommunityPage';
 import QuestionView from '../../questionPage/question';
 import './index.css';
 import ReportUserModal from '../reportUserModal';
+import CommunityMembershipButton from '../communityMembershipButton';
 
 /**
  * This component displays the questions for a specific community.
