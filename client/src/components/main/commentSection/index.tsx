@@ -11,10 +11,14 @@ import useUserContext from '../../../hooks/useUserContext';
  *
  * - comments - list of the comment components
  * - handleAddComment - a function that handles adding a new comment, taking a Comment object as an argument
+ * - externalShowComments - external control for showing comments
+ * - onToggleComments - external toggle function
  */
 interface CommentSectionProps {
   comments: DatabaseComment[];
   handleAddComment: (comment: Comment) => void;
+  externalShowComments?: boolean;
+  onToggleComments?: (show: boolean) => void;
 }
 
 /**
@@ -22,12 +26,22 @@ interface CommentSectionProps {
  *
  * @param comments: an array of Comment objects
  * @param handleAddComment: function to handle the addition of a new comment
+ * @param externalShowComments: external control for showing comments
+ * @param onToggleComments: external toggle function
  */
-const CommentSection = ({ comments, handleAddComment }: CommentSectionProps) => {
+const CommentSection = ({
+  comments,
+  handleAddComment,
+  externalShowComments,
+  onToggleComments,
+}: CommentSectionProps) => {
   const { user } = useUserContext();
   const [text, setText] = useState<string>('');
   const [textErr, setTextErr] = useState<string>('');
-  const [showComments, setShowComments] = useState<boolean>(false);
+  const [internalShowComments, setInternalShowComments] = useState<boolean>(false);
+
+  const showComments =
+    externalShowComments !== undefined ? externalShowComments : internalShowComments;
 
   /**
    * Function to handle the addition of a new comment.
@@ -49,11 +63,21 @@ const CommentSection = ({ comments, handleAddComment }: CommentSectionProps) => 
     setTextErr('');
   };
 
+  const handleToggle = () => {
+    if (onToggleComments) {
+      onToggleComments(!showComments);
+    } else {
+      setInternalShowComments(!showComments);
+    }
+  };
+
   return (
     <div className='comment-section'>
-      <button className='toggle-button' onClick={() => setShowComments(!showComments)}>
-        {showComments ? 'Hide Comments' : 'Show Comments'}
-      </button>
+      {externalShowComments === undefined && (
+        <button className='toggle-button' onClick={handleToggle}>
+          {showComments ? 'Hide Comments' : 'Show Comments'}
+        </button>
+      )}
 
       {showComments && (
         <div className='comments-container'>

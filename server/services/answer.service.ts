@@ -100,3 +100,18 @@ export const isAllowedToPostOnAnswer = async (
 
   return isAllowed;
 };
+
+/**
+ * Retrieves all answers created by a specific user.
+ *
+ * @param {string} username - The username of the user whose answers to retrieve.
+ * @returns {Promise<DatabaseAnswer[]>} - A promise resolving to an array of answers.
+ */
+export const getAnswersByUser = async (username: string): Promise<DatabaseAnswer[]> => {
+  try {
+    const answers = await AnswerModel.find({ ansBy: username }).sort({ ansDateTime: -1 }).lean();
+    return answers;
+  } catch (error) {
+    throw new Error('Error when fetching answers by user');
+  }
+};

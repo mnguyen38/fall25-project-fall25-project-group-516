@@ -3,6 +3,9 @@ import remarkGfm from 'remark-gfm';
 import CommentSection from '../../commentSection';
 import './index.css';
 import { Comment, DatabaseComment } from '../../../../types/types';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faComment } from '@fortawesome/free-solid-svg-icons';
+import { useState } from 'react';
 
 /**
  * Interface representing the props for the AnswerView component.
@@ -31,17 +34,37 @@ interface AnswerProps {
  * @param comments An array of comments associated with the answer.
  * @param handleAddComment Function to handle adding a new comment.
  */
-const AnswerView = ({ text, ansBy, meta, comments, handleAddComment }: AnswerProps) => (
-  <div className='answer right_padding'>
-    <div id='answerText' className='answerText'>
-      {<Markdown remarkPlugins={[remarkGfm]}>{text}</Markdown>}
+const AnswerView = ({ text, ansBy, meta, comments, handleAddComment }: AnswerProps) => {
+  const [showComments, setShowComments] = useState(false);
+
+  return (
+    <div className='answer-container right_padding'>
+      <div className='answer'>
+        <div id='answerText' className='answerText'>
+          {<Markdown remarkPlugins={[remarkGfm]}>{text}</Markdown>}
+        </div>
+        <div className='answerAuthor'>
+          <div className='answer_author'>{ansBy}</div>
+          <div className='answer_question_meta'>{meta}</div>
+        </div>
+      </div>
+      <div className='answer-comment-button-container'>
+        <button
+          className={`action-button ${showComments ? 'active-comments' : ''}`}
+          onClick={() => setShowComments(!showComments)}
+          title={showComments ? 'Hide comments' : 'Show comments'}>
+          <FontAwesomeIcon icon={faComment} />
+          <span className='action-text'>{comments.length}</span>
+        </button>
+      </div>
+      <CommentSection
+        comments={comments}
+        handleAddComment={handleAddComment}
+        externalShowComments={showComments}
+        onToggleComments={setShowComments}
+      />
     </div>
-    <div className='answerAuthor'>
-      <div className='answer_author'>{ansBy}</div>
-      <div className='answer_question_meta'>{meta}</div>
-    </div>
-    <CommentSection comments={comments} handleAddComment={handleAddComment} />
-  </div>
-);
+  );
+};
 
 export default AnswerView;

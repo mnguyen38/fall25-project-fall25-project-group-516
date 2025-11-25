@@ -18,9 +18,19 @@ const useAnswerForm = () => {
   const navigate = useNavigate();
 
   const { user } = useUserContext();
-  const [text, setText] = useState<string>('');
+  const [text, setTextState] = useState<string>('');
   const [textErr, setTextErr] = useState<string>('');
   const [questionID, setQuestionID] = useState<string>('');
+
+  /**
+   * Updates the text and clears any previous error messages.
+   */
+  const setText = (newText: string) => {
+    setTextState(newText);
+    if (textErr) {
+      setTextErr('');
+    }
+  };
 
   useEffect(() => {
     if (!qid) {
@@ -61,11 +71,19 @@ const useAnswerForm = () => {
       comments: [],
     };
 
-    const res = await addAnswer(questionID, answer);
+    try {
+      const res = await addAnswer(questionID, answer);
 
-    if (res && res._id) {
-      // navigate to the question that was answered
-      navigate(`/question/${questionID}`);
+      if (res && res._id) {
+        // navigate to the question that was answered
+        navigate(`/question/${questionID}`);
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        setTextErr(error.message);
+      } else {
+        setTextErr('Failed to submit answer. Please try again.');
+      }
     }
   };
 
