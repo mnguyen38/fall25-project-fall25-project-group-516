@@ -279,10 +279,20 @@ const userController = (socket: FakeSOSocket) => {
         throw new Error(currentUser.error);
       }
 
-      // Toggle the streakHold field
-      const updatedUser = await updateUser(username, {
+      // Build updates object
+      const updates: Partial<User> = {
         streakHold: !currentUser.streakHold,
-      });
+      };
+
+      // If turning off streak hold, update lastLogin and clear missedDays
+      // Set lastLogin to yesterday so next login will be consecutive
+      if (currentUser.streakHold === true) {
+        const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
+        updates.lastLogin = yesterday;
+        updates.missedDays = 0;
+      }
+
+      const updatedUser = await updateUser(username, updates);
 
       if ('error' in updatedUser) {
         throw new Error(updatedUser.error);

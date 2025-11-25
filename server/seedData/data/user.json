@@ -227,7 +227,8 @@
     "biography": "Just happy to be here",
     "lifeUpvotes": "50",
     "coins" : "50",
-    "lastLogin": "2025-11-20T16:44:37Z"
+    "lastLogin": "2025-11-20T16:44:37Z",
+    "loginStreak": "4"
   },
   "plutopatisserie": {
     "username": "plutopatisserie",
@@ -245,6 +246,6 @@
     "biography": "Absolutely BATTY for baking tips",
     "loginStreak": "29",
     "coins": "60",
-    "lastLogin": "2025-11-24T16:44:37Z"
+    "lastLogin": "2025-11-23T16:44:37Z"
   }
 }

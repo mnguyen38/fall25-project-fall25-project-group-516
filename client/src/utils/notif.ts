@@ -29,9 +29,9 @@ export const getNotificationIcon = (type: NotificationType) => {
     case 'sitewide':
       return FiAlertTriangle;
     case 'mute':
-      return FiBellOff
+      return FiBellOff;
     case 'ban':
-      return FiUserMinus
+      return FiUserMinus;
     default:
       return FiBell;
   }

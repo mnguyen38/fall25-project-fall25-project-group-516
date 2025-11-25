@@ -22,11 +22,12 @@ const useStreakRecoveryWindow = () => {
   const [cancelStreak, setCancelStreak] = useState<boolean>(false);
 
   /**
-   * On close, if canceling transaction changes login streak to 1.
-   * Resets streak recovery window states & closes window.
+   * On close without recovery, resets streak to 1 and closes window.
    */
   const handleOnClose = useCallback(async () => {
     try {
+      // Decline recovery - reset streak to 1
+      await resetLoginStreak(user.username);
       await toggleStreakHold(user.username);
       setShowRecoveryWindow(false);
     } catch (error) {
@@ -73,13 +74,16 @@ const useStreakRecoveryWindow = () => {
    */
   const handleRecoverStreak = async (usePass: boolean) => {
     try {
+      setSubmitting(true);
       // pay for streak recovery
       if (usePass) {
         await decrementStreakPasses(user.username);
       } else {
         await reduceCoins(user.username, recoveryCost);
       }
-      handleOnClose();
+      // Accept recovery - release hold and close
+      await toggleStreakHold(user.username);
+      setShowRecoveryWindow(false);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       setError(message);

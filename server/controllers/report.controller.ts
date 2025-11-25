@@ -50,7 +50,14 @@ const reportController = (socket: FakeSOSocket) => {
     const { communityId, reportedUser, reporterUser, reason, category } = req.body;
 
     try {
-      const result = await createReport(communityId, reportedUser, reporterUser, reason, category);
+      const result = await createReport(
+        communityId,
+        reportedUser,
+        reporterUser,
+        reason,
+        category,
+        socket,
+      );
 
       if ('error' in result && typeof result.error === 'string') {
         const errorMsg = result.error;
@@ -66,12 +73,6 @@ const reportController = (socket: FakeSOSocket) => {
           res.status(500).json({ error: errorMsg });
         }
         return;
-      }
-
-      // If auto-ban was applied, emit community update
-      if (result.banApplied) {
-        // TODO: Emit notification to community moderators about the auto-ban
-        // This will be implemented after merging with notifications branch
       }
 
       res.json(result);

@@ -1,5 +1,10 @@
 import ReportModel from '../models/report.model';
 import CommunityModel from '../models/community.model';
+import mongoose from 'mongoose';
+import { Notification } from '@fake-stack-overflow/shared/types/notification';
+import { sendNotification } from './notification.service';
+import userSocketMap from '../utils/socketMap.util';
+import { FakeSOSocket } from '../types/types';
 
 /**
  * Creates a new report for a user within a community.
@@ -9,6 +14,7 @@ import CommunityModel from '../models/community.model';
  * @param reporterUser - Username of the user making the report
  * @param reason - Detailed reason for the report
  * @param category - Category of the violation
+ * @param socket - Socket instance for real-time notifications
  * @returns The created report or an error
  */
 export const createReport = async (
@@ -17,6 +23,7 @@ export const createReport = async (
   reporterUser: string,
   reason: string,
   category: string,
+  socket: FakeSOSocket,
 ) => {
   try {
     // Prevent self-reporting
@@ -60,7 +67,7 @@ export const createReport = async (
     });
 
     // Check if auto-ban threshold is met
-    const banResult = await checkAndApplyAutoBan(communityId, reportedUser);
+    const banResult = await checkAndApplyAutoBan(communityId, reportedUser, socket);
 
     return { report, banApplied: banResult.banned };
   } catch (error) {
@@ -71,12 +78,18 @@ export const createReport = async (
 /**
  * Checks if a user has exceeded the report threshold in a community and applies automatic ban if needed.
  * Uses a sliding window of 7 days to count unique reporters within the community.
+ * Sends notifications to the banned user and community moderators.
  *
  * @param communityId - ID of the community to check
  * @param reportedUsername - Username to check for auto-ban
+ * @param socket - Socket instance for real-time notifications
  * @returns Object indicating if ban was applied and report count
  */
-export const checkAndApplyAutoBan = async (communityId: string, reportedUsername: string) => {
+export const checkAndApplyAutoBan = async (
+  communityId: string,
+  reportedUsername: string,
+  socket: FakeSOSocket,
+) => {
   try {
     // Calculate cutoff date: 7 days ago
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
@@ -85,7 +98,7 @@ export const checkAndApplyAutoBan = async (communityId: string, reportedUsername
     const recentReports = await ReportModel.aggregate([
       {
         $match: {
-          communityId: communityId,
+          communityId: new mongoose.Types.ObjectId(communityId),
           reportedUser: reportedUsername,
           createdAt: { $gte: sevenDaysAgo },
           status: { $ne: 'dismissed' },
@@ -128,6 +141,70 @@ export const checkAndApplyAutoBan = async (communityId: string, reportedUsername
         $addToSet: { banned: reportedUsername },
         $pull: { participants: reportedUsername, moderators: reportedUsername },
       });
+
+      // Send ban notification to the reported user (non-fatal if transactions fail)
+      try {
+        const userNotification: Notification = {
+          title: `Auto-banned from ${community.name}`,
+          msg: `You have been automatically banned from ${community.name} due to multiple user reports (${uniqueReporterCount} reports). You can submit an appeal to request reinstatement.`,
+          dateTime: new Date(),
+          sender: 'System',
+          contextId: community._id,
+          type: 'ban',
+        };
+
+        const userNotificationResult = await sendNotification([reportedUsername], userNotification);
+
+        if (!('error' in userNotificationResult)) {
+          const userSocketId = userSocketMap.get(reportedUsername);
+          if (userSocketId) {
+            socket.to(userSocketId).emit('notificationUpdate', {
+              notificationStatus: { notification: userNotificationResult, read: false },
+            });
+          }
+          // console.log(`[Auto-ban] Notification sent to ${reportedUsername}`);
+        } else {
+          // Notification failed (likely MongoDB transaction error in standalone mode)
+          // console.error(
+          //   `[Auto-ban] Failed to send notification to ${reportedUsername}: ${userNotificationResult.error}`,
+          // );
+        }
+      } catch (err) {
+        // console.error(`[Auto-ban] Error sending user notification: ${err}`);
+      }
+
+      // Send notification to moderators and admin about the auto-ban
+      try {
+        const moderatorRecipients = [community.admin, ...(community.moderators || [])];
+        const modNotification: Notification = {
+          title: `Auto-ban Applied in ${community.name}`,
+          msg: `User "${reportedUsername}" has been automatically banned after receiving ${uniqueReporterCount} unique reports within 7 days.`,
+          dateTime: new Date(),
+          sender: 'System',
+          contextId: community._id,
+          type: 'report',
+        };
+
+        const modNotificationResult = await sendNotification(moderatorRecipients, modNotification);
+
+        if (!('error' in modNotificationResult)) {
+          moderatorRecipients.forEach(moderator => {
+            const modSocketId = userSocketMap.get(moderator);
+            if (modSocketId) {
+              socket.to(modSocketId).emit('notificationUpdate', {
+                notificationStatus: { notification: modNotificationResult, read: false },
+              });
+            }
+          });
+          // console.log(`[Auto-ban] Notification sent to ${moderatorRecipients.length} moderators`);
+        } else {
+          // console.error(
+          //   `[Auto-ban] Failed to send notification to moderators: ${modNotificationResult.error}`,
+          // );
+        }
+      } catch (err) {
+        // console.error(`[Auto-ban] Error sending moderator notification: ${err}`);
+      }
 
       return { banned: true, reportCount: uniqueReporterCount };
     }

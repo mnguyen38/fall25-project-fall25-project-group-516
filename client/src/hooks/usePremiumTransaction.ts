@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import useUserContext from './useUserContext';
-import { activatePremiumProfile } from '../services/userService';
+import useLoginContext from './useLoginContext';
+import { activatePremiumProfile, getUserByUsername } from '../services/userService';
 
 /**
  * Custom hook that encapsulates all logic/state for TransactionWindow Component.
  */
 const usePremiumTransaction = () => {
   const { user } = useUserContext();
+  const { setUser } = useLoginContext();
   const [showPremiumWindow, setShowPremiumWindow] = useState(false);
   const [cost, setCost] = useState<number>(0);
 
@@ -37,9 +39,9 @@ const usePremiumTransaction = () => {
 
     try {
       await activatePremiumProfile(user.username);
-      // Refresh page to activate ad-free browsing experience
-      // is this supposed to log you out? Will revisit at later date
-      // window.location.reload();
+      // Refresh user data to immediately reflect premium status
+      const updatedUser = await getUserByUsername(user.username);
+      setUser(updatedUser);
     } catch (error) {
       throw Error('Activating premium profile failed');
     }

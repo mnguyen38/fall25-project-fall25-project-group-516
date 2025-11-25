@@ -455,9 +455,9 @@ export const updateUserStatus = async (
 /**
  * If user is a top contributor returns user. Else returns null.
  * @param {string} username - The username of the user to update.
- * @returns {Promise<UserResponse>} - Resolves with the user object or an error message.
+ * @returns {Promise<UserResponse | null>} - Resolves with the user object, null if not a top contributor, or an error message.
  */
-export const getUserIfTopContributor = async (username: string): Promise<UserResponse> => {
+export const getUserIfTopContributor = async (username: string): Promise<UserResponse | null> => {
   try {
     interface AverageResult {
       _id: null;
@@ -472,25 +472,23 @@ export const getUserIfTopContributor = async (username: string): Promise<UserRes
     }
 
     // average lifetimeUpvote value
-    let average;
-    // Access the result
-    if (avgResult.length > 0) {
-      average = avgResult[0].averageValue;
+    if (avgResult.length === 0) {
+      throw Error('Could not find average lifeUpvote score');
+    }
 
-      if (!average) {
-        throw Error('Could not find average lifeUpvote score');
-      }
-    } else {
+    const average = avgResult[0].averageValue;
+
+    if (!average && average !== 0) {
       throw Error('Could not find average lifeUpvote score');
     }
 
     const user: PopulatedSafeDatabaseUser | null = await UserModel.findOne({
       username: username,
-      lifetimeUpvotes: { $gt: { average } },
-    });
+      lifeUpvotes: { $gt: average },
+    }).select('-password');
 
     if (!user) {
-      throw Error('User is not top contributor');
+      return null;
     }
 
     return user;

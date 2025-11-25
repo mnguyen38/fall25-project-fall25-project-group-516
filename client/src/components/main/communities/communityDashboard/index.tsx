@@ -1,5 +1,5 @@
 // index.tsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   FiBarChart2,
@@ -10,6 +10,8 @@ import {
   FiCheckCircle,
   FiTrash2,
   FiRadio,
+  FiChevronDown,
+  FiChevronUp,
 } from 'react-icons/fi';
 import './index.css';
 import { DatabaseAppeal } from '@fake-stack-overflow/shared';
@@ -17,6 +19,75 @@ import { Notification } from '@fake-stack-overflow/shared/types/notification';
 import useCommunityDashboard from '../../../../hooks/useCommunityDashboard';
 import { sendAnnouncement, deleteCommunity } from '../../../../services/communityService';
 import useUserContext from '../../../../hooks/useUserContext';
+import { getReportsByUser, CreateReportResponse } from '../../../../services/reportService';
+
+// Component to display reports for an appeal
+interface AppealReportsProps {
+  communityId: string;
+  username: string;
+}
+
+const AppealReports: React.FC<AppealReportsProps> = ({ communityId, username }) => {
+  const [reports, setReports] = useState<CreateReportResponse[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showReports, setShowReports] = useState(false);
+
+  useEffect(() => {
+    const fetchReports = async () => {
+      try {
+        const data = await getReportsByUser(communityId, username);
+        setReports(data.filter((r: CreateReportResponse) => r.status !== 'dismissed'));
+      } catch (err) {
+        setReports([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchReports();
+  }, [communityId, username]);
+
+  if (loading) {
+    return <div className='reports-loading'>Loading reports...</div>;
+  }
+
+  if (reports.length === 0) {
+    return null; // Don't show anything if no reports (manual ban)
+  }
+
+  return (
+    <div className='appeal-reports-section'>
+      <button
+        className='reports-toggle-btn'
+        onClick={() => setShowReports(!showReports)}
+        type='button'>
+        <span className='reports-toggle-text'>
+          View Reports ({reports.length} report{reports.length !== 1 ? 's' : ''})
+        </span>
+        {showReports ? <FiChevronUp /> : <FiChevronDown />}
+      </button>
+
+      {showReports && (
+        <div className='reports-list'>
+          <p className='reports-info'>
+            This user was auto-banned after receiving {reports.length} unique reports:
+          </p>
+          {reports.map((report: CreateReportResponse, index: number) => (
+            <div key={report._id || index} className='report-item'>
+              <div className='report-header'>
+                <span className='report-category'>{report.category.toUpperCase()}</span>
+                <span className='report-date'>
+                  {new Date(report.createdAt).toLocaleDateString()}
+                </span>
+              </div>
+              <p className='report-reason'>{report.reason}</p>
+              <span className='report-by'>— Reported by {report.reporterUser}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
 
 const CommunityDashboard = () => {
   const {
@@ -335,6 +406,12 @@ const CommunityDashboard = () => {
                       </div>
                       <div className='appeal-status'>Pending Review</div>
                     </div>
+
+                    {/* Show reports if user was auto-banned */}
+                    <AppealReports
+                      communityId={community._id.toString()}
+                      username={appeal.username}
+                    />
 
                     <div className='appeal-body'>
                       <h4 className='appeal-body-title'>Reason for Appeal:</h4>
