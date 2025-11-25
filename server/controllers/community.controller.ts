@@ -58,10 +58,8 @@ const communityController = (socket: FakeSOSocket) => {
         throw new Error(foundCommunity.error);
       }
 
-      if (req.user?.username && foundCommunity.banned?.includes(req.user.username)) {
-        res.status(403).send('Access denied');
-        return;
-      }
+      // Allow banned users to view community data (needed for submitting appeals)
+      // Banned users are still blocked from posting/commenting via isAllowedToPostInCommunity
       res.json(foundCommunity);
     } catch (err: unknown) {
       res.status(500).send(`Error retrieving community: ${(err as Error).message}`);
