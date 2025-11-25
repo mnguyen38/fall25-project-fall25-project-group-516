@@ -271,14 +271,8 @@ const questionController = (socket: FakeSOSocket) => {
    */
   const toggleUserInterestRoute = async (req: VoteRequest, res: Response): Promise<void> => {
     const { qid, username } = req.body;
-    try {
-      if (!qid) {
-        res.status(400).send('Must include qid');
-      }
-      if (!username) {
-        res.status(400).send('Must include username');
-      }
 
+    try {
       const q = await toggleUserInterest(qid, username);
 
       if (q && 'error' in q) {
