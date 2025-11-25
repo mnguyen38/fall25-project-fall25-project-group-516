@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import useUserContext from './useUserContext';
 import {
   decrementStreakPasses,
@@ -22,6 +22,20 @@ const useStreakRecoveryWindow = () => {
   const [cancelStreak, setCancelStreak] = useState<boolean>(false);
 
   /**
+   * On close, if canceling transaction changes login streak to 1.
+   * Resets streak recovery window states & closes window.
+   */
+  const handleOnClose = useCallback(async () => {
+    try {
+      await toggleStreakHold(user.username);
+      setShowRecoveryWindow(false);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      setError(message);
+    }
+  }, [user.username]);
+
+  /**
    * Upon log-in, if streak has been held for user sets up recoveryWindow states.
    */
   useEffect(() => {
@@ -43,7 +57,14 @@ const useStreakRecoveryWindow = () => {
         handleOnClose();
       }
     }
-  }, [user.streakHold]);
+  }, [
+    user.streakHold,
+    user.loginStreak,
+    user.streakPass,
+    user.missedDays,
+    user.coins,
+    handleOnClose,
+  ]);
 
   /**
    * If user chooses to recover their streak, pays using their chosen currency, then releases hold on streak.
@@ -68,20 +89,6 @@ const useStreakRecoveryWindow = () => {
   };
 
   /**
-   * On close, if canceling transaction changes login streak to 1.
-   * Resets streak recovery window states & closes window.
-   */
-  const handleOnClose = async () => {
-    try {
-      await toggleStreakHold(user.username);
-      setShowRecoveryWindow(false);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      setError(message);
-    }
-  };
-
-  /**
    * If streak is set to be canceled then it does, if not nothing happens/ streak is retained
    */
   useEffect(() => {
@@ -98,7 +105,7 @@ const useStreakRecoveryWindow = () => {
     };
 
     cancelHeldStreak();
-  }, [cancelStreak]);
+  }, [cancelStreak, user.username]);
 
   return {
     showRecoveryWindow,

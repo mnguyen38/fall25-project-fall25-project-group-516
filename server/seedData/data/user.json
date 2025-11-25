@@ -3,7 +3,8 @@
     "username": "user123",
     "password": "securePass123!",
     "dateJoined": "2024-07-15T08:24:13Z",
-    "biography": "Full-stack developer with 5 years of experience. Passionate about React, Node.js, and building scalable web applications."
+    "biography": "Full-stack developer with 5 years of experience. Passionate about React, Node.js, and building scalable web applications.",
+    "premiumProfile": "true"
   },
   "user234": {
     "username": "user234",
@@ -15,7 +16,8 @@
     "username": "user345",
     "password": "P@ssw0rd345",
     "dateJoined": "2024-09-10T09:12:55Z",
-    "biography": "Frontend developer focusing on React and TypeScript. Always looking to improve UI/UX and performance."
+    "biography": "Frontend developer focusing on React and TypeScript. Always looking to improve UI/UX and performance.",
+    "premiumProfile": "true"
   },
   "user456": {
     "username": "user456",
@@ -63,13 +65,15 @@
     "username": "jsdev123",
     "password": "JavaScr1pt!23",
     "dateJoined": "2024-05-15T08:24:13Z",
-    "biography": "JavaScript developer with a focus on modern ES6+ features and async programming patterns. I love helping others level up their JS skills."
+    "biography": "JavaScript developer with a focus on modern ES6+ features and async programming patterns. I love helping others level up their JS skills.",
+    "premiumProfile": "true"
   },
   "reactninja": {
     "username": "reactninja",
     "password": "R3@ctHooks!",
     "dateJoined": "2024-06-18T14:36:42Z",
-    "biography": "React specialist with 6 years of experience. Core contributor to several popular React libraries and passionate about component design."
+    "biography": "React specialist with 6 years of experience. Core contributor to several popular React libraries and passionate about component design.",
+    "premiumProfile": "true"
   },
   "webpackwizard": {
     "username": "webpackwizard",
@@ -177,19 +181,22 @@
     "username": "reactlearner",
     "password": "H00ksL3arner!",
     "dateJoined": "2025-03-17T11:27:09Z",
-    "biography": "Developer learning React and component lifecycle management. Trying to understand hooks and prevent memory leaks."
+    "biography": "Developer learning React and component lifecycle management. Trying to understand hooks and prevent memory leaks.",
+    "premiumProfile": "true"
   },
   "reactexpert": {
     "username": "reactexpert",
     "password": "R3@ctM@ster!",
     "dateJoined": "2023-06-16T10:45:32Z",
-    "biography": "Senior React developer with 8+ years of experience. Specializing in performance optimization and state management solutions."
+    "biography": "Senior React developer with 8+ years of experience. Specializing in performance optimization and state management solutions.",
+    "premiumProfile": "true"
   },
   "nodejsdev": {
     "username": "nodejsdev",
     "password": "N0d3Exper7!",
     "dateJoined": "2023-08-19T13:27:56Z",
-    "biography": "Node.js developer focusing on scalable backend architecture. Experienced in handling high-traffic applications and microservices."
+    "biography": "Node.js developer focusing on scalable backend architecture. Experienced in handling high-traffic applications and microservices.",
+    "premiumProfile": "true"
   },
   "datascientist": {
     "username": "datascientist",

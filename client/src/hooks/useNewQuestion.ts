@@ -110,6 +110,7 @@ const useNewQuestion = () => {
       community: community ? community._id : null,
       premiumStatus: user.premiumProfile ? user.premiumProfile : false,
       isAnonymous,
+      interestedUsers: [user.username],
     };
 
     const res = await addQuestion(question);

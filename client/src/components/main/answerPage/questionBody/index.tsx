@@ -5,12 +5,14 @@ import './index.css';
 /**
  * Interface representing the props for the QuestionBody component.
  *
+ * - ansCount - The number of answers the question has received.
  * - views - The number of views the question has received.
  * - text - The content of the question, which may contain hyperlinks.
  * - askby - The username of the user who asked the question.
  * - meta - Additional metadata related to the question, such as the date and time it was asked.
  */
 interface QuestionBodyProps {
+  ansCount: number;
   views: number;
   text: string;
   askby: string;
@@ -19,17 +21,21 @@ interface QuestionBodyProps {
 
 /**
  * QuestionBody component that displays the body of a question.
- * It includes the number of views, the question content (with hyperlink handling),
+ * It includes the number of answers, number of views, the question content (with hyperlink handling),
  * the username of the author, and additional metadata.
  *
+ * @param ansCount The number of answers the question has received.
  * @param views The number of views the question has received.
  * @param text The content of the question.
  * @param askby The username of the question's author.
  * @param meta Additional metadata related to the question.
  */
-const QuestionBody = ({ views, text, askby, meta }: QuestionBodyProps) => (
+const QuestionBody = ({ ansCount, views, text, askby, meta }: QuestionBodyProps) => (
   <div id='questionBody' className='questionBody right_padding'>
-    <div className='bold_title answer_question_view'>{views} views</div>
+    <div className='answer_question_stats'>
+      <div className='bold_title answer_question_view'>{ansCount} answers</div>
+      <div className='bold_title answer_question_view'>{views} views</div>
+    </div>
     <div className='answer_question_text'>
       <Markdown remarkPlugins={[remarkGfm]}>{text}</Markdown>
     </div>

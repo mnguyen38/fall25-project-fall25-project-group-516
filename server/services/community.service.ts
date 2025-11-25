@@ -19,32 +19,67 @@ import userSocketMap from '../utils/socketMap.util';
 import AppealModel from '../models/appeal.model';
 
 /**
- * Retrieves a community by its ID.
+ * Retrieves a community by its ID with premium member counts.
  *
  * @param communityId - The ID of the community to retrieve
- * @returns A Promise resolving to the community document or an error object
+ * @returns A Promise resolving to the community document with member counts or an error object
  */
 export const getCommunity = async (communityId: string): Promise<CommunityResponse> => {
   try {
-    const community = await CommunityModel.findById(communityId);
+    const community = await CommunityModel.findById(communityId).lean();
     if (!community) {
       return { error: 'Community not found' };
     }
-    return community;
+
+    // Count premium and non-premium participants
+    const premiumCount = await UserModel.countDocuments({
+      username: { $in: community.participants },
+      premiumProfile: true,
+    });
+
+    const nonPremiumCount = community.participants.length - premiumCount;
+
+    return {
+      ...community,
+      premiumCount,
+      nonPremiumCount,
+    } as DatabaseCommunity & { premiumCount: number; nonPremiumCount: number };
   } catch (err) {
     return { error: (err as Error).message };
   }
 };
 
 /**
- * Retrieves all communities from the database.
+ * Retrieves all communities from the database with premium member counts.
  *
- * @returns A Promise resolving to an array of community documents or an error object
+ * @returns A Promise resolving to an array of community documents with member counts or an error object
  */
 export const getAllCommunities = async (): Promise<DatabaseCommunity[] | { error: string }> => {
   try {
-    const communities = await CommunityModel.find({});
-    return communities;
+    const communities = await CommunityModel.find({}).lean();
+
+    // Add premium/non-premium counts for each community
+    const communitiesWithCounts = await Promise.all(
+      communities.map(async community => {
+        const premiumCount = await UserModel.countDocuments({
+          username: { $in: community.participants },
+          premiumProfile: true,
+        });
+
+        const nonPremiumCount = community.participants.length - premiumCount;
+
+        return {
+          ...community,
+          premiumCount,
+          nonPremiumCount,
+        };
+      }),
+    );
+
+    return communitiesWithCounts as (DatabaseCommunity & {
+      premiumCount: number;
+      nonPremiumCount: number;
+    })[];
   } catch (err) {
     return { error: (err as Error).message };
   }

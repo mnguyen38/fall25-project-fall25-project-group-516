@@ -67,6 +67,7 @@ const mockQuestion: Question = {
   comments: [],
   community: null,
   premiumStatus: false,
+  interestedUsers: ['question3_user'],
 };
 
 const mockDatabaseQuestion: DatabaseQuestion = {
@@ -83,6 +84,7 @@ const mockDatabaseQuestion: DatabaseQuestion = {
   comments: [],
   community: null,
   premiumStatus: false,
+  interestedUsers: ['question3_user'],
 };
 
 const mockPopulatedQuestion: PopulatedDatabaseQuestion = {
@@ -107,6 +109,7 @@ const mockCommunityDatabaseQuestion: DatabaseQuestion = {
   comments: [],
   community: new mongoose.Types.ObjectId('65e9b58910afe6e94fc6e6f1'),
   premiumStatus: false,
+  interestedUsers: ['question3_user'],
 };
 
 const mockCommunityPopulatedQuestion: PopulatedDatabaseQuestion = {
@@ -173,6 +176,7 @@ const MOCK_POPULATED_QUESTIONS: PopulatedDatabaseQuestion[] = [
     comments: [],
     community: null,
     premiumStatus: false,
+    interestedUsers: ['question3_user'],
   },
   {
     _id: new mongoose.Types.ObjectId('65e9b5a995b6c7045a30d823'),
@@ -188,6 +192,7 @@ const MOCK_POPULATED_QUESTIONS: PopulatedDatabaseQuestion[] = [
     comments: [],
     community: null,
     premiumStatus: false,
+    interestedUsers: ['question3_user'],
   },
   {
     _id: new mongoose.Types.ObjectId('34e9b58910afe6e94fc6e99f'),
@@ -203,6 +208,7 @@ const MOCK_POPULATED_QUESTIONS: PopulatedDatabaseQuestion[] = [
     comments: [],
     community: null,
     premiumStatus: false,
+    interestedUsers: ['question3_user'],
   },
 ];
 
@@ -357,6 +363,7 @@ describe('Test questionController', () => {
         comments: [],
         community: null,
         premiumStatus: false,
+        interestedUsers: ['question3_user'],
       };
 
       const result: PopulatedDatabaseQuestion = {

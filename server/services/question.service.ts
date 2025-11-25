@@ -218,6 +218,11 @@ export const fetchAndIncrementQuestionViewsById = async (
  */
 export const saveQuestion = async (question: Question): Promise<QuestionResponse> => {
   try {
+    const newQuestion = {
+      ...question,
+      interestedUsers: !question.interestedUsers ? [question.askedBy] : question.interestedUsers,
+    };
+
     const allowed = question.community
       ? await isAllowedToPostInCommunity(question.community.toString(), question.askedBy)
       : true;
@@ -226,7 +231,7 @@ export const saveQuestion = async (question: Question): Promise<QuestionResponse
       throw new Error('Unauthorized: User cannot post question in this community');
     }
 
-    const result: DatabaseQuestion = await QuestionModel.create(question);
+    const result: DatabaseQuestion = await QuestionModel.create(newQuestion);
 
     return result;
   } catch (error) {
@@ -411,6 +416,53 @@ export const getCommunityQuestions = async (communityId: string): Promise<Databa
     return questions;
   } catch (error) {
     return [];
+  }
+};
+
+/**
+ * Fetches a question by ID, adding user to interestedUsers if they weren't there and removing them if they were.
+ * @param {string} qid - The question ID
+ * @param {string} username - The username requesting the question
+ * @returns {Promise<QuestionResponse | null>} - The question with updated or error message
+ */
+export const toggleUserInterest = async (
+  qid: string,
+  username: string,
+): Promise<PopulatedDatabaseQuestion | { error: string }> => {
+  try {
+    const q: PopulatedDatabaseQuestion | null = await QuestionModel.findOneAndUpdate(
+      { _id: new ObjectId(qid) },
+      [
+        {
+          $set: {
+            interestedUsers: {
+              $cond: [
+                { $ne: ['$interestedUsers', undefined] },
+                {
+                  $cond: {
+                    if: { $in: [username, '$interestedUsers'] },
+                    then: {
+                      $setDifference: ['$interestedUsers', [username]],
+                    },
+                    else: { $concatArrays: ['$interestedUsers', [username]] },
+                  },
+                },
+                [username],
+              ],
+            },
+          },
+        },
+      ],
+      { new: true },
+    );
+
+    if (!q) {
+      throw new Error('Question not found');
+    }
+
+    return q;
+  } catch (error) {
+    return { error: 'Error when fetching and updating interested users' };
   }
 };
 

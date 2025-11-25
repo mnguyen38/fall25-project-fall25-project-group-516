@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { getAuthToken } from '../utils/auth';
 import { getLoginStatus, setLoginStatus } from '../utils/login';
 import useUserContext from './useUserContext';
@@ -19,7 +19,7 @@ const useTransactionWindow = () => {
    * Opens transaction window and sets various attributes depending on type of transaction
    * @param type login or premium transaction
    */
-  const openTransactionWindow = () => {
+  const openTransactionWindow = useCallback(() => {
     let reward: number;
     if (user.loginStreak) {
       reward = user.loginStreak % 7 == 0 ? 10 : user.loginStreak % 7;
@@ -37,7 +37,7 @@ const useTransactionWindow = () => {
     setShowRewardWindow(true);
     // eslint-disable-next-line no-console
     console.log(showRewardWindow);
-  };
+  }, [user.loginStreak, loginStreak, showRewardWindow]);
 
   /**
    * Handles transaction confirmation.
@@ -55,7 +55,7 @@ const useTransactionWindow = () => {
     if (getAuthToken() && !getLoginStatus(user.username)) {
       openTransactionWindow();
     }
-  }, [user.loginStreak, user.username, user.streakHold]);
+  }, [user.loginStreak, user.username, user.streakHold, openTransactionWindow]);
 
   /**
    * When user claims login reward, sets login status in session storage.

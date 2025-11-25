@@ -10,7 +10,8 @@ import {
   updateShowLoginStreak,
 } from '../services/userService';
 import { getUserBadges, updateDisplayedBadges } from '../services/badgeService';
-import { PopulatedSafeDatabaseUser, BadgeWithProgress } from '../types/types';
+import { getAnswersByUser } from '../services/answerService';
+import { PopulatedSafeDatabaseUser, BadgeWithProgress, DatabaseAnswer } from '../types/types';
 import useUserContext from './useUserContext';
 import useHeader from './useHeader';
 
@@ -42,6 +43,9 @@ const useProfileSettings = () => {
   // toggle login streak visibility
   const [showLoginStreak, setShowLoginStreak] = useState<boolean>(true);
 
+  // User answers state
+  const [userAnswers, setUserAnswers] = useState<DatabaseAnswer[]>([]);
+
   const canEditProfile =
     currentUser.username && userData?.username ? currentUser.username === userData.username : false;
 
@@ -71,8 +75,18 @@ const useProfileSettings = () => {
       }
     };
 
+    const fetchUserAnswers = async () => {
+      try {
+        const answers = await getAnswersByUser(username);
+        setUserAnswers(answers);
+      } catch (error) {
+        // console.error('Error fetching user answers:', error);
+      }
+    };
+
     fetchUserData();
     fetchBadges();
+    fetchUserAnswers();
   }, [username]);
 
   // Auto-dismiss success messages after 10 seconds
@@ -352,6 +366,7 @@ const useProfileSettings = () => {
     handleCancelButton,
     handleDoneButton,
     handleEnteringEditMode,
+    userAnswers,
   };
 };
 

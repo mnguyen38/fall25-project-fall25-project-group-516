@@ -125,6 +125,27 @@ const getQuestionsByUser = async (username: string): Promise<PopulatedDatabaseQu
   return res.data;
 };
 
+/**
+ * Function to toggle user's interest in question.
+ * @param qid - unique id of question of interest.
+ * @param username - The username of interested user.
+ * @returns A promise resolving to the updated question.
+ * @throws Error if there is an issue updating question.
+ */
+const toggleUserInterestInQuestion = async (
+  qid: ObjectId,
+  username: string,
+): Promise<PopulatedDatabaseQuestion> => {
+  const data = { qid, username };
+  const res = await api.patch(`${QUESTION_API_URL}/toggleUserInterestInQuestion`, data);
+
+  if (res.status !== 200) {
+    throw new Error('Error when trying to update interested users to question');
+  }
+
+  return res.data;
+};
+
 export {
   getQuestionsByFilter,
   getQuestionById,
@@ -133,4 +154,5 @@ export {
   downvoteQuestion,
   getCommunityQuestionsById,
   getQuestionsByUser,
+  toggleUserInterestInQuestion,
 };

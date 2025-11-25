@@ -1,8 +1,9 @@
 import './index.css';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import SideBarNav from '../main/sideBarNav';
 import RightSidebar from '../rightSidebar';
+import CommunitySidebar from '../communitySidebar';
 import Header from '../header';
 import Footer from '../footer';
 import AdBlockerModal from '../adBlockerModal';
@@ -18,6 +19,10 @@ import useUserContext from '../../hooks/useUserContext';
  */
 const Layout = () => {
   const { user } = useUserContext();
+  const location = useLocation();
+
+  // Check if we're on a specific community page (e.g., /communities/:id)
+  const isOnCommunityPage = /^\/communities\/[^/]+$/.test(location.pathname);
 
   // Ad blocker detection - only for non-premium users
   const [showModal, setShowModal] = useState(false);
@@ -95,7 +100,7 @@ const Layout = () => {
             awarded={false}
           />
         </div>
-        <RightSidebar />
+        {isOnCommunityPage ? <CommunitySidebar /> : <RightSidebar />}
       </div>
       <Footer />
       {/* Ad blocker modal - only shown to non-premium users */}

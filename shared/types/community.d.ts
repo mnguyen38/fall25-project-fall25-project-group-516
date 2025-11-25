@@ -29,6 +29,8 @@ export interface Community {
  * _id - Object Id of the community document
  * createdAt - created at date timestamp
  * updatedAt - updated at date timestamp
+ * premiumCount - optional count of premium members (computed field)
+ * nonPremiumCount - optional count of non-premium members (computed field)
  */
 export interface DatabaseCommunity extends Omit<Community, 'appeals'> {
   _id: ObjectId;
@@ -39,6 +41,8 @@ export interface DatabaseCommunity extends Omit<Community, 'appeals'> {
 
 export interface PopulatedDatabaseCommunity extends Omit<DatabaseCommunity, 'appeals'> {
   appeals: DatabaseAppeal[];
+  premiumCount?: number;
+  nonPremiumCount?: number;
 }
 
 /**

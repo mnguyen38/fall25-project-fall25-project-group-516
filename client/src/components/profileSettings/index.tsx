@@ -28,8 +28,9 @@ import {
   updateStatus,
 } from '../../services/userService';
 import { getQuestionsByUser } from '../../services/questionService';
+import { getAnswersByUser } from '../../services/answerService';
 import Question from '../main/questionPage/question';
-import { PopulatedDatabaseQuestion } from '../../types/types';
+import { PopulatedDatabaseQuestion, DatabaseAnswer } from '../../types/types';
 import UserContext from '../../contexts/UserContext';
 
 const ProfileSettings: React.FC = () => {
@@ -73,6 +74,8 @@ const ProfileSettings: React.FC = () => {
   const [editMode, setEditMode] = React.useState(false);
   const [userQuestions, setUserQuestions] = React.useState<PopulatedDatabaseQuestion[]>([]);
   const [questionsLoading, setQuestionsLoading] = React.useState(false);
+  const [userAnswers, setUserAnswers] = React.useState<DatabaseAnswer[]>([]);
+  const [answersLoading, setAnswersLoading] = React.useState(false);
   const [currentStatus, setCurrentStatus] = React.useState<'online' | 'busy' | 'away' | undefined>(
     userData?.status,
   );
@@ -268,6 +271,25 @@ const ProfileSettings: React.FC = () => {
     };
 
     fetchUserQuestions();
+  }, [userData?.username]);
+
+  // Fetch user's answers
+  React.useEffect(() => {
+    const fetchUserAnswers = async () => {
+      if (!userData?.username) return;
+
+      try {
+        setAnswersLoading(true);
+        const answers = await getAnswersByUser(userData.username);
+        setUserAnswers(answers);
+      } catch {
+        setUserAnswers([]);
+      } finally {
+        setAnswersLoading(false);
+      }
+    };
+
+    fetchUserAnswers();
   }, [userData?.username]);
 
   // Close dropdown when clicking outside
@@ -893,6 +915,42 @@ const ProfileSettings: React.FC = () => {
               </div>
             ) : (
               <p>No questions posted yet.</p>
+            )}
+          </div>
+        </div>
+
+        {/* User's Answers */}
+        <div className='profile-card'>
+          <div className='profile-section'>
+            <h2 className='section-title'>
+              Answers Posted{' '}
+              {!hasViewerBlockedProfile && (!userData.profilePrivate || canEditProfile)
+                ? `(${userAnswers.length})`
+                : ''}
+              {answersLoading && null}
+            </h2>
+            {hasViewerBlockedProfile ? (
+              <p className='private-message'>You have blocked this user.</p>
+            ) : userData.profilePrivate && !canEditProfile ? (
+              <p className='private-message'>This user account is private</p>
+            ) : userAnswers.length > 0 ? (
+              <div className='user-answers-list'>
+                {userAnswers.map(answer => (
+                  <div key={answer._id.toString()} className='answer-card'>
+                    <div className='answer-text'>
+                      <Markdown remarkPlugins={[remarkGfm]}>{answer.text}</Markdown>
+                    </div>
+                    <div className='answer-meta'>
+                      <span className='answer-author'>{answer.ansBy}</span>
+                      <span className='answer-date'>
+                        {new Date(answer.ansDateTime).toLocaleDateString()}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p>No answers posted yet.</p>
             )}
           </div>
         </div>

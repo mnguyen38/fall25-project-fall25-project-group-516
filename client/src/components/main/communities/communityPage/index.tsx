@@ -4,13 +4,12 @@ import { faFlag } from '@fortawesome/free-solid-svg-icons';
 import { FiShield } from 'react-icons/fi';
 import useCommunityPage from '../../../../hooks/useCommunityPage';
 import QuestionView from '../../questionPage/question';
-import CommunityMembershipButton from '../communityMembershipButton';
 import './index.css';
 import ReportUserModal from '../reportUserModal';
 
 /**
- * This component displays the details of a specific community, including its name, description,
- * members, and questions.
+ * This component displays the questions for a specific community.
+ * The community sidebar is now rendered in the Layout component.
  */
 const CommunityPage = () => {
   const { community, communityQuestions, handleDashboardRedirect, username } = useCommunityPage();

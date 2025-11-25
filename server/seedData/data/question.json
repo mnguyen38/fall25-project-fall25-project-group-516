@@ -136,7 +136,8 @@
     "upVotes": ["user123", "user234"],
     "downVotes": [],
     "comments": ["comment2"],
-    "community": "community1"
+    "community": "community1",
+    "premiumStatus": "true"
   },
   "question11": {
     "title": "Can we talk about the culture on FSO...",

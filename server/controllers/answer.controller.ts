@@ -1,7 +1,7 @@
-import express, { Response } from 'express';
+import express, { Request, Response } from 'express';
 import { ObjectId } from 'mongodb';
 import { Answer, AddAnswerRequest, FakeSOSocket, PopulatedDatabaseAnswer } from '../types/types';
-import { addAnswerToQuestion, saveAnswer } from '../services/answer.service';
+import { addAnswerToQuestion, saveAnswer, getAnswersByUser } from '../services/answer.service';
 import { populateDocument } from '../utils/database.util';
 import { checkAndAwardBadges } from '../services/badge.service';
 import userSocketMap from '../utils/socketMap.util';
@@ -60,18 +60,22 @@ const answerController = (socket: FakeSOSocket) => {
         type: 'answer',
       };
 
-      const sentNotification = await sendNotification([status.askedBy], notificationData);
+      // Send notification (non-fatal)
+      const sentNotification = await sendNotification(
+        status.interestedUsers || [],
+        notificationData,
+      );
 
       if ('error' in sentNotification) {
-        throw new Error(sentNotification.error);
-      }
+        // console.error('Failed to send notification:', sentNotification.error);
+      } else {
+        const socketId = userSocketMap.get(status.askedBy);
 
-      const socketId = userSocketMap.get(status.askedBy);
-
-      if (socketId) {
-        socket.to(socketId).emit('notificationUpdate', {
-          notificationStatus: { notification: notificationData, read: false },
-        });
+        if (socketId) {
+          socket.to(socketId).emit('notificationUpdate', {
+            notificationStatus: { notification: notificationData, read: false },
+          });
+        }
       }
       // Populates the fields of the answer that was added and emits the new object
       socket.emit('answerUpdate', {
@@ -84,8 +88,28 @@ const answerController = (socket: FakeSOSocket) => {
     }
   };
 
+  /**
+   * Retrieves all answers created by a specific user.
+   *
+   * @param req The Request object containing the username parameter.
+   * @param res The HTTP response object used to send back the result of the operation.
+   *
+   * @returns A Promise that resolves to void.
+   */
+  const getAnswersByUserRoute = async (req: Request, res: Response): Promise<void> => {
+    const { username } = req.params;
+
+    try {
+      const answers = await getAnswersByUser(username);
+      res.json(answers);
+    } catch (err) {
+      res.status(500).send(`Error when fetching answers by user: ${(err as Error).message}`);
+    }
+  };
+
   // add appropriate HTTP verbs and their endpoints to the router.
   router.post('/addAnswer', addAnswer);
+  router.get('/user/:username', getAnswersByUserRoute);
 
   return router;
 };

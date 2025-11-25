@@ -100,7 +100,7 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
             onCropChange={onCropChange}
             onZoomChange={onZoomChange}
             onCropComplete={onCropCompleteInternal}
-            objectFit='horizontal-cover'
+            objectFit='contain'
           />
         </div>
         <div className='cropper-controls'>
