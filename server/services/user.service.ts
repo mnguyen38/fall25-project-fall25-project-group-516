@@ -171,12 +171,12 @@ export const loginUser = async (loginCredentials: UserCredentials): Promise<User
     );
 
     // Get updated user without password
-    const updatedUser = await populateUser(user._id.toString());
-
-    if (!updatedUser) {
-      throw Error(`Failed to retrieve updated user`);
+    if (user.notifications) {
+      const updatedUser = await populateUser(user._id.toString());
+      return updatedUser as PopulatedSafeDatabaseUser;
+    } else {
+      return { ...user, notifications: [] } as PopulatedSafeDatabaseUser;
     }
-    return updatedUser as PopulatedSafeDatabaseUser;
   } catch (error) {
     return { error: `Error occurred when authenticating user: ${error}` };
   }

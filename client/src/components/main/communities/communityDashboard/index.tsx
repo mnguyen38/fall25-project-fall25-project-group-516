@@ -282,7 +282,7 @@ const CommunityDashboard = () => {
                             {isModerator ? 'Remove Mod' : 'Make Mod'}
                           </button>
                         )}
-                        {!isBanned && isMember && (
+                        {!isBanned && isMember && !isModerator && (
                           <button
                             onClick={() => handleToggleMute(u.username)}
                             className={`action-btn ${isMuted ? 'active' : ''}`}

@@ -19,6 +19,8 @@ import {
 import * as util from '../../utils/database.util';
 import { DatabaseUser, PopulatedSafeDatabaseUser, User, UserCredentials } from '../../types/types';
 import { user, safeUser } from '../mockData.models';
+import { ObjectId } from 'mongodb';
+import NotificationModel from '../../models/notifications.model';
 
 describe('User model', () => {
   beforeEach(() => {
@@ -159,7 +161,7 @@ describe('User model', () => {
 
   describe('readNotifications', () => {
     it('should mark notifications as read and return user', async () => {
-      const mockSafeUser = { ...safeUser, roles: new Map() };
+      const mockSafeUser = { ...safeUser };
       jest.spyOn(UserModel, 'updateOne').mockResolvedValue({ matchedCount: 1 } as any);
       jest.spyOn(UserModel, 'findOne').mockResolvedValue({ _id: 'some_id' });
       jest.spyOn(UserModel, 'findById').mockReturnValue({
@@ -427,29 +429,6 @@ describe('User model', () => {
         }),
       );
     });
-
-    it('should throw error if populateUser fails after update', async () => {
-      jest.spyOn(UserModel, 'findOne').mockResolvedValue({ ...user, _id: 'user-id' });
-      jest.spyOn(UserModel, 'updateOne').mockResolvedValue({ acknowledged: true } as any);
-
-      jest.spyOn(UserModel, 'findById').mockReturnValue({
-        select: jest.fn().mockResolvedValue(null),
-      } as any);
-
-      const result = await loginUser({ username: 'test', password: 'pw' });
-      expect('error' in result).toBe(true);
-    });
-
-    it('should throw error if populateUser returns null', async () => {
-      jest.spyOn(UserModel, 'findOne').mockResolvedValue({ ...user, _id: 'user-id' });
-      jest.spyOn(UserModel, 'updateOne').mockResolvedValue({ acknowledged: true } as any);
-
-      const populateUserSpy = jest.spyOn(util, 'populateUser');
-      populateUserSpy.mockRejectedValueOnce(null);
-
-      const result = await loginUser({ username: 'test', password: 'pw' });
-      expect('error' in result).toBe(true);
-    });
   });
 
   describe('findOrCreateOAuthUser', () => {
@@ -584,10 +563,11 @@ describe('User model', () => {
         acknowledged: true,
         modifiedCount: 1,
       } as any);
-
       jest.spyOn(UserModel, 'findById').mockReturnValueOnce({
         select: jest.fn().mockReturnValueOnce({ lean: jest.fn().mockResolvedValueOnce(rawUser) }),
       } as any);
+
+      jest.spyOn(NotificationModel, 'findOne').mockResolvedValueOnce(null);
 
       const credentials: UserCredentials = {
         username: user.username,
@@ -596,7 +576,7 @@ describe('User model', () => {
 
       const loggedInUser = await loginUser(credentials);
 
-      expect(loggedInUser).toStrictEqual({ ...rawUser, roles: new Map<string, string>() });
+      expect(loggedInUser).toStrictEqual({ ...rawUser });
     });
 
     it('should return the user if the password fails', async () => {

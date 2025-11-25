@@ -66,7 +66,6 @@ export interface User extends UserCredentials {
   streakHold?: boolean;
   status?: 'online' | 'busy' | 'away';
   customStatus?: string;
-  notifications?: Notification[];
   communityNotifs?: boolean;
   messageNotifs?: boolean;
   blockedUsers?: string[];

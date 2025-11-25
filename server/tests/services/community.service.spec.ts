@@ -57,6 +57,9 @@ describe('Community Service', () => {
       endSession: jest.fn(),
     };
     jest.spyOn(mongoose, 'startSession').mockResolvedValue(mockSession);
+
+    // Default countDocuments to 0 to prevent getCommunity crashes on calculation
+    (UserModel.countDocuments as jest.Mock).mockResolvedValue(0);
   });
 
   const mockCommunityId = '65e9b58910afe6e94fc6e6dc';
@@ -76,40 +79,79 @@ describe('Community Service', () => {
   };
 
   describe('getCommunity', () => {
-    test('should return community if found', async () => {
-      (CommunityModel.findById as jest.Mock).mockResolvedValue(mockCommunity);
+    test('should return community with premium counts if found', async () => {
+      // Mock findById to return an object with a lean() function
+      (CommunityModel.findById as jest.Mock).mockReturnValue({
+        lean: jest.fn().mockResolvedValue(mockCommunity),
+      });
+
+      // Mock countDocuments for premium calculation
+      (UserModel.countDocuments as jest.Mock).mockResolvedValue(1);
+
       const result = await getCommunity(mockCommunityId);
-      expect(result).toEqual(mockCommunity);
+
+      expect(result).toEqual({
+        ...mockCommunity,
+        premiumCount: 1,
+        nonPremiumCount: mockCommunity.participants.length - 1,
+      });
     });
 
     test('should return error if not found', async () => {
-      (CommunityModel.findById as jest.Mock).mockResolvedValue(null);
+      // Mock findById -> lean() -> null
+      (CommunityModel.findById as jest.Mock).mockReturnValue({
+        lean: jest.fn().mockResolvedValue(null),
+      });
+
       const result = await getCommunity(mockCommunityId);
       expect(result).toEqual({ error: 'Community not found' });
     });
 
     test('should return error on exception', async () => {
-      (CommunityModel.findById as jest.Mock).mockRejectedValue(new Error('DB Error'));
+      // Mock findById -> lean() -> rejection
+      (CommunityModel.findById as jest.Mock).mockReturnValue({
+        lean: jest.fn().mockRejectedValue(new Error('DB Error')),
+      });
+
       const result = await getCommunity(mockCommunityId);
+
       expect(result).toEqual({ error: 'DB Error' });
     });
   });
 
   describe('getAllCommunities', () => {
-    test('should return all communities', async () => {
-      (CommunityModel.find as jest.Mock).mockResolvedValue([mockCommunity]);
+    test('should return all communities with counts', async () => {
+      // Mock find -> lean() -> [community]
+      (CommunityModel.find as jest.Mock).mockReturnValue({
+        lean: jest.fn().mockResolvedValue([mockCommunity]),
+      });
+
+      (UserModel.countDocuments as jest.Mock).mockResolvedValue(0);
+
       const result = await getAllCommunities();
-      expect(result).toEqual([mockCommunity]);
+
+      const expected = [
+        {
+          ...mockCommunity,
+          premiumCount: 0,
+          nonPremiumCount: mockCommunity.participants.length,
+        },
+      ];
+
+      expect(result).toEqual(expected);
     });
 
     test('should return error on exception', async () => {
-      (CommunityModel.find as jest.Mock).mockRejectedValue(new Error('DB Error'));
+      (CommunityModel.find as jest.Mock).mockReturnValue({
+        lean: jest.fn().mockRejectedValue(new Error('DB Error')),
+      });
       const result = await getAllCommunities();
       expect(result).toEqual({ error: 'DB Error' });
     });
   });
 
   describe('toggleCommunityMembership', () => {
+    // This function uses simple findById (no lean) based on provided implementation
     test('should throw error if community not found', async () => {
       (CommunityModel.findById as jest.Mock).mockResolvedValue(null);
 
@@ -188,6 +230,7 @@ describe('Community Service', () => {
       const result = await createCommunity(input);
       expect(result).toEqual({ error: 'Save Fail' });
     });
+
     test('should not duplicate admin in participants if already present', async () => {
       const inputWithAdmin: Community = {
         ...input,
@@ -337,6 +380,7 @@ describe('Community Service', () => {
 
       expect(CommunityModel.findByIdAndUpdate).toHaveBeenCalled();
     });
+
     test('should return error if update returns null', async () => {
       (CommunityModel.findById as jest.Mock).mockResolvedValue(mockCommunity);
       (CommunityModel.findByIdAndUpdate as jest.Mock).mockResolvedValue(null);
@@ -461,7 +505,10 @@ describe('Community Service', () => {
     const announcement = { title: 'T', msg: 'M', sender: 'admin_user' } as any;
 
     test('should succeed for admin', async () => {
-      (CommunityModel.findById as jest.Mock).mockResolvedValue(mockCommunity);
+      // Must mock using lean() because sendCommunityAnnouncement calls getCommunity()
+      (CommunityModel.findById as jest.Mock).mockReturnValue({
+        lean: jest.fn().mockResolvedValue(mockCommunity),
+      });
       (saveNotification as jest.Mock).mockResolvedValue({ _id: 'n1' });
       (addNotificationToUsers as jest.Mock).mockResolvedValue({});
 
@@ -472,7 +519,9 @@ describe('Community Service', () => {
     });
 
     test('should error if unauthorized', async () => {
-      (CommunityModel.findById as jest.Mock).mockResolvedValue(mockCommunity);
+      (CommunityModel.findById as jest.Mock).mockReturnValue({
+        lean: jest.fn().mockResolvedValue(mockCommunity),
+      });
       const result = await sendCommunityAnnouncement(mockCommunityId, 'user1', announcement);
 
       expect(mockSession.abortTransaction).toHaveBeenCalled();
@@ -480,15 +529,21 @@ describe('Community Service', () => {
     });
 
     test('should abort if saveNotification fails', async () => {
-      (CommunityModel.findById as jest.Mock).mockResolvedValue(mockCommunity);
+      (CommunityModel.findById as jest.Mock).mockReturnValue({
+        lean: jest.fn().mockResolvedValue(mockCommunity),
+      });
       (saveNotification as jest.Mock).mockResolvedValue({ error: 'Save Error' });
 
       const result = await sendCommunityAnnouncement(mockCommunityId, 'admin_user', announcement);
       expect(mockSession.abortTransaction).toHaveBeenCalled();
       expect(result).toEqual({ error: 'Save Error' });
     });
+
     test('should return error if community lookup fails', async () => {
-      (CommunityModel.findById as jest.Mock).mockResolvedValue(null);
+      // Mock findById -> lean() -> null
+      (CommunityModel.findById as jest.Mock).mockReturnValue({
+        lean: jest.fn().mockResolvedValue(null),
+      });
 
       const result = await sendCommunityAnnouncement(mockCommunityId, 'admin_user', {} as any);
 
@@ -497,7 +552,9 @@ describe('Community Service', () => {
     });
 
     test('should abort if addNotificationToUsers fails', async () => {
-      (CommunityModel.findById as jest.Mock).mockResolvedValue(mockCommunity);
+      (CommunityModel.findById as jest.Mock).mockReturnValue({
+        lean: jest.fn().mockResolvedValue(mockCommunity),
+      });
       (saveNotification as jest.Mock).mockResolvedValue({ _id: 'n1' });
 
       (addNotificationToUsers as jest.Mock).mockResolvedValue({ error: 'Partial fail' });
@@ -511,7 +568,10 @@ describe('Community Service', () => {
 
   describe('sendNotificationUpdates', () => {
     test('should emit to filtered users', async () => {
-      (CommunityModel.findById as jest.Mock).mockResolvedValue(mockCommunity);
+      // Must mock using lean() structure
+      (CommunityModel.findById as jest.Mock).mockReturnValue({
+        lean: jest.fn().mockResolvedValue(mockCommunity),
+      });
 
       (UserModel.find as jest.Mock).mockResolvedValue([{ username: 'user1' }]);
       (userSocketMap.get as unknown as jest.Mock).mockReturnValue('s1');
@@ -521,20 +581,27 @@ describe('Community Service', () => {
       expect(mockSocket.to).toHaveBeenCalledWith('s1');
       expect(mockSocket.emit).toHaveBeenCalled();
     });
+
     test('should return error if community not found', async () => {
-      (CommunityModel.findById as jest.Mock).mockResolvedValue(null);
+      (CommunityModel.findById as jest.Mock).mockReturnValue({
+        lean: jest.fn().mockResolvedValue(null),
+      });
       const result = await sendNotificationUpdates(mockCommunityId, mockSocket, {} as any);
       expect(result).toEqual({ error: 'Community not found' });
     });
 
     test('should return error on exception', async () => {
-      (CommunityModel.findById as jest.Mock).mockRejectedValue(new Error('Crash'));
+      (CommunityModel.findById as jest.Mock).mockReturnValue({
+        lean: jest.fn().mockRejectedValue(new Error('Crash')),
+      });
       const result = await sendNotificationUpdates(mockCommunityId, mockSocket, {} as any);
       expect(result).toEqual({ error: 'Crash' });
     });
 
     test('should skip users without socket connections', async () => {
-      (CommunityModel.findById as jest.Mock).mockResolvedValue(mockCommunity);
+      (CommunityModel.findById as jest.Mock).mockReturnValue({
+        lean: jest.fn().mockResolvedValue(mockCommunity),
+      });
 
       (UserModel.find as jest.Mock).mockResolvedValue([
         { username: 'user1' },
@@ -563,7 +630,7 @@ describe('Community Service', () => {
       );
       expect(result).toEqual({ error: expect.stringContaining('Community not found') });
     });
-    test('should error if community not found', async () => {
+    test('should error if unauthorized', async () => {
       (CommunityModel.findById as jest.Mock).mockResolvedValue(mockCommunity);
       const result = await toggleMuteCommunityUser(
         mockCommunityId,
@@ -617,6 +684,7 @@ describe('Community Service', () => {
   });
 
   describe('isAllowedToPostInCommunity', () => {
+    // This function uses findOne, not findById, and no lean()
     test('should allow if no communityId', async () => {
       const result = await isAllowedToPostInCommunity('', 'user1');
       expect(result).toBe(true);
