@@ -16,10 +16,8 @@ import {
   blockUser,
   unblockUser,
 } from '../../services/user.service';
-import * as util from '../../utils/database.util';
 import { DatabaseUser, PopulatedSafeDatabaseUser, User, UserCredentials } from '../../types/types';
 import { user, safeUser } from '../mockData.models';
-import { ObjectId } from 'mongodb';
 import NotificationModel from '../../models/notifications.model';
 
 describe('User model', () => {
@@ -283,6 +281,36 @@ describe('User model', () => {
             streakHold: false,
             missedDays: 0,
             loginStreak: 11,
+          }),
+        }),
+      );
+    });
+
+    it('should set streak to one if user does not have a streak', async () => {
+      const newUser = {
+        ...user,
+        _id: 'user-id',
+      };
+
+      jest.spyOn(UserModel, 'findOne').mockResolvedValue(newUser);
+      const updateSpy = jest
+        .spyOn(UserModel, 'updateOne')
+        .mockResolvedValue({ acknowledged: true } as any);
+      jest.spyOn(UserModel, 'findById').mockReturnValue({
+        select: jest.fn().mockResolvedValue({
+          lean: jest.fn().mockResolvedValue(safeUser),
+        }),
+      } as any);
+
+      await loginUser({ username: user.username, password: user.password });
+
+      expect(updateSpy).toHaveBeenCalledWith(
+        { username: user.username },
+        expect.objectContaining({
+          $set: expect.objectContaining({
+            streakHold: false,
+            missedDays: 0,
+            loginStreak: 1,
           }),
         }),
       );
@@ -1204,6 +1232,69 @@ describe('User model', () => {
       const result = await unblockUser(mockUser.username, 'targetUser');
 
       expect('error' in result).toBe(true);
+    });
+  });
+
+  describe('updateUserStatus', () => {
+    it('should return updated user if status is online w/ no custom status', async () => {
+      jest.spyOn(UserModel, 'findOneAndUpdate').mockReturnValue({
+        select: jest.fn().mockResolvedValue({ ...user, status: 'online' }),
+      } as unknown as Query<PopulatedSafeDatabaseUser, typeof UserModel>);
+
+      const result = await updateUserStatus(user.username, 'online');
+
+      expect(result).toBeDefined();
+      expect(result).toStrictEqual({ ...user, status: 'online' });
+    });
+
+    it('should return updated user if status is busy w/ no custom status', async () => {
+      jest.spyOn(UserModel, 'findOneAndUpdate').mockReturnValue({
+        select: jest.fn().mockResolvedValue({ ...user, status: 'busy' }),
+      } as unknown as Query<PopulatedSafeDatabaseUser, typeof UserModel>);
+
+      const result = await updateUserStatus(user.username, 'busy');
+
+      expect(result).toBeDefined();
+      expect(result).toStrictEqual({ ...user, status: 'busy' });
+    });
+
+    it('should return updated user if status is away w/ no custom status', async () => {
+      jest.spyOn(UserModel, 'findOneAndUpdate').mockReturnValue({
+        select: jest.fn().mockResolvedValue({ ...user, status: 'away' }),
+      } as unknown as Query<PopulatedSafeDatabaseUser, typeof UserModel>);
+
+      const result = await updateUserStatus(user.username, 'away');
+
+      expect(result).toBeDefined();
+      expect(result).toStrictEqual({ ...user, status: 'away' });
+    });
+
+    it('should return updated user if status is online w/ custom status', async () => {
+      const findOneAndUpdateSpy = jest.spyOn(UserModel, 'findOneAndUpdate');
+      findOneAndUpdateSpy.mockReturnValue({
+        select: jest
+          .fn()
+          .mockResolvedValue({ ...user, status: 'online', customStatus: 'Feeling good!' }),
+      } as unknown as Query<PopulatedSafeDatabaseUser, typeof UserModel>);
+
+      const result = await updateUserStatus(user.username, 'online', 'Feeling good!');
+
+      expect(result).toBeDefined();
+      expect(result).toStrictEqual({ ...user, status: 'online', customStatus: 'Feeling good!' });
+    });
+
+    it('should return updated user if status is online w/ custom status', async () => {
+      const findOneAndUpdateSpy = jest.spyOn(UserModel, 'findOneAndUpdate');
+      findOneAndUpdateSpy.mockReturnValue({
+        select: jest
+          .fn()
+          .mockResolvedValue({ ...user, status: 'online', customStatus: 'Feeling good!' }),
+      } as unknown as Query<PopulatedSafeDatabaseUser, typeof UserModel>);
+
+      const result = await updateUserStatus(user.username, 'online', 'Feeling good!');
+
+      expect(result).toBeDefined();
+      expect(result).toStrictEqual({ ...user, status: 'online', customStatus: 'Feeling good!' });
     });
   });
 });

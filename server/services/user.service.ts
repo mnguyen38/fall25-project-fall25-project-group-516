@@ -579,25 +579,3 @@ export const unblockUser = async (
     return { error: `Error occurred when unblocking user: ${error}` };
   }
 };
-
-/**
- * Gets the list of blocked users for a given user.
- *
- * @param {string} username - The username to get blocked users for.
- * @returns {Promise<UserResponse>} - Resolves with the user object containing blockedUsers or an error message.
- */
-export const getBlockedUsers = async (username: string): Promise<UserResponse> => {
-  try {
-    const user: PopulatedSafeDatabaseUser | null = await UserModel.findOne({ username }).select(
-      '-password',
-    );
-
-    if (!user) {
-      throw Error('User not found');
-    }
-
-    return user;
-  } catch (error) {
-    return { error: `Error occurred when getting blocked users: ${error}` };
-  }
-};
