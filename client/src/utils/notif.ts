@@ -7,6 +7,8 @@ import {
   FiAlertTriangle,
   FiCheckCircle,
   FiBell,
+  FiBellOff,
+  FiUserMinus,
 } from 'react-icons/fi';
 
 // --- Icons & Colors Helpers ---
@@ -22,10 +24,14 @@ export const getNotificationIcon = (type: NotificationType) => {
       return FiMail;
     case 'report':
       return FiAlertTriangle;
-    case 'unban':
+    case 'appeal':
       return FiCheckCircle;
     case 'sitewide':
       return FiAlertTriangle;
+    case 'mute':
+      return FiBellOff
+    case 'ban':
+      return FiUserMinus
     default:
       return FiBell;
   }
@@ -33,7 +39,7 @@ export const getNotificationIcon = (type: NotificationType) => {
 
 export const getTypeColor = (type: NotificationType) => {
   switch (type) {
-    case 'unban':
+    case 'appeal':
       return '#15803d';
     case 'report':
     case 'sitewide':
@@ -47,7 +53,7 @@ export const getTypeColor = (type: NotificationType) => {
 
 export const getTypeBackground = (type: NotificationType) => {
   switch (type) {
-    case 'unban':
+    case 'appeal':
       return '#d1f4e0';
     case 'report':
     case 'sitewide':

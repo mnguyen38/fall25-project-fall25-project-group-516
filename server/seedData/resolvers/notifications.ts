@@ -17,7 +17,9 @@ const notificationContextMap: Record<NotificationType, string> = {
   message: 'Chat', // Or 'Message'
   sitewide: 'User', // Or null if no context
   report: 'Report',
-  unban: 'Community',
+  appeal: 'Community',
+  ban: 'Ban',
+  mute: 'Mute',
 };
 
 /**
