@@ -563,24 +563,20 @@ export const respondToAppeal = async (
       return { error: 'Community not found' };
     }
 
-    // Verify permissions
     const isMod = community.moderators?.includes(managerUsername);
     const isAdmin = community.admin === managerUsername;
     if (!isMod && !isAdmin) {
       return { error: 'Unauthorized: User does not have proper permissions' };
     }
 
-    // Find and delete appeal. Verifies existence and community association.
     const appeal = await AppealModel.findOneAndDelete({ _id: appealId, community: communityId });
     if (!appeal) {
       return { error: 'Appeal not found or does not belong to this community' };
     }
 
-    // Prepare update operations
     const updateOps: any = { $pull: { appeals: appealId } };
 
     if (status === 'approve') {
-      // If approved, remove user from banned and muted lists in addition to removing the appeal
       updateOps.$pull = {
         appeals: appealId,
         banned: appeal.username,
@@ -596,13 +592,12 @@ export const respondToAppeal = async (
       return { error: 'Failed to update community' };
     }
 
-    // Notification Logic
     const notification: Notification = {
       title: `Appeal Decision: ${community.name}`,
       msg: `Your appeal in ${community.name} has been ${status}.`,
       dateTime: new Date(),
       sender: managerUsername,
-      contextId: null, // As requested
+      contextId: null,
       type: 'community',
     };
 

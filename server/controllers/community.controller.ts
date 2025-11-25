@@ -107,6 +107,11 @@ const communityController = (socket: FakeSOSocket) => {
   ): Promise<void> => {
     const { communityId, username } = req.body;
 
+    if (!communityId || !username) {
+      res.status(400).json({ error: 'Missing communityId or username' });
+      return;
+    }
+
     try {
       const result = await toggleCommunityMembership(communityId, username);
 

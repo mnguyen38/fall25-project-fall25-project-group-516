@@ -2,7 +2,7 @@ import { FiCheckSquare, FiMessageSquare, FiSettings } from 'react-icons/fi';
 import useNotificationsPage from '../../hooks/useNotificationsPage';
 import './index.css';
 import NotificationItem from '../notificationItem';
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 
 const Notifications = () => {
   const {
@@ -12,17 +12,24 @@ const Notifications = () => {
     handleReadAllNotifications,
     handleToggleCommunityNotifs,
     handleToggleMessageNotifs,
-    // communityNotif,
-    // messageNotif,
-    // onOpenSettings,
     userData,
   } = useNotificationsPage();
 
   const [showSettingsDropdown, setShowSettingsDropdown] = useState(false);
+  const [activeSection, setActiveSection] = useState<'all' | 'community'>('all');
 
   const settingsDropdownRef = React.useRef<HTMLDivElement>(null);
 
-  // Close dropdown when clicking outside
+  const { allNotifications, communityNotifications } = useMemo(() => {
+    const all = notificationsList.filter(({ notification }) => notification.type !== 'appeal');
+    const community = notificationsList.filter(
+      ({ notification }) => notification.type === 'appeal',
+    );
+    return { allNotifications: all, communityNotifications: community };
+  }, [notificationsList]);
+
+  const currentNotifications = activeSection === 'all' ? allNotifications : communityNotifications;
+
   React.useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -130,30 +137,6 @@ const Notifications = () => {
                       />
                       Get Notifications for Direct Messages
                     </label>
-                    {/* <button
-                      className='dropdown-item'
-                      onClick={() => {
-                        setShowSettingsDropdown(!showSettingsDropdown);
-                        handleToggleCommunityNotifs();
-                      }}>
-                      <span>
-                        {communityNotif
-                          ? 'Community Notifications Enabled'
-                          : 'Community Notifications Disabled'}
-                      </span>
-                    </button>
-                    <button
-                      className='dropdown-item'
-                      onClick={() => {
-                        setShowSettingsDropdown(!showSettingsDropdown);
-                        handleToggleMessageNotifs();
-                      }}>
-                      <span>
-                        {messageNotif
-                          ? 'Direct Message Notifications Enabled'
-                          : 'Direct Message Notifications Disabled'}
-                      </span>
-                    </button> */}
                   </div>
                 </div>
               )}
@@ -161,24 +144,51 @@ const Notifications = () => {
           </div>
         </div>
 
-        {notificationsList.length === 0 ? (
+        {/* Section Tabs */}
+        <div className='notifications-tabs'>
+          <button
+            className={`tab-button ${activeSection === 'all' ? 'active' : ''}`}
+            onClick={() => setActiveSection('all')}>
+            All
+            {allNotifications.length > 0 && (
+              <span className='tab-count'>{allNotifications.length}</span>
+            )}
+          </button>
+          <button
+            className={`tab-button ${activeSection === 'community' ? 'active' : ''}`}
+            onClick={() => setActiveSection('community')}>
+            Community Management
+            {communityNotifications.length > 0 && (
+              <span className='tab-count'>{communityNotifications.length}</span>
+            )}
+          </button>
+        </div>
+
+        {currentNotifications.length === 0 ? (
           <div className='empty-state'>
             <FiMessageSquare size={48} className='empty-state-icon' />
-            <h3 className='empty-state-title'>No notifications yet</h3>
-            <p className='empty-state-text'>We'll let you know when something comes up!</p>
+            <h3 className='empty-state-title'>
+              {activeSection === 'all'
+                ? 'No notifications yet'
+                : 'No community management notifications'}
+            </h3>
+            <p className='empty-state-text'>
+              {activeSection === 'all'
+                ? "We'll let you know when something comes up!"
+                : 'No appeals or community management items at this time.'}
+            </p>
           </div>
         ) : (
           <ul className='notifications-list'>
-            {notificationsList.map(({ notification, read }, index) => (
+            {currentNotifications.map(({ notification, read }, index) => (
               <NotificationItem
                 key={notification._id?.toString() || index}
                 notificationStatus={{ notification, read }}
                 onClick={() => {
-                  // 1. Mark as read if it isn't already
                   if (!read) {
                     handleReadNotification(notification._id.toString());
                   }
-                  // 2. Proceed with the redirect
+
                   handleNotificationRedirect(notification);
                 }}
               />
