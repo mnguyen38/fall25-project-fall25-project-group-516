@@ -26,6 +26,8 @@ import CollectionPage from './main/collections/collectionPage';
 import NewCollectionPage from './main/collections/newCollectionPage';
 import AuthCallbackPage from './auth/callback';
 import Notifications from './notificationsPage';
+import AppealsPage from './main/appealsPage';
+import CommunityDashboard from './main/communities/communityDashboard';
 
 const ProtectedRoute = ({
   user,
@@ -142,6 +144,8 @@ const FakeStackOverflow = ({ socket }: { socket: FakeSOSocket | null }) => {
             <Route path='/new/community' element={<NewCommunityPage />} />
             <Route path='/communities/:communityID' element={<CommunityPage />} />
             <Route path='/notifications' element={<Notifications />} />
+            <Route path='/communities/appeals/:communityID' element={<AppealsPage />} />
+            <Route path='/communities/manage/:communityID' element={<CommunityDashboard />} />
           </Route>
         }
       </Routes>

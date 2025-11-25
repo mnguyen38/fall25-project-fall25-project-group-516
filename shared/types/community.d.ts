@@ -1,6 +1,7 @@
 import { ObjectId } from 'mongodb';
 import { Request } from 'express';
 import { Notification } from './notification';
+import { Appeal, DatabaseAppeal } from './appeal';
 
 /**
  * Represents a Community (unpopulated).
@@ -20,6 +21,7 @@ export interface Community {
   moderators?: string[];
   banned?: string[];
   muted?: string[];
+  appeals?: Appeal[];
 }
 
 /**
@@ -30,10 +32,17 @@ export interface Community {
  * premiumCount - optional count of premium members (computed field)
  * nonPremiumCount - optional count of non-premium members (computed field)
  */
-export interface DatabaseCommunity extends Community {
+export interface DatabaseCommunity extends Omit<Community, 'appeals'> {
   _id: ObjectId;
   createdAt: Date;
   updatedAt: Date;
+  appeals?: ObjectId[];
+  premiumCount?: number;
+  nonPremiumCount?: number;
+}
+
+export interface PopulatedDatabaseCommunity extends Omit<DatabaseCommunity, 'appeals'> {
+  appeals: DatabaseAppeal[];
   premiumCount?: number;
   nonPremiumCount?: number;
 }
@@ -44,6 +53,24 @@ export interface DatabaseCommunity extends Community {
 export interface CommunityIdRequest extends Request {
   params: {
     communityId: string;
+  };
+}
+
+export interface CommunityDashboardRequest extends Request {
+  params: {
+    communityId: string;
+  };
+  query: {
+    managerUsername: string;
+  };
+}
+
+interface AppealUpdateRequest extends Request {
+  body: {
+    communityId: string;
+    appealId: string;
+    status: 'deny' | 'approve';
+    managerUsername: string;
   };
 }
 
@@ -76,6 +103,10 @@ export interface ToggleRequest extends Request {
     managerUsername: string;
     username: string;
   };
+}
+
+export interface AppealRequest extends Request {
+  body: Appeal;
 }
 
 /**

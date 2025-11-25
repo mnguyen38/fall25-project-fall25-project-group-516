@@ -10,7 +10,7 @@
  */
 export const loginUser = (username: string, password: string = 'securePass123!') => {
   cy.visit('http://localhost:4530');
-  cy.contains('Welcome to FakeStackOverflow!');
+  cy.contains('Welcome to PancakeOverflow!');
   cy.get('#username-input').type(username);
   cy.get('#password-input').type(password);
   cy.contains('Submit').click();

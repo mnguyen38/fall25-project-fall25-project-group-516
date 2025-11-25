@@ -28,7 +28,10 @@ const Header = ({ openTransactionWindow }: HeaderProps) => {
   return (
     <div id='header' className='header'>
       <div></div>
-      <div className='title'>Fake Stack Overflow</div>
+      <div className='title-with-logo'>
+        <img src='\logo\pancake_overflow.PNG' alt='Pancake Overflow Logo' className='header-logo' />
+        <div className='title'>PancakeOverflow</div>
+      </div>
       <input
         id='searchBar'
         placeholder='Search ...'

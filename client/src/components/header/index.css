@@ -25,6 +25,25 @@
   position: relative;
 }
 
+.title-with-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.header-logo {
+  width: 50px;
+  height: 50px;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px var(--pancake-shadow);
+  transition: transform 0.3s ease;
+}
+
+.header-logo:hover {
+  transform: scale(1.05);
+}
+
 .title {
   font-size: 32px;
   font-weight: 700;

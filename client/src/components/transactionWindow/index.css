@@ -59,6 +59,11 @@
   color: #ffffff;
 }
 
+.text-block h2 {
+  color: #ffffff !important;
+  margin: 0;
+}
+
 .coin-image {
   height: 125px;
   width: 125px;

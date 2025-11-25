@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import CommunityModel from '../../models/community.model';
 import UserModel from '../../models/users.model';
+import AppealModel from '../../models/appeal.model';
 import {
   getCommunity,
   getAllCommunities,
@@ -8,371 +9,800 @@ import {
   createCommunity,
   deleteCommunity,
   toggleMuteCommunityUser,
+  toggleBanUser,
+  toggleModerator,
+  getCommunityRole,
+  sendCommunityAnnouncement,
+  sendNotificationUpdates,
+  isAllowedToPostInCommunity,
+  addAppealToCommunity,
+  respondToAppeal,
 } from '../../services/community.service';
-import { Community, DatabaseCommunity } from '../../types/types';
+import { Community, DatabaseCommunity, FakeSOSocket } from '../../types/types';
+import {
+  sendNotification,
+  saveNotification,
+  addNotificationToUsers,
+} from '../../services/notification.service';
+import userSocketMap from '../../utils/socketMap.util';
+
+jest.mock('../../models/community.model');
+jest.mock('../../models/users.model');
+jest.mock('../../models/appeal.model');
+jest.mock('../../services/notification.service');
+
+jest.mock('../../utils/socketMap.util', () => ({
+  __esModule: true,
+  default: {
+    get: jest.fn(),
+  },
+}));
 
 describe('Community Service', () => {
+  let mockSocket: FakeSOSocket;
+  let mockSession: any;
+
   beforeEach(() => {
     jest.clearAllMocks();
+
+    mockSocket = {
+      to: jest.fn().mockReturnThis(),
+      emit: jest.fn(),
+    } as unknown as FakeSOSocket;
+
+    mockSession = {
+      startTransaction: jest.fn(),
+      commitTransaction: jest.fn(),
+      abortTransaction: jest.fn(),
+      endSession: jest.fn(),
+    };
+    jest.spyOn(mongoose, 'startSession').mockResolvedValue(mockSession);
   });
 
-  // Mock community data with admin as participant
+  const mockCommunityId = '65e9b58910afe6e94fc6e6dc';
   const mockCommunity: DatabaseCommunity = {
-    _id: new mongoose.Types.ObjectId('65e9b58910afe6e94fc6e6dc'),
+    _id: new mongoose.Types.ObjectId(mockCommunityId),
     name: 'Test Community',
     description: 'Test Description',
     admin: 'admin_user',
-    participants: ['admin_user', 'user1', 'user2'],
-    moderators: [],
+    participants: ['admin_user', 'user1', 'user2', 'mod_user'],
+    moderators: ['mod_user'],
     muted: [],
     banned: [],
     visibility: 'PUBLIC',
-    createdAt: new Date('2024-03-01'),
-    updatedAt: new Date('2024-03-01'),
-  };
-
-  const mockCommunityInput: Community = {
-    name: 'New Community',
-    description: 'New Description',
-    admin: 'new_admin',
-    participants: ['user1'],
-    visibility: 'PRIVATE',
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    appeals: [],
   };
 
   describe('getCommunity', () => {
-    test('should return the community when found', async () => {
-      jest.spyOn(CommunityModel, 'findById').mockReturnValue({
-        lean: jest.fn().mockResolvedValue(mockCommunity),
-      } as any);
-      jest.spyOn(UserModel, 'countDocuments').mockResolvedValue(1);
-
-      const result = await getCommunity('65e9b58910afe6e94fc6e6dc');
-
-      expect(result).toEqual({
-        ...mockCommunity,
-        premiumCount: 1,
-        nonPremiumCount: 2,
-      });
-      expect(CommunityModel.findById).toHaveBeenCalledWith('65e9b58910afe6e94fc6e6dc');
+    test('should return community if found', async () => {
+      (CommunityModel.findById as jest.Mock).mockResolvedValue(mockCommunity);
+      const result = await getCommunity(mockCommunityId);
+      expect(result).toEqual(mockCommunity);
     });
 
-    test('should return error when community not found', async () => {
-      jest.spyOn(CommunityModel, 'findById').mockReturnValue({
-        lean: jest.fn().mockResolvedValue(null),
-      } as any);
-
-      const result = await getCommunity('65e9b58910afe6e94fc6e6dc');
-
+    test('should return error if not found', async () => {
+      (CommunityModel.findById as jest.Mock).mockResolvedValue(null);
+      const result = await getCommunity(mockCommunityId);
       expect(result).toEqual({ error: 'Community not found' });
     });
 
-    test('should return error when database throws error', async () => {
-      jest.spyOn(CommunityModel, 'findById').mockReturnValue({
-        lean: jest.fn().mockRejectedValue(new Error('Database error')),
-      } as any);
-
-      const result = await getCommunity('65e9b58910afe6e94fc6e6dc');
-
-      expect(result).toEqual({ error: 'Database error' });
+    test('should return error on exception', async () => {
+      (CommunityModel.findById as jest.Mock).mockRejectedValue(new Error('DB Error'));
+      const result = await getCommunity(mockCommunityId);
+      expect(result).toEqual({ error: 'DB Error' });
     });
   });
 
   describe('getAllCommunities', () => {
     test('should return all communities', async () => {
-      const mockCommunities = [mockCommunity, { ...mockCommunity, name: 'Community 2' }];
-      jest.spyOn(CommunityModel, 'find').mockReturnValue({
-        lean: jest.fn().mockResolvedValue(mockCommunities),
-      } as any);
-      jest.spyOn(UserModel, 'countDocuments').mockResolvedValue(1);
-
+      (CommunityModel.find as jest.Mock).mockResolvedValue([mockCommunity]);
       const result = await getAllCommunities();
-
-      const expectedResult = mockCommunities.map(community => ({
-        ...community,
-        premiumCount: 1,
-        nonPremiumCount: community.participants.length - 1,
-      }));
-
-      expect(result).toEqual(expectedResult);
-      expect(CommunityModel.find).toHaveBeenCalledWith({});
+      expect(result).toEqual([mockCommunity]);
     });
 
-    test('should return empty array when no communities found', async () => {
-      jest.spyOn(CommunityModel, 'find').mockReturnValue({
-        lean: jest.fn().mockResolvedValue([]),
-      } as any);
-
+    test('should return error on exception', async () => {
+      (CommunityModel.find as jest.Mock).mockRejectedValue(new Error('DB Error'));
       const result = await getAllCommunities();
-
-      expect(result).toEqual([]);
-    });
-
-    test('should return error when database throws error', async () => {
-      jest.spyOn(CommunityModel, 'find').mockReturnValue({
-        lean: jest.fn().mockRejectedValue(new Error('Database error')),
-      } as any);
-
-      const result = await getAllCommunities();
-
-      expect(result).toEqual({ error: 'Database error' });
+      expect(result).toEqual({ error: 'DB Error' });
     });
   });
 
   describe('toggleCommunityMembership', () => {
-    test('should add user to community when not a participant', async () => {
-      // user3 is not in the participants array
-      const communityWithoutUser = {
-        ...mockCommunity,
-        participants: ['admin_user', 'user1'],
-      };
-      const updatedCommunity = {
-        ...mockCommunity,
-        participants: ['admin_user', 'user1', 'user3'],
-      };
+    test('should throw error if community not found', async () => {
+      (CommunityModel.findById as jest.Mock).mockResolvedValue(null);
 
-      jest.spyOn(CommunityModel, 'findById').mockResolvedValueOnce(communityWithoutUser);
-      jest.spyOn(CommunityModel, 'findByIdAndUpdate').mockResolvedValueOnce(updatedCommunity);
+      const result = await toggleCommunityMembership(mockCommunityId, 'new_user');
+      expect('error' in result).toBe(true);
+    });
+    test('should add user if not participant', async () => {
+      (CommunityModel.findById as jest.Mock).mockResolvedValue(mockCommunity);
+      (CommunityModel.findByIdAndUpdate as jest.Mock).mockResolvedValue(mockCommunity);
 
-      const result = await toggleCommunityMembership('65e9b58910afe6e94fc6e6dc', 'user3');
+      await toggleCommunityMembership(mockCommunityId, 'new_user');
 
-      expect(result).toEqual(updatedCommunity);
       expect(CommunityModel.findByIdAndUpdate).toHaveBeenCalledWith(
-        '65e9b58910afe6e94fc6e6dc',
-        { $addToSet: { participants: 'user3' } },
+        mockCommunityId,
+        { $addToSet: { participants: 'new_user' } },
         { new: true },
       );
     });
 
-    test('should remove user from community when already a participant', async () => {
-      // user2 will be removed from participants
-      const updatedCommunity = {
-        ...mockCommunity,
-        participants: ['admin_user', 'user1'],
-      };
+    test('should remove user if participant', async () => {
+      (CommunityModel.findById as jest.Mock).mockResolvedValue(mockCommunity);
+      (CommunityModel.findByIdAndUpdate as jest.Mock).mockResolvedValue(mockCommunity);
 
-      jest.spyOn(CommunityModel, 'findById').mockResolvedValueOnce(mockCommunity);
-      jest.spyOn(CommunityModel, 'findByIdAndUpdate').mockResolvedValueOnce(updatedCommunity);
+      await toggleCommunityMembership(mockCommunityId, 'user1');
 
-      const result = await toggleCommunityMembership('65e9b58910afe6e94fc6e6dc', 'user2');
-
-      expect(result).toEqual(updatedCommunity);
       expect(CommunityModel.findByIdAndUpdate).toHaveBeenCalledWith(
-        '65e9b58910afe6e94fc6e6dc',
-        { $pull: { participants: 'user2' } },
+        mockCommunityId,
+        { $pull: { participants: 'user1' } },
         { new: true },
       );
     });
 
-    test('should return error when admin tries to leave their community', async () => {
-      // admin_user trying to leave their own community
-      jest.spyOn(CommunityModel, 'findById').mockResolvedValueOnce(mockCommunity);
-
-      const result = await toggleCommunityMembership('65e9b58910afe6e94fc6e6dc', 'admin_user');
-
-      expect(result).toEqual({
-        error:
-          'Community admins cannot leave their communities. Please transfer ownership or delete the community instead.',
-      });
-      expect(CommunityModel.findByIdAndUpdate).not.toHaveBeenCalled();
+    test('should error if admin tries to leave', async () => {
+      (CommunityModel.findById as jest.Mock).mockResolvedValue(mockCommunity);
+      const result = await toggleCommunityMembership(mockCommunityId, 'admin_user');
+      expect(result).toEqual({ error: expect.stringContaining('admins cannot leave') });
     });
 
-    test('should return error when community not found', async () => {
-      jest.spyOn(CommunityModel, 'findById').mockResolvedValueOnce(null);
-
-      const result = await toggleCommunityMembership('65e9b58910afe6e94fc6e6dc', 'user2');
-
-      expect(result).toEqual({ error: 'Community not found' });
-    });
-
-    test('should return error when update fails', async () => {
-      jest.spyOn(CommunityModel, 'findById').mockResolvedValueOnce(mockCommunity);
-      jest.spyOn(CommunityModel, 'findByIdAndUpdate').mockResolvedValueOnce(null);
-
-      const result = await toggleCommunityMembership('65e9b58910afe6e94fc6e6dc', 'user2');
-
+    test('should return error if update returns null', async () => {
+      (CommunityModel.findById as jest.Mock).mockResolvedValue(mockCommunity);
+      (CommunityModel.findByIdAndUpdate as jest.Mock).mockResolvedValue(null);
+      const result = await toggleCommunityMembership(mockCommunityId, 'user1');
       expect(result).toEqual({ error: 'Failed to update community' });
     });
 
-    test('should return error when database throws error', async () => {
-      jest.spyOn(CommunityModel, 'findById').mockRejectedValueOnce(new Error('Database error'));
-
-      const result = await toggleCommunityMembership('65e9b58910afe6e94fc6e6dc', 'user2');
-
-      expect(result).toEqual({ error: 'Database error' });
+    test('should handle exceptions', async () => {
+      (CommunityModel.findById as jest.Mock).mockRejectedValue(new Error('Err'));
+      const result = await toggleCommunityMembership(mockCommunityId, 'user1');
+      expect(result).toEqual({ error: 'Err' });
     });
   });
 
   describe('createCommunity', () => {
-    test('should create a new community with admin in participants', async () => {
-      const savedCommunity = {
-        ...mockCommunityInput,
-        _id: new mongoose.Types.ObjectId(),
-        participants: ['user1', 'new_admin'],
-      };
+    const input: Community = {
+      name: 'New',
+      description: 'Desc',
+      admin: 'admin',
+      participants: [],
+      visibility: 'PUBLIC',
+    };
 
-      const saveMock = jest.fn().mockResolvedValueOnce(savedCommunity);
-      jest.spyOn(CommunityModel.prototype, 'save').mockImplementation(saveMock);
+    test('should save new community', async () => {
+      const mockSave = jest.fn().mockResolvedValue(mockCommunity);
+      (CommunityModel as unknown as jest.Mock).mockImplementation(() => ({
+        save: mockSave,
+      }));
 
-      const result = await createCommunity(mockCommunityInput);
-
-      expect(result).toEqual(savedCommunity);
-      expect(saveMock).toHaveBeenCalled();
+      const result = await createCommunity(input);
+      expect(result).toEqual(mockCommunity);
     });
 
-    test('should not duplicate admin in participants if already included', async () => {
-      // Admin already exists in participants array
-      const inputWithAdminInParticipants = {
-        ...mockCommunityInput,
-        participants: ['new_admin', 'user1'],
+    test('should handle save errors', async () => {
+      (CommunityModel as unknown as jest.Mock).mockImplementation(() => ({
+        save: jest.fn().mockRejectedValue(new Error('Save Fail')),
+      }));
+      const result = await createCommunity(input);
+      expect(result).toEqual({ error: 'Save Fail' });
+    });
+    test('should not duplicate admin in participants if already present', async () => {
+      const inputWithAdmin: Community = {
+        ...input,
+        participants: ['admin'],
       };
-      const savedCommunity = {
-        ...inputWithAdminInParticipants,
-        _id: new mongoose.Types.ObjectId(),
-      };
 
-      const saveMock = jest.fn().mockResolvedValueOnce(savedCommunity);
-      jest.spyOn(CommunityModel.prototype, 'save').mockImplementation(saveMock);
+      const mockSave = jest.fn().mockResolvedValue(mockCommunity);
+      (CommunityModel as unknown as jest.Mock).mockImplementation(() => ({
+        save: mockSave,
+      }));
 
-      const result = await createCommunity(inputWithAdminInParticipants);
+      await createCommunity(inputWithAdmin);
 
-      expect(result).toEqual(savedCommunity);
-      expect(saveMock).toHaveBeenCalled();
+      expect(CommunityModel).toHaveBeenCalledWith(
+        expect.objectContaining({
+          participants: ['admin'],
+        }),
+      );
     });
 
-    test('should set default visibility to PUBLIC if not provided', async () => {
-      const inputWithoutVisibility = {
-        ...mockCommunityInput,
-        visibility: undefined as unknown as string,
-      };
+    test('should default visibility to PUBLIC if not provided', async () => {
+      const inputNoVis: Partial<Community> = { ...input, visibility: undefined };
 
-      const savedCommunity = {
-        ...inputWithoutVisibility,
-        _id: new mongoose.Types.ObjectId(),
-        visibility: 'PUBLIC',
-        participants: ['user1', 'new_admin'],
-      };
+      const mockSave = jest.fn().mockResolvedValue(mockCommunity);
+      (CommunityModel as unknown as jest.Mock).mockImplementation(() => ({
+        save: mockSave,
+      }));
 
-      const saveMock = jest.fn().mockResolvedValueOnce(savedCommunity);
-      jest.spyOn(CommunityModel.prototype, 'save').mockImplementation(saveMock);
+      await createCommunity(inputNoVis as Community);
 
-      const result = await createCommunity(inputWithoutVisibility);
-
-      expect(result).toEqual(savedCommunity);
-    });
-
-    test('should return error when save fails', async () => {
-      const saveMock = jest.fn().mockRejectedValueOnce(new Error('Save failed'));
-      jest.spyOn(CommunityModel.prototype, 'save').mockImplementation(saveMock);
-
-      const result = await createCommunity(mockCommunityInput);
-
-      expect(result).toEqual({ error: 'Save failed' });
+      expect(CommunityModel).toHaveBeenCalledWith(
+        expect.objectContaining({
+          visibility: 'PUBLIC',
+        }),
+      );
     });
   });
 
   describe('deleteCommunity', () => {
-    test('should delete community when user is admin', async () => {
-      // Verify admin status before deletion
-      jest.spyOn(CommunityModel, 'findById').mockResolvedValueOnce(mockCommunity);
-      jest.spyOn(CommunityModel, 'findByIdAndDelete').mockResolvedValueOnce(mockCommunity);
+    test('should throw error if community not found', async () => {
+      (CommunityModel.findById as jest.Mock).mockResolvedValue(null);
 
-      const result = await deleteCommunity('65e9b58910afe6e94fc6e6dc', 'admin_user');
-
+      const result = await deleteCommunity(mockCommunityId, 'admin_user');
+      expect('error' in result).toBe(true);
+    });
+    test('should delete if admin', async () => {
+      (CommunityModel.findById as jest.Mock).mockResolvedValue(mockCommunity);
+      (CommunityModel.findByIdAndDelete as jest.Mock).mockResolvedValue(mockCommunity);
+      const result = await deleteCommunity(mockCommunityId, 'admin_user');
       expect(result).toEqual(mockCommunity);
-      expect(CommunityModel.findByIdAndDelete).toHaveBeenCalledWith('65e9b58910afe6e94fc6e6dc');
     });
 
-    test('should return error when user is not admin', async () => {
-      jest.spyOn(CommunityModel, 'findById').mockResolvedValueOnce(mockCommunity);
-
-      const result = await deleteCommunity('65e9b58910afe6e94fc6e6dc', 'user1');
-
-      expect(result).toEqual({
-        error: 'Unauthorized: Only the community admin can delete this community',
-      });
-      expect(CommunityModel.findByIdAndDelete).not.toHaveBeenCalled();
+    test('should error if not admin', async () => {
+      (CommunityModel.findById as jest.Mock).mockResolvedValue(mockCommunity);
+      const result = await deleteCommunity(mockCommunityId, 'user1');
+      expect(result).toEqual({ error: expect.stringContaining('Unauthorized') });
     });
 
-    test('should return error when community not found during check', async () => {
-      jest.spyOn(CommunityModel, 'findById').mockResolvedValueOnce(null);
-
-      const result = await deleteCommunity('65e9b58910afe6e94fc6e6dc', 'admin_user');
-
-      expect(result).toEqual({ error: 'Community not found' });
+    test('should error if delete returns null', async () => {
+      (CommunityModel.findById as jest.Mock).mockResolvedValue(mockCommunity);
+      (CommunityModel.findByIdAndDelete as jest.Mock).mockResolvedValue(null);
+      const result = await deleteCommunity(mockCommunityId, 'admin_user');
+      expect(result).toEqual({ error: expect.stringContaining('already deleted') });
     });
 
-    test('should return error when deletion fails', async () => {
-      jest.spyOn(CommunityModel, 'findById').mockResolvedValueOnce(mockCommunity);
-      jest.spyOn(CommunityModel, 'findByIdAndDelete').mockResolvedValueOnce(null);
-
-      const result = await deleteCommunity('65e9b58910afe6e94fc6e6dc', 'admin_user');
-
-      expect(result).toEqual({ error: 'Community not found or already deleted' });
-    });
-
-    test('should return error when database throws error', async () => {
-      jest.spyOn(CommunityModel, 'findById').mockRejectedValueOnce(new Error('Database error'));
-
-      const result = await deleteCommunity('65e9b58910afe6e94fc6e6dc', 'admin_user');
-
-      expect(result).toEqual({ error: 'Database error' });
+    test('should handle exceptions', async () => {
+      (CommunityModel.findById as jest.Mock).mockRejectedValue(new Error('Err'));
+      const result = await deleteCommunity(mockCommunityId, 'admin_user');
+      expect(result).toEqual({ error: 'Err' });
     });
   });
 
-  describe('Muting user', () => {
-    test('Mute successfully if users role is admin', async () => {
-      const updatedCommunity = { ...mockCommunity, muted: ['user1'] };
+  describe('toggleBanUser', () => {
+    test('should throw error if community not found', async () => {
+      (CommunityModel.findById as jest.Mock).mockResolvedValue(null);
 
-      jest.spyOn(CommunityModel, 'findById').mockResolvedValueOnce(mockCommunity);
-      jest.spyOn(CommunityModel, 'findByIdAndUpdate').mockResolvedValue(updatedCommunity);
+      const result = await toggleBanUser(mockCommunityId, 'user1', 'user2', mockSocket);
+      expect('error' in result).toBe(true);
+    });
+    test('should error if user is only participant (not mod/admin)', async () => {
+      (CommunityModel.findById as jest.Mock).mockResolvedValue(mockCommunity);
 
-      const result = await toggleMuteCommunityUser(
-        '65e9b58910afe6e94fc6e6dc',
-        'admin_user',
-        'user1',
+      const result = await toggleBanUser(mockCommunityId, 'user1', 'user2', mockSocket);
+      expect(result).toEqual({ error: 'Unauthorized: User does not have permission to ban' });
+    });
+
+    test('should error if target is admin', async () => {
+      (CommunityModel.findById as jest.Mock).mockResolvedValue(mockCommunity);
+      const result = await toggleBanUser(mockCommunityId, 'mod_user', 'admin_user', mockSocket);
+      expect(result).toEqual({ error: expect.stringContaining('admins cannot be banned') });
+    });
+
+    test('should error if moderator tries to ban another moderator', async () => {
+      (CommunityModel.findById as jest.Mock).mockResolvedValue(mockCommunity);
+      const result = await toggleBanUser(mockCommunityId, 'mod_user', 'mod_user', mockSocket);
+      expect(result).toEqual({ error: 'Moderators cannot ban other moderators' });
+    });
+
+    test('should ban user, notify, and emit socket if not banned', async () => {
+      const comm = { ...mockCommunity, banned: [] };
+      const updatedComm = { ...mockCommunity, banned: ['user1'] };
+
+      (CommunityModel.findById as jest.Mock).mockResolvedValue(comm);
+      (CommunityModel.findByIdAndUpdate as jest.Mock).mockResolvedValue(updatedComm);
+      (sendNotification as jest.Mock).mockResolvedValue({ _id: 'n1' });
+      (userSocketMap.get as unknown as jest.Mock).mockReturnValue('s1');
+
+      const result = await toggleBanUser(mockCommunityId, 'admin_user', 'user1', mockSocket);
+
+      expect(CommunityModel.findByIdAndUpdate).toHaveBeenCalledWith(
+        mockCommunityId,
+        {
+          $addToSet: { banned: 'user1' },
+          $pull: { participants: 'user1', moderators: 'user1' },
+        },
+        { new: true },
+      );
+      expect(sendNotification).toHaveBeenCalled();
+      expect(mockSocket.to).toHaveBeenCalledWith('s1');
+      expect(result).toEqual(updatedComm);
+    });
+
+    test('should unban user (no notification) if already banned', async () => {
+      const comm = { ...mockCommunity, banned: ['user1'] };
+      const updatedComm = { ...mockCommunity, banned: [] };
+
+      (CommunityModel.findById as jest.Mock).mockResolvedValue(comm);
+      (CommunityModel.findByIdAndUpdate as jest.Mock).mockResolvedValue(updatedComm);
+
+      const result = await toggleBanUser(mockCommunityId, 'admin_user', 'user1', mockSocket);
+
+      expect(CommunityModel.findByIdAndUpdate).toHaveBeenCalledWith(
+        mockCommunityId,
+        { $pull: { banned: 'user1' } },
+        { new: true },
+      );
+      expect(sendNotification).not.toHaveBeenCalled();
+      expect(result).toEqual(updatedComm);
+    });
+
+    test('should initialize banned array if undefined', async () => {
+      const commNoBanned = { ...mockCommunity, banned: undefined };
+      (CommunityModel.findById as jest.Mock).mockResolvedValue(commNoBanned);
+      (CommunityModel.findByIdAndUpdate as jest.Mock).mockResolvedValue(mockCommunity);
+
+      await toggleBanUser(mockCommunityId, 'admin_user', 'user1', mockSocket);
+
+      expect(CommunityModel.findByIdAndUpdate).toHaveBeenCalled();
+    });
+    test('should return error if update returns null', async () => {
+      (CommunityModel.findById as jest.Mock).mockResolvedValue(mockCommunity);
+      (CommunityModel.findByIdAndUpdate as jest.Mock).mockResolvedValue(null);
+
+      const result = await toggleBanUser(mockCommunityId, 'admin_user', 'user1', mockSocket);
+      expect(result).toEqual({ error: 'Failed to update community document' });
+    });
+
+    test('should not emit socket if notification fails', async () => {
+      const comm = { ...mockCommunity, banned: [] };
+      const updatedComm = { ...mockCommunity, banned: ['user1'] };
+      (CommunityModel.findById as jest.Mock).mockResolvedValue(comm);
+      (CommunityModel.findByIdAndUpdate as jest.Mock).mockResolvedValue(updatedComm);
+
+      (sendNotification as jest.Mock).mockResolvedValue({ error: 'Mail down' });
+
+      await toggleBanUser(mockCommunityId, 'admin_user', 'user1', mockSocket);
+
+      expect(sendNotification).toHaveBeenCalled();
+      expect(mockSocket.to).not.toHaveBeenCalled();
+    });
+
+    test('should not emit socket if user is offline (socketId undefined)', async () => {
+      const comm = { ...mockCommunity, banned: [] };
+      const updatedComm = { ...mockCommunity, banned: ['user1'] };
+      (CommunityModel.findById as jest.Mock).mockResolvedValue(comm);
+      (CommunityModel.findByIdAndUpdate as jest.Mock).mockResolvedValue(updatedComm);
+      (sendNotification as jest.Mock).mockResolvedValue({ _id: 'n1' });
+
+      (userSocketMap.get as unknown as jest.Mock).mockReturnValue(undefined);
+
+      await toggleBanUser(mockCommunityId, 'admin_user', 'user1', mockSocket);
+
+      expect(mockSocket.to).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('toggleModerator', () => {
+    test('should error if community not found', async () => {
+      (CommunityModel.findById as jest.Mock).mockResolvedValue(null);
+      const result = await toggleModerator(mockCommunityId, 'mod_user', 'user1');
+      expect(result).toEqual({ error: expect.stringContaining('Community not found') });
+    });
+    test('should return error if update returns null', async () => {
+      (CommunityModel.findById as jest.Mock).mockResolvedValue(mockCommunity);
+      (CommunityModel.findByIdAndUpdate as jest.Mock).mockResolvedValue(null);
+
+      const result = await toggleModerator(mockCommunityId, 'admin_user', 'user1');
+      expect(result).toEqual({ error: 'Failed to update community document' });
+    });
+    test('should error if not admin', async () => {
+      (CommunityModel.findById as jest.Mock).mockResolvedValue(mockCommunity);
+      const result = await toggleModerator(mockCommunityId, 'mod_user', 'user1');
+      expect(result).toEqual({ error: expect.stringContaining('Only the admin') });
+    });
+
+    test('should error if target not member', async () => {
+      (CommunityModel.findById as jest.Mock).mockResolvedValue(mockCommunity);
+      const result = await toggleModerator(mockCommunityId, 'admin_user', 'outsider');
+      expect(result).toEqual({ error: 'User is not a member of the community' });
+    });
+
+    test('should add moderator', async () => {
+      (CommunityModel.findById as jest.Mock).mockResolvedValue(mockCommunity);
+      (CommunityModel.findByIdAndUpdate as jest.Mock).mockResolvedValue(mockCommunity);
+
+      await toggleModerator(mockCommunityId, 'admin_user', 'user1');
+
+      expect(CommunityModel.findByIdAndUpdate).toHaveBeenCalledWith(
+        mockCommunityId,
+        { $addToSet: { moderators: 'user1' } },
+        { new: true },
+      );
+    });
+
+    test('should remove moderator', async () => {
+      (CommunityModel.findById as jest.Mock).mockResolvedValue(mockCommunity);
+      (CommunityModel.findByIdAndUpdate as jest.Mock).mockResolvedValue(mockCommunity);
+
+      await toggleModerator(mockCommunityId, 'admin_user', 'mod_user');
+
+      expect(CommunityModel.findByIdAndUpdate).toHaveBeenCalledWith(
+        mockCommunityId,
+        { $pull: { moderators: 'mod_user' } },
+        { new: true },
+      );
+    });
+  });
+
+  describe('getCommunityRole', () => {
+    test('should return admin', async () => {
+      (CommunityModel.findById as jest.Mock).mockResolvedValue(mockCommunity);
+      const result = await getCommunityRole(mockCommunityId, 'admin_user');
+      expect(result).toBe('admin');
+    });
+
+    test('should return moderator', async () => {
+      (CommunityModel.findById as jest.Mock).mockResolvedValue(mockCommunity);
+      const result = await getCommunityRole(mockCommunityId, 'mod_user');
+      expect(result).toBe('moderator');
+    });
+
+    test('should return participant', async () => {
+      (CommunityModel.findById as jest.Mock).mockResolvedValue(mockCommunity);
+      const result = await getCommunityRole(mockCommunityId, 'user1');
+      expect(result).toBe('participant');
+    });
+
+    test('should error if user not member', async () => {
+      (CommunityModel.findById as jest.Mock).mockResolvedValue(mockCommunity);
+      const result = await getCommunityRole(mockCommunityId, 'outsider');
+      expect(result).toEqual({ error: 'User is not a member of this community.' });
+    });
+    test('should return error if community not found', async () => {
+      (CommunityModel.findById as jest.Mock).mockResolvedValue(null);
+      const result = await getCommunityRole(mockCommunityId, 'admin_user');
+      expect(result).toEqual({ error: 'Community not found' });
+    });
+  });
+
+  describe('sendCommunityAnnouncement', () => {
+    const announcement = { title: 'T', msg: 'M', sender: 'admin_user' } as any;
+
+    test('should succeed for admin', async () => {
+      (CommunityModel.findById as jest.Mock).mockResolvedValue(mockCommunity);
+      (saveNotification as jest.Mock).mockResolvedValue({ _id: 'n1' });
+      (addNotificationToUsers as jest.Mock).mockResolvedValue({});
+
+      const result = await sendCommunityAnnouncement(mockCommunityId, 'admin_user', announcement);
+
+      expect(mockSession.commitTransaction).toHaveBeenCalled();
+      expect(result).toEqual({ _id: 'n1' });
+    });
+
+    test('should error if unauthorized', async () => {
+      (CommunityModel.findById as jest.Mock).mockResolvedValue(mockCommunity);
+      const result = await sendCommunityAnnouncement(mockCommunityId, 'user1', announcement);
+
+      expect(mockSession.abortTransaction).toHaveBeenCalled();
+      expect(result).toEqual({ error: expect.stringContaining('Unauthorized') });
+    });
+
+    test('should abort if saveNotification fails', async () => {
+      (CommunityModel.findById as jest.Mock).mockResolvedValue(mockCommunity);
+      (saveNotification as jest.Mock).mockResolvedValue({ error: 'Save Error' });
+
+      const result = await sendCommunityAnnouncement(mockCommunityId, 'admin_user', announcement);
+      expect(mockSession.abortTransaction).toHaveBeenCalled();
+      expect(result).toEqual({ error: 'Save Error' });
+    });
+    test('should return error if community lookup fails', async () => {
+      (CommunityModel.findById as jest.Mock).mockResolvedValue(null);
+
+      const result = await sendCommunityAnnouncement(mockCommunityId, 'admin_user', {} as any);
+
+      expect(result).toEqual({ error: 'Community not found' });
+      expect(mockSession.abortTransaction).toHaveBeenCalled();
+    });
+
+    test('should abort if addNotificationToUsers fails', async () => {
+      (CommunityModel.findById as jest.Mock).mockResolvedValue(mockCommunity);
+      (saveNotification as jest.Mock).mockResolvedValue({ _id: 'n1' });
+
+      (addNotificationToUsers as jest.Mock).mockResolvedValue({ error: 'Partial fail' });
+
+      const result = await sendCommunityAnnouncement(mockCommunityId, 'admin_user', {} as any);
+
+      expect(mockSession.abortTransaction).toHaveBeenCalled();
+      expect(result).toEqual({ error: 'Partial fail' });
+    });
+  });
+
+  describe('sendNotificationUpdates', () => {
+    test('should emit to filtered users', async () => {
+      (CommunityModel.findById as jest.Mock).mockResolvedValue(mockCommunity);
+
+      (UserModel.find as jest.Mock).mockResolvedValue([{ username: 'user1' }]);
+      (userSocketMap.get as unknown as jest.Mock).mockReturnValue('s1');
+
+      await sendNotificationUpdates(mockCommunityId, mockSocket, { _id: 'n1' } as any);
+
+      expect(mockSocket.to).toHaveBeenCalledWith('s1');
+      expect(mockSocket.emit).toHaveBeenCalled();
+    });
+    test('should return error if community not found', async () => {
+      (CommunityModel.findById as jest.Mock).mockResolvedValue(null);
+      const result = await sendNotificationUpdates(mockCommunityId, mockSocket, {} as any);
+      expect(result).toEqual({ error: 'Community not found' });
+    });
+
+    test('should return error on exception', async () => {
+      (CommunityModel.findById as jest.Mock).mockRejectedValue(new Error('Crash'));
+      const result = await sendNotificationUpdates(mockCommunityId, mockSocket, {} as any);
+      expect(result).toEqual({ error: 'Crash' });
+    });
+
+    test('should skip users without socket connections', async () => {
+      (CommunityModel.findById as jest.Mock).mockResolvedValue(mockCommunity);
+
+      (UserModel.find as jest.Mock).mockResolvedValue([
+        { username: 'user1' },
+        { username: 'user2' },
+      ]);
+
+      (userSocketMap.get as unknown as jest.Mock).mockImplementation(u =>
+        u === 'user1' ? 's1' : undefined,
       );
 
-      expect(result).toBe(updatedCommunity);
+      await sendNotificationUpdates(mockCommunityId, mockSocket, { _id: 'n1' } as any);
+
+      expect(mockSocket.to).toHaveBeenCalledTimes(1);
+      expect(mockSocket.to).toHaveBeenCalledWith('s1');
     });
-    test('Mute successfully if users role is moderator', async () => {
-      const newMockCommunity = { ...mockCommunity, moderators: ['user2'] };
-      const updatedCommunity = { ...newMockCommunity, muted: ['user123'] };
+  });
 
-      jest.spyOn(CommunityModel, 'findById').mockResolvedValueOnce(newMockCommunity);
-      jest.spyOn(CommunityModel, 'findByIdAndUpdate').mockResolvedValue(updatedCommunity);
-
-      const result = await toggleMuteCommunityUser('65e9b58910afe6e94fc6e6dc', 'user2', 'user1');
-
-      expect(result).toBe(updatedCommunity);
-    });
-
-    test('Mute fails if community does not exist', async () => {
-      jest.spyOn(CommunityModel, 'findById').mockResolvedValueOnce(null);
-
-      const result = await toggleMuteCommunityUser('65e9b58910afe6e94fc6e6dc', 'user2', 'user1');
-
-      expect('error' in result).toBe(true);
-    });
-
-    test('Mute fails if user does not have permissions', async () => {
-      jest.spyOn(CommunityModel, 'findById').mockResolvedValueOnce(mockCommunity);
-
-      const result = await toggleMuteCommunityUser('65e9b58910afe6e94fc6e6dc', 'user2', 'user1');
-
-      expect('error' in result).toBe(true);
-    });
-
-    test('Mute fails if update is unsuccessful', async () => {
-      jest.spyOn(CommunityModel, 'findById').mockResolvedValueOnce(mockCommunity);
-      jest.spyOn(CommunityModel, 'findByIdAndUpdate').mockResolvedValue(null);
-
+  describe('toggleMuteCommunityUser', () => {
+    test('should error if community not found', async () => {
+      (CommunityModel.findById as jest.Mock).mockResolvedValue(null);
       const result = await toggleMuteCommunityUser(
-        '65e9b58910afe6e94fc6e6dc',
+        mockCommunityId,
         'admin_user',
         'user1',
+        mockSocket,
+      );
+      expect(result).toEqual({ error: expect.stringContaining('Community not found') });
+    });
+    test('should error if community not found', async () => {
+      (CommunityModel.findById as jest.Mock).mockResolvedValue(mockCommunity);
+      const result = await toggleMuteCommunityUser(
+        mockCommunityId,
+        'minion1',
+        'minon2',
+        mockSocket,
+      );
+      expect(result).toEqual({
+        error: expect.stringContaining('Unauthorized: User does not have proper permissions'),
+      });
+    });
+    test('should unmute without notification', async () => {
+      const mutedComm = { ...mockCommunity, muted: ['user1'] };
+      (CommunityModel.findById as jest.Mock).mockResolvedValue(mutedComm);
+      (CommunityModel.findByIdAndUpdate as jest.Mock).mockResolvedValue(mockCommunity);
+
+      await toggleMuteCommunityUser(mockCommunityId, 'admin_user', 'user1', mockSocket);
+
+      expect(sendNotification).not.toHaveBeenCalled();
+      expect(CommunityModel.findByIdAndUpdate).toHaveBeenCalledWith(
+        mockCommunityId,
+        { $pull: { muted: 'user1' } },
+        { new: true },
+      );
+    });
+
+    test('should mute and notify', async () => {
+      (CommunityModel.findById as jest.Mock).mockResolvedValue(mockCommunity);
+      const mutedResult = { ...mockCommunity, muted: ['user1'] };
+      (CommunityModel.findByIdAndUpdate as jest.Mock).mockResolvedValue(mutedResult);
+      (sendNotification as jest.Mock).mockResolvedValue({});
+      (userSocketMap.get as unknown as jest.Mock).mockReturnValue('s1');
+
+      await toggleMuteCommunityUser(mockCommunityId, 'admin_user', 'user1', mockSocket);
+
+      expect(sendNotification).toHaveBeenCalled();
+      expect(mockSocket.emit).toHaveBeenCalled();
+    });
+
+    test('should fail if update returns null', async () => {
+      (CommunityModel.findById as jest.Mock).mockResolvedValue(mockCommunity);
+      (CommunityModel.findByIdAndUpdate as jest.Mock).mockResolvedValue(null);
+      const result = await toggleMuteCommunityUser(
+        mockCommunityId,
+        'admin_user',
+        'user1',
+        mockSocket,
+      );
+      expect(result).toEqual({ error: expect.stringContaining('Count not update') });
+    });
+  });
+
+  describe('isAllowedToPostInCommunity', () => {
+    test('should allow if no communityId', async () => {
+      const result = await isAllowedToPostInCommunity('', 'user1');
+      expect(result).toBe(true);
+    });
+
+    test('should allow if findOne returns document', async () => {
+      (CommunityModel.findOne as jest.Mock).mockResolvedValue(mockCommunity);
+      const result = await isAllowedToPostInCommunity(mockCommunityId, 'user1');
+      expect(result).toBe(true);
+    });
+
+    test('should deny if findOne returns null', async () => {
+      (CommunityModel.findOne as jest.Mock).mockResolvedValue(null);
+      const result = await isAllowedToPostInCommunity(mockCommunityId, 'user1');
+      expect(result).toBe(false);
+    });
+
+    test('should deny on error', async () => {
+      (CommunityModel.findOne as jest.Mock).mockRejectedValue(new Error('Err'));
+      const result = await isAllowedToPostInCommunity(mockCommunityId, 'user1');
+      expect(result).toBe(false);
+    });
+  });
+
+  describe('addAppealToCommunity', () => {
+    const appeal = { _id: 'a1', community: mockCommunityId, username: 'banned_user' } as any;
+
+    test('should add appeal and notify admins/mods', async () => {
+      (CommunityModel.findOneAndUpdate as jest.Mock).mockReturnValue({
+        session: jest.fn().mockResolvedValue(mockCommunity),
+      });
+      (saveNotification as jest.Mock).mockResolvedValue({ _id: 'n1' });
+
+      const result = await addAppealToCommunity(appeal, mockSession, mockSocket);
+
+      expect(addNotificationToUsers).toHaveBeenCalled();
+      expect(result).toEqual(mockCommunity);
+    });
+
+    test('should error if update fails', async () => {
+      (CommunityModel.findOneAndUpdate as jest.Mock).mockReturnValue({
+        session: jest.fn().mockResolvedValue(null),
+      });
+
+      const result = await addAppealToCommunity(appeal, mockSession, mockSocket);
+      expect(result).toEqual({ error: 'Failed to add appeal to community' });
+    });
+    test('should error if saveNotification fails', async () => {
+      (CommunityModel.findOneAndUpdate as jest.Mock).mockReturnValue({
+        session: jest.fn().mockResolvedValue(mockCommunity),
+      });
+      (saveNotification as jest.Mock).mockResolvedValue({ error: 'Save Fail' });
+
+      const result = await addAppealToCommunity(
+        { _id: 'a1', community: mockCommunityId, username: 'u1' } as any,
+        mockSession,
+        mockSocket,
+      );
+      expect(result).toEqual({ error: 'Save Fail' });
+    });
+
+    test('should handle exceptions', async () => {
+      (CommunityModel.findOneAndUpdate as jest.Mock).mockReturnValue({
+        session: jest.fn().mockRejectedValue(new Error('DB Fail')),
+      });
+      const result = await addAppealToCommunity(
+        { _id: 'a1', community: mockCommunityId } as any,
+        mockSession,
+        mockSocket,
+      );
+      expect(result).toEqual({ error: 'DB Fail' });
+    });
+
+    test('should skip socket emit if user offline', async () => {
+      (CommunityModel.findOneAndUpdate as jest.Mock).mockReturnValue({
+        session: jest.fn().mockResolvedValue(mockCommunity),
+      });
+      (saveNotification as jest.Mock).mockResolvedValue({});
+      (addNotificationToUsers as jest.Mock).mockResolvedValue({});
+      (userSocketMap.get as unknown as jest.Mock).mockReturnValue(undefined);
+
+      await addAppealToCommunity(
+        { _id: 'a1', community: mockCommunityId, username: 'u1' } as any,
+        mockSession,
+        mockSocket,
+      );
+      expect(mockSocket.to).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('respondToAppeal', () => {
+    const appeal = { _id: 'a1', community: mockCommunityId, username: 'user1' } as any;
+
+    test('should error if unauthorized', async () => {
+      (CommunityModel.findById as jest.Mock).mockResolvedValue(mockCommunity);
+      const result = await respondToAppeal(mockCommunityId, 'a1', 'approve', 'user1', mockSocket);
+      expect(result).toEqual({ error: expect.stringContaining('Unauthorized') });
+    });
+
+    test('should error if appeal not found', async () => {
+      (CommunityModel.findById as jest.Mock).mockResolvedValue(mockCommunity);
+      (AppealModel.findOneAndDelete as jest.Mock).mockResolvedValue(null);
+
+      const result = await respondToAppeal(
+        mockCommunityId,
+        'a1',
+        'approve',
+        'admin_user',
+        mockSocket,
+      );
+      expect(result).toEqual({ error: expect.stringContaining('Appeal not found') });
+    });
+
+    test('should APPROVE: remove appeal, ban, mute, and notify', async () => {
+      (CommunityModel.findById as jest.Mock).mockResolvedValue(mockCommunity);
+      (AppealModel.findOneAndDelete as jest.Mock).mockResolvedValue(appeal);
+      (CommunityModel.findByIdAndUpdate as jest.Mock).mockResolvedValue(mockCommunity);
+      (sendNotification as jest.Mock).mockResolvedValue({});
+      (userSocketMap.get as unknown as jest.Mock).mockReturnValue('s1');
+
+      await respondToAppeal(mockCommunityId, 'a1', 'approve', 'admin_user', mockSocket);
+
+      expect(CommunityModel.findByIdAndUpdate).toHaveBeenCalledWith(
+        mockCommunityId,
+        { $pull: { appeals: 'a1', banned: 'user1', muted: 'user1' } },
+        { new: true },
       );
 
-      expect('error' in result).toBe(true);
+      expect(sendNotification).toHaveBeenCalled();
+      expect(mockSocket.emit).toHaveBeenCalled();
+    });
+
+    test('should DENY: remove appeal only', async () => {
+      (CommunityModel.findById as jest.Mock).mockResolvedValue(mockCommunity);
+      (AppealModel.findOneAndDelete as jest.Mock).mockResolvedValue(appeal);
+      (CommunityModel.findByIdAndUpdate as jest.Mock).mockResolvedValue(mockCommunity);
+
+      await respondToAppeal(mockCommunityId, 'a1', 'deny', 'admin_user', mockSocket);
+
+      expect(CommunityModel.findByIdAndUpdate).toHaveBeenCalledWith(
+        mockCommunityId,
+        { $pull: { appeals: 'a1' } },
+        { new: true },
+      );
+    });
+
+    test('should return error if community not found', async () => {
+      (CommunityModel.findById as jest.Mock).mockResolvedValue(null);
+      const result = await respondToAppeal(mockCommunityId, 'a1', 'approve', 'admin', mockSocket);
+      expect(result).toEqual({ error: 'Community not found' });
+    });
+
+    test('should return error if update returns null', async () => {
+      (CommunityModel.findById as jest.Mock).mockResolvedValue(mockCommunity);
+      (AppealModel.findOneAndDelete as jest.Mock).mockResolvedValue({ _id: 'a1', username: 'u1' });
+      (CommunityModel.findByIdAndUpdate as jest.Mock).mockResolvedValue(null);
+
+      const result = await respondToAppeal(
+        mockCommunityId,
+        'a1',
+        'approve',
+        'admin_user',
+        mockSocket,
+      );
+      expect(result).toEqual({ error: 'Failed to update community' });
+    });
+
+    test('should not emit socket if notification fails', async () => {
+      (CommunityModel.findById as jest.Mock).mockResolvedValue(mockCommunity);
+      (AppealModel.findOneAndDelete as jest.Mock).mockResolvedValue({ _id: 'a1', username: 'u1' });
+      (CommunityModel.findByIdAndUpdate as jest.Mock).mockResolvedValue(mockCommunity);
+      (sendNotification as jest.Mock).mockResolvedValue({ error: 'Fail' });
+
+      await respondToAppeal(mockCommunityId, 'a1', 'approve', 'admin_user', mockSocket);
+      expect(mockSocket.to).not.toHaveBeenCalled();
+    });
+
+    test('should not emit socket if user offline', async () => {
+      (CommunityModel.findById as jest.Mock).mockResolvedValue(mockCommunity);
+      (AppealModel.findOneAndDelete as jest.Mock).mockResolvedValue({ _id: 'a1', username: 'u1' });
+      (CommunityModel.findByIdAndUpdate as jest.Mock).mockResolvedValue(mockCommunity);
+      (sendNotification as jest.Mock).mockResolvedValue({});
+      (userSocketMap.get as unknown as jest.Mock).mockReturnValue(undefined);
+
+      await respondToAppeal(mockCommunityId, 'a1', 'approve', 'admin_user', mockSocket);
+      expect(mockSocket.to).not.toHaveBeenCalled();
     });
   });
 });

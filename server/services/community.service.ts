@@ -8,13 +8,15 @@ import {
   Community,
   CommunityResponse,
   CommunityRole,
+  DatabaseAppeal,
   DatabaseCommunity,
   FakeSOSocket,
 } from '../types/types';
-import mongoose from 'mongoose';
-import { addNotificationToUsers, saveNotification } from './notification.service';
+import mongoose, { ClientSession } from 'mongoose';
+import { addNotificationToUsers, saveNotification, sendNotification } from './notification.service';
 import UserModel from '../models/users.model';
 import userSocketMap from '../utils/socketMap.util';
+import AppealModel from '../models/appeal.model';
 
 /**
  * Retrieves a community by its ID with premium member counts.
@@ -102,7 +104,6 @@ export const toggleCommunityMembership = async (
       return { error: 'Community not found' };
     }
 
-    // Check if user is the admin and trying to leave
     if (community.admin === username && community.participants.includes(username)) {
       return {
         error:
@@ -110,20 +111,17 @@ export const toggleCommunityMembership = async (
       };
     }
 
-    // Check if user is already a participant
     const isParticipant = community.participants.includes(username);
 
     let updatedCommunity: DatabaseCommunity | null;
 
     if (isParticipant) {
-      // User is already a participant, so remove them
       updatedCommunity = await CommunityModel.findByIdAndUpdate(
         communityId,
         { $pull: { participants: username } },
         { new: true },
       );
     } else {
-      // User is not a participant, so add them
       updatedCommunity = await CommunityModel.findByIdAndUpdate(
         communityId,
         { $addToSet: { participants: username } },
@@ -150,7 +148,6 @@ export const toggleCommunityMembership = async (
  */
 export const createCommunity = async (communityData: Community): Promise<CommunityResponse> => {
   try {
-    // Ensure admin is included in the participants list
     const newCommunity = new CommunityModel({
       ...communityData,
       admin: communityData.admin,
@@ -180,19 +177,16 @@ export const deleteCommunity = async (
   username: string,
 ): Promise<CommunityResponse> => {
   try {
-    // First get the community to check admin status
     const community = await CommunityModel.findById(communityId);
 
     if (!community) {
       return { error: 'Community not found' };
     }
 
-    // Check if the user is the admin
     if (community.admin !== username) {
       return { error: 'Unauthorized: Only the community admin can delete this community' };
     }
 
-    // If user is admin, proceed with deletion
     const result = await CommunityModel.findByIdAndDelete(communityId);
 
     if (!result) {
@@ -209,6 +203,7 @@ export const toggleBanUser = async (
   communityId: string,
   managerUsername: string,
   username: string,
+  socket: FakeSOSocket,
 ) => {
   try {
     const community = await CommunityModel.findById(communityId);
@@ -223,7 +218,6 @@ export const toggleBanUser = async (
       throw new Error('Unauthorized: User does not have permission to ban');
     }
 
-    // 1. Prevent banning the Community Admin
     if (community.admin === username) {
       return {
         error:
@@ -233,7 +227,6 @@ export const toggleBanUser = async (
 
     const isTargetModerator = community.moderators?.includes(username);
 
-    // 2. Prevent Moderators from banning other Moderators
     if (role === 'moderator' && isTargetModerator) {
       return { error: 'Moderators cannot ban other moderators' };
     }
@@ -244,7 +237,6 @@ export const toggleBanUser = async (
 
     const isBanned = community.banned.includes(username);
 
-    // Optimized logic: Unban removes from 'banned', Ban adds to 'banned' and removes from 'participants'/'moderators'
     const communityUpdateOp = isBanned
       ? { $pull: { banned: username } }
       : {
@@ -260,6 +252,27 @@ export const toggleBanUser = async (
 
     if (!updatedCommunity) {
       return { error: 'Failed to update community document' };
+    }
+
+    if (!isBanned) {
+      const notification: Notification = {
+        title: `Banned from ${updatedCommunity.name}`,
+        msg: `You have been banned from the community ${updatedCommunity.name}.`,
+        dateTime: new Date(),
+        sender: managerUsername,
+        contextId: updatedCommunity._id,
+        type: 'ban',
+      };
+      const savedNotification = await sendNotification([username], notification);
+
+      if (!('error' in savedNotification)) {
+        const socketId = userSocketMap.get(username);
+        if (socketId) {
+          socket.to(socketId).emit('notificationUpdate', {
+            notificationStatus: { notification: savedNotification, read: false },
+          });
+        }
+      }
     }
 
     return updatedCommunity;
@@ -409,13 +422,10 @@ export const sendNotificationUpdates = async (
       .map(rec => userSocketMap.get(rec.username))
       .filter((id): id is string => id !== undefined);
 
-    // 2. Iterate and emit to specific sockets
     socketIds.forEach(socketId => {
-      socket
-        .to(socketId) // Targets the specific client
-        .emit('notificationUpdate', {
-          notificationStatus: { notification, read: false },
-        });
+      socket.to(socketId).emit('notificationUpdate', {
+        notificationStatus: { notification, read: false },
+      });
     });
   } catch (error) {
     return { error: (error as Error).message };
@@ -426,6 +436,7 @@ export const toggleMuteCommunityUser = async (
   communityId: string,
   managerUsername: string,
   username: string,
+  socket: FakeSOSocket,
 ): Promise<CommunityResponse> => {
   try {
     const community = await CommunityModel.findById(communityId);
@@ -451,6 +462,27 @@ export const toggleMuteCommunityUser = async (
 
     if (!updatedCommunity) {
       throw new Error('Count not update muted users');
+    }
+
+    if (!isMuted) {
+      const notification: Notification = {
+        title: `Muted in ${updatedCommunity.name}`,
+        msg: `You have been muted in the community ${updatedCommunity.name}.`,
+        dateTime: new Date(),
+        sender: managerUsername,
+        contextId: updatedCommunity._id,
+        type: 'mute',
+      };
+      const savedNotification = await sendNotification([username], notification);
+
+      if (!('error' in savedNotification)) {
+        const socketId = userSocketMap.get(username);
+        if (socketId) {
+          socket.to(socketId).emit('notificationUpdate', {
+            notificationStatus: { notification: savedNotification, read: false },
+          });
+        }
+      }
     }
 
     return updatedCommunity;
@@ -488,5 +520,135 @@ export const isAllowedToPostInCommunity = async (
     return true;
   } catch {
     return false;
+  }
+};
+
+export const addAppealToCommunity = async (
+  appeal: DatabaseAppeal,
+  session: ClientSession,
+  socket: FakeSOSocket,
+): Promise<CommunityResponse> => {
+  try {
+    const community = await CommunityModel.findOneAndUpdate(
+      { _id: appeal.community.toString() },
+      {
+        $addToSet: { appeals: appeal },
+      },
+      { new: true },
+    ).session(session);
+
+    if (!community) {
+      throw new Error('Failed to add appeal to community');
+    }
+
+    const recipients = [community.admin, ...(community.moderators || [])];
+    const uniqueRecipients = [...new Set(recipients)];
+
+    const notification: Notification = {
+      title: `New Appeal in ${community.name}`,
+      msg: `User ${appeal.username} has submitted an appeal request.`,
+      dateTime: new Date(),
+      sender: appeal.username,
+      contextId: community._id,
+      type: 'appeal',
+    };
+
+    const savedNotification = await saveNotification(notification, session);
+    if ('error' in savedNotification) {
+      throw new Error(savedNotification.error);
+    }
+
+    await addNotificationToUsers(uniqueRecipients, savedNotification, session);
+
+    uniqueRecipients.forEach(recipient => {
+      const socketId = userSocketMap.get(recipient);
+      if (socketId) {
+        socket.to(socketId).emit('notificationUpdate', {
+          notificationStatus: { notification: savedNotification, read: false },
+        });
+      }
+    });
+
+    return community;
+  } catch (error) {
+    return { error: (error as Error).message };
+  }
+};
+
+/**
+ * Resolves a community appeal by either approving or denying it.
+ *
+ * @param communityId - The ID of the community
+ * @param appealId - The ID of the appeal
+ * @param status - The decision ('approve' or 'deny')
+ * @param managerUsername - The username of the moderator/admin performing the action
+ * @param socket - The socket instance for emitting notifications
+ * @returns {Promise<CommunityResponse>} - The updated community or an error
+ */
+export const respondToAppeal = async (
+  communityId: string,
+  appealId: string,
+  status: 'deny' | 'approve',
+  managerUsername: string,
+  socket: FakeSOSocket,
+): Promise<CommunityResponse> => {
+  try {
+    const community = await CommunityModel.findById(communityId);
+    if (!community) {
+      return { error: 'Community not found' };
+    }
+
+    const isMod = community.moderators?.includes(managerUsername);
+    const isAdmin = community.admin === managerUsername;
+    if (!isMod && !isAdmin) {
+      return { error: 'Unauthorized: User does not have proper permissions' };
+    }
+
+    const appeal = await AppealModel.findOneAndDelete({ _id: appealId, community: communityId });
+    if (!appeal) {
+      return { error: 'Appeal not found or does not belong to this community' };
+    }
+
+    const updateOps = { $pull: { appeals: appealId } };
+
+    if (status === 'approve') {
+      (updateOps as { $pull: { appeals: string; banned: string; muted: string } }).$pull = {
+        appeals: appealId,
+        banned: appeal.username,
+        muted: appeal.username,
+      };
+    }
+
+    const updatedCommunity = await CommunityModel.findByIdAndUpdate(communityId, updateOps, {
+      new: true,
+    });
+
+    if (!updatedCommunity) {
+      return { error: 'Failed to update community' };
+    }
+
+    const notification: Notification = {
+      title: `Appeal Decision: ${community.name}`,
+      msg: `Your appeal in ${community.name} has been ${status}.`,
+      dateTime: new Date(),
+      sender: managerUsername,
+      contextId: null,
+      type: 'community',
+    };
+
+    const savedNotification = await sendNotification([appeal.username], notification);
+
+    if (!('error' in savedNotification)) {
+      const socketId = userSocketMap.get(appeal.username);
+      if (socketId) {
+        socket.to(socketId).emit('notificationUpdate', {
+          notificationStatus: { notification: savedNotification, read: false },
+        });
+      }
+    }
+
+    return updatedCommunity;
+  } catch (error) {
+    return { error: (error as Error).message };
   }
 };

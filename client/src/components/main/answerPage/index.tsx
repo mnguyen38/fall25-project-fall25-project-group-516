@@ -8,6 +8,8 @@ import VoteComponent from '../voteComponent';
 import CommentSection from '../commentSection';
 import useAnswerPage from '../../../hooks/useAnswerPage';
 import useUserContext from '../../../hooks/useUserContext';
+import AskQuestionButton from '../askQuestionButton';
+import { useState } from 'react';
 
 /**
  * AnswerPage component that displays the full content of a question along with its answers.
@@ -16,6 +18,7 @@ import useUserContext from '../../../hooks/useUserContext';
 const AnswerPage = () => {
   const { questionID, question, handleNewComment, handleNewAnswer } = useAnswerPage();
   const { user } = useUserContext();
+  const [showQuestionComments, setShowQuestionComments] = useState(false);
 
   if (!question) {
     return null;
@@ -29,18 +32,37 @@ const AnswerPage = () => {
 
   return (
     <>
-      <VoteComponent question={question} />
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '16px' }}>
+        <AskQuestionButton />
+      </div>
       <AnswerHeader ansCount={filteredAnswers.length} title={question.title} />
       <QuestionBody
+        ansCount={filteredAnswers.length}
         views={question.views.length}
         text={question.text}
         askby={question.isAnonymous ? 'Anonymous' : question.askedBy}
         meta={getMetaData(new Date(question.askDateTime))}
       />
+      <VoteComponent
+        question={question}
+        commentCount={question.comments.length}
+        onToggleComments={() => setShowQuestionComments(!showQuestionComments)}
+        showComments={showQuestionComments}
+      />
       <CommentSection
         comments={question.comments}
         handleAddComment={(comment: Comment) => handleNewComment(comment, 'question', questionID)}
+        externalShowComments={showQuestionComments}
+        onToggleComments={setShowQuestionComments}
       />
+      <button
+        className='bluebtn ansButton'
+        onClick={() => {
+          handleNewAnswer();
+        }}
+        style={{ marginTop: '16px', marginBottom: '24px' }}>
+        Answer Question
+      </button>
       {filteredAnswers.map(a => (
         <AnswerView
           key={String(a._id)}
@@ -53,13 +75,6 @@ const AnswerPage = () => {
           }
         />
       ))}
-      <button
-        className='bluebtn ansButton'
-        onClick={() => {
-          handleNewAnswer();
-        }}>
-        Answer Question
-      </button>
     </>
   );
 };

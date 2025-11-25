@@ -7,8 +7,14 @@
   background: var(--pancake-white);
 }
 
-.answer_question_view {
+.answer_question_stats {
+  display: flex;
+  flex-direction: column;
   width: 15%;
+  gap: 8px;
+}
+
+.answer_question_view {
   color: var(--pancake-text-medium);
   font-size: 13px;
   font-weight: 600;

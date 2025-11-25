@@ -53,6 +53,10 @@ const communitySchema = new Schema(
       required: true,
       default: [],
     },
+    appeals: {
+      type: [{ type: Schema.Types.ObjectId, ref: 'Appeal' }],
+      default: [],
+    },
   },
   {
     collection: 'Community',

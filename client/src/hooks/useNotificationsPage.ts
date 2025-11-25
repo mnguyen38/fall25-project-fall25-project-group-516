@@ -20,7 +20,6 @@ const useNotificationsPage = () => {
   const { user, socket } = useUserContext();
   const navigate = useNavigate();
 
-  // Initialize with empty, we will sync in the Effect below
   const [notificationsList, setNotificationsList] = useState<PopulatedUserNotificationStatus[]>([]);
   const [isTabOpen, setisTabOpen] = useState<boolean>(false);
   const [userData, setUserData] = useState<PopulatedSafeDatabaseUser | null>(null);
@@ -36,7 +35,6 @@ const useNotificationsPage = () => {
     });
   };
 
-  // ... [Keep existing handlers: handleToggleCommunityNotifs, etc.] ...
   const handleToggleCommunityNotifs = async (): Promise<void> => {
     try {
       if (!user.username) return;
@@ -64,8 +62,12 @@ const useNotificationsPage = () => {
         navigate(`/question/${notif.contextId}`);
         break;
       case 'report':
-      case 'unban':
-        navigate(`/manage/${notif.contextId}`);
+      case 'appeal':
+        navigate(`/communities/manage/${notif.contextId}`);
+        break;
+      case 'ban':
+      case 'mute':
+        navigate(`/communities/appeals/${notif.contextId}`);
         break;
       case 'message':
         navigate(`/messaging/direct-message`);
@@ -91,7 +93,7 @@ const useNotificationsPage = () => {
           setNotificationsList(sortNotifications(freshUser.notifications));
         }
       } catch (e) {
-        // nothing
+        // nothing happens
       }
     };
 

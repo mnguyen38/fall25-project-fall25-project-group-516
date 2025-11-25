@@ -7,6 +7,11 @@ import {
   DeleteCommunityRequest,
   ToggleRequest,
   CommunityAnnouncementRequest,
+  AppealRequest,
+  Appeal,
+  CommunityDashboardRequest,
+  DatabaseAppeal,
+  AppealUpdateRequest,
 } from '../types/types';
 import {
   getCommunity,
@@ -19,7 +24,13 @@ import {
   sendCommunityAnnouncement,
   sendNotificationUpdates,
   toggleMuteCommunityUser,
+  addAppealToCommunity,
+  respondToAppeal,
 } from '../services/community.service';
+import saveAppeal from '../services/appeal.service';
+import mongoose from 'mongoose';
+import CommunityModel from '../models/community.model';
+import AppealModel from '../models/appeal.model';
 
 /**
  * This controller handles community-related routes.
@@ -94,6 +105,11 @@ const communityController = (socket: FakeSOSocket) => {
     res: Response,
   ): Promise<void> => {
     const { communityId, username } = req.body;
+
+    if (!communityId || !username) {
+      res.status(400).json({ error: 'Missing communityId or username' });
+      return;
+    }
 
     try {
       const result = await toggleCommunityMembership(communityId, username);
@@ -203,7 +219,7 @@ const communityController = (socket: FakeSOSocket) => {
     const { communityId, managerUsername, username } = req.body;
 
     try {
-      const result = await toggleBanUser(communityId, managerUsername, username);
+      const result = await toggleBanUser(communityId, managerUsername, username, socket);
 
       if ('error' in result) {
         if (result.error.includes('admins or moderators cannot be banned')) {
@@ -292,7 +308,12 @@ const communityController = (socket: FakeSOSocket) => {
     const { communityId, managerUsername, username } = req.body;
 
     try {
-      const savedCommunity = await toggleMuteCommunityUser(communityId, managerUsername, username);
+      const savedCommunity = await toggleMuteCommunityUser(
+        communityId,
+        managerUsername,
+        username,
+        socket,
+      );
 
       if ('error' in savedCommunity) {
         if (savedCommunity.error.includes('Unauthorized')) {
@@ -315,7 +336,121 @@ const communityController = (socket: FakeSOSocket) => {
     }
   };
 
+  const sendAppealRequestRoute = async (req: AppealRequest, res: Response) => {
+    const appeal: Appeal = req.body;
+    const session = await mongoose.startSession();
+
+    try {
+      session.startTransaction();
+
+      const savedAppeal = await saveAppeal(appeal, session);
+      if ('error' in savedAppeal) {
+        throw new Error(savedAppeal.error);
+      }
+
+      const updatedCommunity = await addAppealToCommunity(savedAppeal, session, socket);
+      if ('error' in updatedCommunity) {
+        throw new Error(updatedCommunity.error);
+      }
+
+      await session.commitTransaction();
+
+      socket.emit('commmunityUpdate', {
+        community: updatedCommunity,
+        type: 'updated',
+      });
+
+      res.status(200).json(savedAppeal);
+    } catch (error) {
+      if (session.inTransaction()) {
+        await session.abortTransaction();
+      }
+
+      res.status(500).json({
+        error: `Error while submitting appeal: ${(error as Error).message}`,
+      });
+    } finally {
+      await session.endSession();
+    }
+  };
+
+  const getCommunityAppeals = async (req: CommunityDashboardRequest, res: Response) => {
+    try {
+      const { communityId } = req.params;
+      const { managerUsername } = req.query;
+
+      const community = await CommunityModel.findOne({ _id: communityId });
+
+      if (!community) {
+        throw new Error('Community not found');
+      }
+
+      if (
+        !(community.admin === managerUsername) &&
+        !community.moderators?.includes(managerUsername)
+      ) {
+        throw new Error('Unauthorized: User does not have permission to view dashboard');
+      }
+
+      const populatedAppeals: DatabaseAppeal[] = await Promise.all(
+        community?.appeals?.map(async a => {
+          const appeal = await AppealModel.findOne({ _id: a.toString() });
+
+          if (!appeal) {
+            throw new Error('Notification not found');
+          }
+
+          return appeal;
+        }) ?? [],
+      );
+
+      res.json(populatedAppeals);
+    } catch (error) {
+      res.status(500).json({ error: `Error while getting appeals: ${(error as Error).message}` });
+    }
+  };
+
+  const updateAppealRoute = async (req: AppealUpdateRequest, res: Response) => {
+    const { communityId, appealId, status, managerUsername } = req.body;
+
+    try {
+      const result = await respondToAppeal(communityId, appealId, status, managerUsername, socket);
+
+      if ('error' in result) {
+        if (result.error.includes('Unauthorized')) {
+          res.status(403).json({ error: result.error });
+        } else if (result.error.includes('not found')) {
+          res.status(404).json({ error: result.error });
+        } else {
+          res.status(500).json({ error: result.error });
+        }
+        return;
+      }
+
+      const populatedAppeals: DatabaseAppeal[] = await Promise.all(
+        result?.appeals?.map(async a => {
+          const appeal = await AppealModel.findOne({ _id: a.toString() });
+
+          if (!appeal) {
+            throw new Error('Notification not found');
+          }
+
+          return appeal;
+        }) ?? [],
+      );
+
+      socket.emit('communityUpdate', {
+        type: 'updated',
+        community: result,
+      });
+      res.json({ ...result, appeals: populatedAppeals });
+    } catch (err) {
+      res.status(500).json({ error: `Error updating appeal: ${(err as Error).message}` });
+    }
+  };
+
   router.get('/getCommunity/:communityId', getCommunityRoute);
+  router.get('/getAppeals/:communityId', getCommunityAppeals);
   router.get('/getAllCommunities', getAllCommunitiesRoute);
   router.post('/toggleMembership', toggleMembershipRoute);
   router.post('/toggleModerator', toggleModeratorRoute);
@@ -323,6 +458,8 @@ const communityController = (socket: FakeSOSocket) => {
   router.post('/create', createCommunityRoute);
   router.post('/announcement', sendCommunityAnnouncementRoute);
   router.post('/toggleMute', toggleMuteCommunityUserRoute);
+  router.post('/sendAppeal', sendAppealRequestRoute);
+  router.patch('/updateAppeal', updateAppealRoute);
   router.delete('/delete/:communityId', deleteCommunityRoute);
 
   return router;

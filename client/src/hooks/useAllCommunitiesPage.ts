@@ -15,7 +15,7 @@ import { CommunityUpdatePayload, DatabaseCommunity } from '../types/types';
  * - setError: Function to set the error message.
  */
 const useAllCommunitiesPage = () => {
-  const { socket } = useUserContext();
+  const { user, socket } = useUserContext();
   const [communities, setCommunities] = useState<DatabaseCommunity[]>([]);
   const [search, setSearch] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
@@ -27,7 +27,7 @@ const useAllCommunitiesPage = () => {
   useEffect(() => {
     const fetchCommunities = async () => {
       try {
-        setCommunities(await getCommunities());
+        setCommunities((await getCommunities()).filter(c => !c.banned?.includes(user.username)));
       } catch (err: unknown) {
         setError('Failed to fetch communities');
       }
@@ -40,11 +40,13 @@ const useAllCommunitiesPage = () => {
           break;
         case 'updated':
           setCommunities(prev =>
-            prev.map(community =>
-              community._id === communityUpdate.community._id
-                ? { ...community, ...communityUpdate.community }
-                : community,
-            ),
+            prev
+              .map(community =>
+                community._id === communityUpdate.community._id
+                  ? { ...community, ...communityUpdate.community }
+                  : community,
+              )
+              .filter(c => !c.banned?.includes(user.username)),
           );
           break;
         case 'deleted':

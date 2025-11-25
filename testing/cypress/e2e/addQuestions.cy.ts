@@ -16,7 +16,7 @@ describe("Cypress Tests to verify asking new questions", () => {
 
     createQuestion("Test Question Q1", "Test Question Q1 Text T1", "javascript");
 
-    cy.contains("Fake Stack Overflow");
+    cy.contains("PancakeOverflow");
     cy.contains("11 questions");
     cy.contains("user123 asked 0 seconds ago");
     const answers = [

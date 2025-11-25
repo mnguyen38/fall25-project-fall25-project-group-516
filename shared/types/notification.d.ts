@@ -12,7 +12,9 @@ export type NotificationType =
   | 'message' // Direct message notifications
   | 'sitewide' // Site-wide announcements
   | 'report' // Notifications related to content reports
-  | 'unban'; // Notification when a user is unbanned
+  | 'appeal' // Notification when a user is unbanned
+  | 'ban'
+  | 'mute';
 
 /**
  * Base notification interface representing a notification in the system.

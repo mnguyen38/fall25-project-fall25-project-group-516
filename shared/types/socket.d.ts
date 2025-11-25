@@ -4,7 +4,7 @@ import { DatabaseMessage } from './message';
 import { PopulatedDatabaseQuestion } from './question';
 import { PopulatedSafeDatabaseUser } from './user';
 import { BaseMove, GameInstance, GameInstanceID, GameMove, GameState } from './game';
-import { DatabaseCommunity } from './community';
+import { DatabaseCommunity, PopulatedDatabaseCommunity } from './community';
 import { PopulatedDatabaseCollection } from './collection';
 import { DatabaseBadge } from './badge';
 
@@ -110,6 +110,10 @@ export interface CommunityUpdatePayload {
   community: DatabaseCommunity;
 }
 
+export interface DashboardUpdatePayload {
+  type: 'updated' | 'deleted';
+  community: PopulatedDatabaseCommunity;
+}
 /**
  * Interface representing the payload for a collection update event.
  * - `type`: The type of update (`'created'`, `'updated'`, or `'deleted'`).
@@ -231,4 +235,5 @@ export interface ServerToClientEvents {
   transactionEvent: (transaction: TransactionPayload) => void;
   notificationUpdate: (notification: NotificationPayload) => void;
   premiumUpdate: (status: PremiumUpdatePayload) => void;
+  dashboardUpdate: (community: DashboardUpdatePayload) => void;
 }

@@ -1,15 +1,20 @@
 /* All the CSS related to answers Page*/
-.answer {
+.answer-container {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   border-bottom: 1px solid var(--pancake-border);
   padding: var(--spacing-md) 0;
   background: var(--pancake-white);
   transition: all 0.2s ease;
 }
 
-.answer:hover {
+.answer-container:hover {
   background: var(--pancake-bg-light);
+}
+
+.answer {
+  display: flex;
+  flex-direction: row;
 }
 
 .answerText {
@@ -24,4 +29,13 @@
 .answer_author {
   color: var(--pancake-brown-dark);
   font-weight: 600;
+}
+
+.answer-comment-button-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 0;
+  margin: 8px 0;
 }
