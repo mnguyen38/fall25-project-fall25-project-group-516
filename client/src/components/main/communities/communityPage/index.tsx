@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFlag } from '@fortawesome/free-solid-svg-icons';
+import { FiShield } from 'react-icons/fi';
 import useCommunityPage from '../../../../hooks/useCommunityPage';
 import QuestionView from '../../questionPage/question';
 import CommunityMembershipButton from '../communityMembershipButton';
 import './index.css';
-import ModToolsModal from '../modToolsModal';
 import ReportUserModal from '../reportUserModal';
 
 /**
@@ -13,8 +13,7 @@ import ReportUserModal from '../reportUserModal';
  * members, and questions.
  */
 const CommunityPage = () => {
-  const { community, communityQuestions, isModalOpen, setIsModalOpen, username } =
-    useCommunityPage();
+  const { community, communityQuestions, handleDashboardRedirect, username } = useCommunityPage();
   const [reportModalOpen, setReportModalOpen] = useState(false);
   const [reportedUser, setReportedUser] = useState<string>('');
 
@@ -49,8 +48,9 @@ const CommunityPage = () => {
           {community.admin !== username && <CommunityMembershipButton community={community} />}
 
           {(community.admin === username || community.moderators?.includes(username)) && (
-            <button className='mod-tools-trigger-btn' onClick={() => setIsModalOpen(true)}>
-              🛠️ Mod Tools
+            <button className='mod-tools-trigger-btn' onClick={handleDashboardRedirect}>
+              <FiShield size={20} />
+              Manage Community
             </button>
           )}
 
@@ -91,7 +91,6 @@ const CommunityPage = () => {
           </div>
         </div>
       </div>
-      {isModalOpen && <ModToolsModal community={community} onClose={() => setIsModalOpen(false)} />}
       {reportModalOpen && username && (
         <ReportUserModal
           communityId={community._id.toString()}

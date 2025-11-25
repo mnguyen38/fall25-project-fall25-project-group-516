@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import {
   CommunityUpdatePayload,
   DatabaseCommunity,
@@ -21,11 +21,16 @@ import { getCommunityQuestionsById } from '../services/questionService';
  */
 const useCommunityPage = () => {
   const { user, socket } = useUserContext();
+  const navigate = useNavigate();
+
   const [community, setCommunity] = useState<DatabaseCommunity | null>(null);
   const [communityQuestions, setCommunityQuestions] = useState<PopulatedDatabaseQuestion[]>([]);
-  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 
   const { communityID } = useParams();
+
+  const handleDashboardRedirect = () => {
+    if (community) navigate(`/communities/manage/${community._id.toString()}`);
+  };
 
   const fetchCommunity = async (communityId: string) => {
     setCommunity(await getCommunityById(communityId));
@@ -77,8 +82,7 @@ const useCommunityPage = () => {
   return {
     community,
     communityQuestions,
-    isModalOpen,
-    setIsModalOpen,
+    handleDashboardRedirect,
     username: user.username,
   };
 };
