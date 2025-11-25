@@ -319,6 +319,11 @@ const userController = (socket: FakeSOSocket) => {
     try {
       const { username, status, customStatus } = req.body;
 
+      if (!username || !status) {
+        res.status(400).send('Username and status must be provided');
+        return;
+      }
+
       const updatedUser = await updateUserStatus(username, status, customStatus);
 
       if ('error' in updatedUser) {

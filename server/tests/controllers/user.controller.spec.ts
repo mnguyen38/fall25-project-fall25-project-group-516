@@ -36,6 +36,7 @@ const deleteUserByUsernameSpy = jest.spyOn(util, 'deleteUserByUsername');
 const makeTransactionSpy = jest.spyOn(util, 'makeTransaction');
 const blockUserSpy = jest.spyOn(util, 'blockUser');
 const unblockUserSpy = jest.spyOn(util, 'unblockUser');
+const updateUserStatusSpy = jest.spyOn(util, 'updateUserStatus');
 
 describe('Test userController', () => {
   beforeEach(() => {
@@ -978,12 +979,11 @@ describe('Test userController', () => {
         targetUsername: targetUser.username,
       };
       jest.spyOn(UserModel, 'findOne').mockResolvedValueOnce(targetUser);
-      jest
-        .spyOn(UserModel, 'findOne')
-        .mockResolvedValueOnce({ ...blockingUser, blockedUsers: [targetUser.username] });
+      jest.spyOn(UserModel, 'findOne').mockResolvedValueOnce({ ...blockingUser });
       jest.spyOn(UserModel, 'findOneAndUpdate').mockReturnValue({
-        select: jest.fn().mockRejectedValueOnce(null),
+        select: jest.fn().mockRejectedValueOnce({ error: 'error blocking user' }),
       } as unknown as Query<PopulatedSafeDatabaseUser, typeof UserModel>);
+
       const res = await supertest(app).patch('/api/user/blockUser').send(mockReqBody);
 
       expect(res.status).toBe(500);
@@ -1037,14 +1037,241 @@ describe('Test userController', () => {
   });
 
   describe('PATCH /updateStatus', () => {
-    it('should return updated user when username & status are given');
+    it('should return updated user when username & status are given', async () => {
+      const mockReqBody = { username: mockSafeUser.username, status: 'online' };
+      updateUserStatusSpy.mockResolvedValueOnce({ ...mockSafeUser, status: 'online' });
+      const res = await supertest(app).patch('/api/user/updateStatus').send(mockReqBody);
+
+      expect(res.status).toBe(200);
+    });
+
+    it('should return updated user when username & status & customStatus are given', async () => {
+      const mockReqBody = {
+        username: mockSafeUser.username,
+        status: 'online',
+        customStatus: 'status',
+      };
+      updateUserStatusSpy.mockResolvedValueOnce({
+        ...mockSafeUser,
+        status: 'online',
+        customStatus: 'status',
+      });
+      const res = await supertest(app).patch('/api/user/updateStatus').send(mockReqBody);
+
+      expect(res.status).toBe(200);
+    });
+
+    it('should return 400 when request missing status', async () => {
+      const mockReqBody = {
+        username: mockSafeUser.username,
+        customStatus: 'status',
+      };
+      const res = await supertest(app).patch('/api/user/updateStatus').send(mockReqBody);
+
+      expect(res.status).toBe(400);
+    });
+
+    it('should return 400 when request missing username', async () => {
+      const mockReqBody = {
+        status: 'online',
+        customStatus: 'status',
+      };
+      const res = await supertest(app).patch('/api/user/updateStatus').send(mockReqBody);
+
+      expect(res.status).toBe(400);
+    });
+
+    it('should return 500 when updateUserStatus returns error', async () => {
+      const mockReqBody = { username: mockSafeUser.username, status: 'online' };
+      updateUserStatusSpy.mockRejectedValueOnce({ error: 'Error updating status' });
+      const res = await supertest(app).patch('/api/user/updateStatus').send(mockReqBody);
+
+      expect(res.status).toBe(500);
+    });
   });
 
-  describe('PATCH /toggleProfilePrivacy', () => {});
+  describe('PATCH /toggleProfilePrivacy', () => {
+    it('should return updated private user if username of public user is given', async () => {
+      getUserByUsernameSpy.mockResolvedValueOnce({ ...mockSafeUser, profilePrivate: false });
+      updatedUserSpy.mockResolvedValueOnce({ ...mockSafeUser, profilePrivate: true });
+
+      const res = await supertest(app)
+        .patch('/api/user/toggleProfilePrivacy')
+        .send({ username: mockSafeUser.username });
+
+      expect(res.status).toBe(200);
+      expect(updatedUserSpy).toHaveBeenCalledWith(mockSafeUser.username, { profilePrivate: true });
+    });
+
+    it('should return updated public user if username of private user is given', async () => {
+      getUserByUsernameSpy.mockResolvedValueOnce({ ...mockSafeUser, profilePrivate: true });
+      updatedUserSpy.mockResolvedValueOnce({ ...mockSafeUser, profilePrivate: false });
+
+      const res = await supertest(app)
+        .patch('/api/user/toggleProfilePrivacy')
+        .send({ username: mockSafeUser.username });
+
+      expect(res.status).toBe(200);
+      expect(updatedUserSpy).toHaveBeenCalledWith(mockSafeUser.username, { profilePrivate: false });
+    });
+
+    it('should return 400 if username not given', async () => {
+      const res = await supertest(app).patch('/api/user/toggleProfilePrivacy').send({});
+
+      expect(res.status).toBe(400);
+    });
+
+    it('should return 500 if error getting user', async () => {
+      getUserByUsernameSpy.mockResolvedValueOnce({ error: 'Error getting user' });
+
+      const res = await supertest(app)
+        .patch('/api/user/toggleProfilePrivacy')
+        .send({ username: mockSafeUser.username });
+
+      expect(res.status).toBe(500);
+    });
+
+    it('should return 500 if error updating user', async () => {
+      getUserByUsernameSpy.mockResolvedValueOnce({ ...mockSafeUser, profilePrivate: true });
+      updatedUserSpy.mockResolvedValueOnce({ error: 'Error updating user' });
+
+      const res = await supertest(app)
+        .patch('/api/user/toggleProfilePrivacy')
+        .send({ username: mockSafeUser.username });
+
+      expect(res.status).toBe(500);
+    });
+  });
 
   describe('PATCH /readNotifications', () => {});
 
-  describe('PATCH /toggleCommunityNotifs', () => {});
+  describe('PATCH /toggleCommunityNotifs', () => {
+    it('should return updated user with communityNotifs toggled true -> false', async () => {
+      getUserByUsernameSpy.mockResolvedValueOnce({ ...mockSafeUser, communityNotifs: true });
+      updatedUserSpy.mockResolvedValueOnce({ ...mockSafeUser, communityNotifs: false });
 
-  describe('PATCH /toggleMessageNotifs', () => {});
+      const res = await supertest(app)
+        .patch('/api/user/toggleCommunityNotifs')
+        .send({ username: mockSafeUser.username });
+
+      expect(res.status).toBe(200);
+      expect(updatedUserSpy).toHaveBeenCalledWith(mockUser.username, { communityNotifs: false });
+    });
+
+    it('should return updated user with communityNotifs toggled false -> true', async () => {
+      getUserByUsernameSpy.mockResolvedValueOnce({ ...mockSafeUser, communityNotifs: false });
+      updatedUserSpy.mockResolvedValueOnce({ ...mockSafeUser, communityNotifs: true });
+
+      const res = await supertest(app)
+        .patch('/api/user/toggleCommunityNotifs')
+        .send({ username: mockSafeUser.username });
+
+      expect(res.status).toBe(200);
+      expect(updatedUserSpy).toHaveBeenCalledWith(mockUser.username, { communityNotifs: true });
+    });
+
+    it('should return updated user with communityNotifs toggled undefined -> false', async () => {
+      getUserByUsernameSpy.mockResolvedValueOnce({ ...mockSafeUser });
+      updatedUserSpy.mockResolvedValueOnce({ ...mockSafeUser, communityNotifs: false });
+
+      const res = await supertest(app)
+        .patch('/api/user/toggleCommunityNotifs')
+        .send({ username: mockSafeUser.username });
+
+      expect(res.status).toBe(200);
+      expect(updatedUserSpy).toHaveBeenCalledWith(mockUser.username, { communityNotifs: false });
+    });
+
+    it('should return 400 if request is missing username', async () => {
+      const res = await supertest(app).patch('/api/user/toggleCommunityNotifs').send({});
+
+      expect(res.status).toBe(400);
+    });
+
+    it('should return 500 if error getting user', async () => {
+      getUserByUsernameSpy.mockResolvedValueOnce({ error: 'Error getting user' });
+
+      const res = await supertest(app)
+        .patch('/api/user/toggleCommunityNotifs')
+        .send({ username: mockSafeUser.username });
+
+      expect(res.status).toBe(500);
+    });
+
+    it('should return 500 if error updating user', async () => {
+      getUserByUsernameSpy.mockResolvedValueOnce({ ...mockSafeUser, communityNotifs: true });
+      updatedUserSpy.mockResolvedValueOnce({ error: 'Error getting user' });
+
+      const res = await supertest(app)
+        .patch('/api/user/toggleCommunityNotifs')
+        .send({ username: mockSafeUser.username });
+
+      expect(res.status).toBe(500);
+    });
+  });
+
+  describe('PATCH /toggleMessageNotifs', () => {
+    it('should return updated user with messageNotifs toggled true -> false', async () => {
+      getUserByUsernameSpy.mockResolvedValueOnce({ ...mockSafeUser, messageNotifs: true });
+      updatedUserSpy.mockResolvedValueOnce({ ...mockSafeUser, messageNotifs: false });
+
+      const res = await supertest(app)
+        .patch('/api/user/toggleMessageNotifs')
+        .send({ username: mockSafeUser.username });
+
+      expect(res.status).toBe(200);
+      expect(updatedUserSpy).toHaveBeenCalledWith(mockUser.username, { messageNotifs: false });
+    });
+
+    it('should return updated user with messageNotifs toggled false -> true', async () => {
+      getUserByUsernameSpy.mockResolvedValueOnce({ ...mockSafeUser, messageNotifs: false });
+      updatedUserSpy.mockResolvedValueOnce({ ...mockSafeUser, messageNotifs: true });
+
+      const res = await supertest(app)
+        .patch('/api/user/toggleMessageNotifs')
+        .send({ username: mockSafeUser.username });
+
+      expect(res.status).toBe(200);
+      expect(updatedUserSpy).toHaveBeenCalledWith(mockUser.username, { messageNotifs: true });
+    });
+
+    it('should return updated user with messageNotifs toggled undefined -> false', async () => {
+      getUserByUsernameSpy.mockResolvedValueOnce({ ...mockSafeUser });
+      updatedUserSpy.mockResolvedValueOnce({ ...mockSafeUser, messageNotifs: false });
+
+      const res = await supertest(app)
+        .patch('/api/user/toggleMessageNotifs')
+        .send({ username: mockSafeUser.username });
+
+      expect(res.status).toBe(200);
+      expect(updatedUserSpy).toHaveBeenCalledWith(mockUser.username, { messageNotifs: false });
+    });
+
+    it('should return 400 if request is missing username', async () => {
+      const res = await supertest(app).patch('/api/user/toggleMessageNotifs').send({});
+
+      expect(res.status).toBe(400);
+    });
+
+    it('should return 500 if error getting user', async () => {
+      getUserByUsernameSpy.mockResolvedValueOnce({ error: 'Error getting user' });
+
+      const res = await supertest(app)
+        .patch('/api/user/toggleMessageNotifs')
+        .send({ username: mockSafeUser.username });
+
+      expect(res.status).toBe(500);
+    });
+
+    it('should return 500 if error updating user', async () => {
+      getUserByUsernameSpy.mockResolvedValueOnce({ ...mockSafeUser, messageNotifs: true });
+      updatedUserSpy.mockResolvedValueOnce({ error: 'Error getting user' });
+
+      const res = await supertest(app)
+        .patch('/api/user/toggleMessageNotifs')
+        .send({ username: mockSafeUser.username });
+
+      expect(res.status).toBe(500);
+    });
+  });
 });

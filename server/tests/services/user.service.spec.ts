@@ -1020,7 +1020,9 @@ describe('User model', () => {
         exec: jest.fn().mockResolvedValue(mockAverage),
       } as unknown as Aggregate<AverageResult[]>);
 
-      jest.spyOn(UserModel, 'findOne').mockResolvedValue({ ...safeUser, lifeUpvotes: 5 });
+      jest.spyOn(UserModel, 'findOne').mockReturnValue({
+        select: jest.fn().mockResolvedValue({ ...safeUser, lifeUpvotes: 5 }),
+      } as unknown as Query<PopulatedSafeDatabaseUser, typeof UserModel>);
 
       const result = await getUserIfTopContributor(safeUser.username);
 
@@ -1037,7 +1039,9 @@ describe('User model', () => {
         exec: jest.fn().mockResolvedValue(mockAverage),
       } as unknown as Aggregate<AverageResult[]>);
 
-      jest.spyOn(UserModel, 'findOne').mockResolvedValue(null);
+      jest.spyOn(UserModel, 'findOne').mockReturnValue({
+        select: jest.fn().mockResolvedValue(null),
+      } as unknown as Query<PopulatedSafeDatabaseUser, typeof UserModel>);
 
       const result = await getUserIfTopContributor(safeUser.username);
 
@@ -1112,7 +1116,9 @@ describe('User model', () => {
         exec: jest.fn().mockResolvedValue(mockAverage),
       } as unknown as Aggregate<AverageResult[]>);
 
-      jest.spyOn(UserModel, 'findOne').mockRejectedValue(new Error('User search failed'));
+      jest.spyOn(UserModel, 'findOne').mockReturnValue({
+        select: jest.fn().mockRejectedValue(new Error('User search failed')),
+      } as unknown as Query<PopulatedSafeDatabaseUser, typeof UserModel>);
 
       const result = await getUserIfTopContributor(safeUser.username);
 

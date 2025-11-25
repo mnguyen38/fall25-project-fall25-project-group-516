@@ -9,6 +9,7 @@ import {
   addVoteToQuestion,
   getCommunityQuestions,
   isAllowedToPostOnQuestion,
+  filterQuestionsByBlocking,
 } from '../../services/question.service';
 import { DatabaseQuestion, PopulatedDatabaseQuestion, Question } from '../../types/types';
 import {
@@ -26,6 +27,7 @@ import {
 import UserModel from '../../models/users.model';
 import { ObjectId } from 'mongodb';
 import CommunityModel from '../../models/community.model';
+import { defaultMockUser } from '../../utils/mocks.util';
 
 describe('Question model', () => {
   beforeEach(() => {
@@ -788,5 +790,78 @@ describe('Question model', () => {
     const result = await addVoteToQuestion('someQuestionId', 'testUser', 'upvote');
 
     expect(result).toEqual({ error: 'User lifetime upvotes failed to update!' });
+  });
+
+  describe('filterQuestionsByBlocking', () => {
+    const mockUserWithBlocks = { ...user, blockedUsers: ['user2', 'user3'] };
+
+    const mockUser1 = { ...user, username: 'user1' };
+    const mockUser2 = { ...user, username: 'user2' };
+    const mockUser3 = { ...user, username: 'user3' };
+
+    const mockQ1: PopulatedDatabaseQuestion = {
+      _id: new mongoose.Types.ObjectId(),
+      title: 'Question 1',
+      text: 'Question 1 text',
+      tags: [tag1, tag2],
+      answers: [],
+      askedBy: 'user2',
+      askDateTime: new Date('2024-06-05'),
+      views: [],
+      upVotes: [],
+      downVotes: [],
+      comments: [],
+      community: community1,
+      premiumStatus: false,
+      interestedUsers: ['user2'],
+    };
+
+    const mockQ2: PopulatedDatabaseQuestion = {
+      _id: new mongoose.Types.ObjectId(),
+      title: 'Question',
+      text: 'Question text',
+      tags: [tag1, tag2],
+      answers: [],
+      askedBy: 'user3',
+      askDateTime: new Date('2024-06-05'),
+      views: [],
+      upVotes: [],
+      downVotes: [],
+      comments: [],
+      community: community1,
+      premiumStatus: false,
+      interestedUsers: ['user3'],
+    };
+
+    const mockQ3: PopulatedDatabaseQuestion = {
+      _id: new mongoose.Types.ObjectId(),
+      title: 'Question',
+      text: 'Question text',
+      tags: [tag1, tag2],
+      answers: [],
+      askedBy: 'user1',
+      askDateTime: new Date('2024-06-05'),
+      views: [],
+      upVotes: [],
+      downVotes: [],
+      comments: [],
+      community: community1,
+      premiumStatus: false,
+      interestedUsers: ['user1'],
+    };
+
+    const qlist = [mockQ1, mockQ2, mockQ3];
+
+    const authors = [mockUser1, mockUser2, mockUser3];
+
+    // it('should return a list of questions that are not asked by blocked users', async () => {
+    //   jest.spyOn(QuestionModel, 'findOne').mockResolvedValueOnce(mockUserWithBlocks);
+    //   jest.spyOn(UserModel, 'find').mockResolvedValueOnce(authors);
+
+    //   const response = await filterQuestionsByBlocking(qlist, mockUserWithBlocks.username);
+
+    //   expect(response).toBeDefined();
+    //   expect(response).toStrictEqual([mockQ3]);
+    // });
   });
 });

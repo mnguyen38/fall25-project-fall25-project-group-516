@@ -457,7 +457,7 @@ export const updateUserStatus = async (
  * @param {string} username - The username of the user to update.
  * @returns {Promise<UserResponse | null>} - Resolves with the user object, null if not a top contributor, or an error message.
  */
-export const getUserIfTopContributor = async (username: string): Promise<UserResponse | null> => {
+export const getUserIfTopContributor = async (username: string): Promise<UserResponse> => {
   try {
     interface AverageResult {
       _id: null;
@@ -488,7 +488,7 @@ export const getUserIfTopContributor = async (username: string): Promise<UserRes
     }).select('-password');
 
     if (!user) {
-      return null;
+      throw Error('User could not be found');
     }
 
     return user;
