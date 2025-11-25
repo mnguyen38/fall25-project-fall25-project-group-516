@@ -14,7 +14,6 @@ import {
 import {
   blockUser,
   deleteUserByUsername,
-  getBlockedUsers,
   getUserByUsername,
   getUsersList,
   loginUser,
@@ -490,64 +489,7 @@ const userController = (socket: FakeSOSocket) => {
         return;
       }
 
-      updatePremiumProfile(req, res, 'activate');
-    } catch (error) {
-      res.status(500).send(`Error activating premium profile: ${error}`);
-    }
-  };
-
-  /**
-   * Updates user's premium profile status to inactive.
-   * @param req The request, containing the user's username.
-   * @param res The reponse, containing the updated user.
-   */
-  const deactivatePremium = async (req: Request, res: Response) => {
-    try {
-      const { username } = req.body;
-
-      if (!username) {
-        res.status(400).send('Username must be provided');
-        return;
-      }
-
-      const currentUser = await getUserByUsername(username);
-
-      if ('error' in currentUser) {
-        throw new Error(currentUser.error);
-      }
-
-      if (currentUser.premiumProfile == false) {
-        res.status(402).send('User does not have premium profile.');
-        return;
-      }
-
-      updatePremiumProfile(req, res, 'deactivate');
-    } catch (error) {
-      res.status(500).send(`Error deactivating premium profile: ${error}`);
-    }
-  };
-
-  /**
-   * Helper that updates a user's premium profile status.
-   * @param req The request, containing the user's username.
-   * @param res The reponse, containing the updated user.
-   * @param status whether premium profile is being activated or deactivated.
-   */
-  const updatePremiumProfile = async (
-    req: Request,
-    res: Response,
-    status: 'activate' | 'deactivate',
-  ) => {
-    try {
-      const { username } = req.body;
-
-      let updatedUser;
-
-      if (status == 'activate') {
-        updatedUser = await updateUser(username, { premiumProfile: true, streakPass: 3 });
-      } else {
-        updatedUser = await updateUser(username, { premiumProfile: false });
-      }
+      const updatedUser = await updateUser(username, { premiumProfile: true, streakPass: 3 });
 
       if ('error' in updatedUser) {
         throw new Error(updatedUser.error);
@@ -562,11 +504,7 @@ const userController = (socket: FakeSOSocket) => {
 
       res.status(200).json(updatedUser);
     } catch (error) {
-      res
-        .status(500)
-        .send(
-          `Error ${status == 'activate' ? 'activating' : 'deactivating'} premium profile: ${error}`,
-        );
+      res.status(500).send(`Error activating premium profile: ${error}`);
     }
   };
 
@@ -695,7 +633,8 @@ const userController = (socket: FakeSOSocket) => {
       }
 
       if (!currentUser.streakPass || (currentUser.streakPass && currentUser.streakPass <= 0)) {
-        throw new Error('User has no streak passes to decrement.');
+        res.status(402).send('User has no streak passes to decrement.');
+        return;
       }
       // Decrement streakPass field
       const updatedUser = await updateUser(username, {
@@ -729,6 +668,7 @@ const userController = (socket: FakeSOSocket) => {
 
       if (!username) {
         res.status(400).send('Username must be provided');
+        return;
       }
 
       const updatedUser = await updateUser(username, {
@@ -746,7 +686,7 @@ const userController = (socket: FakeSOSocket) => {
 
       res.status(200).json(updatedUser);
     } catch (error) {
-      res.status(500).send(`Error reseting user's login strak: ${error}`);
+      res.status(500).send(`Error reseting user's login streak: ${error}`);
     }
   };
 
@@ -939,34 +879,6 @@ const userController = (socket: FakeSOSocket) => {
     }
   };
 
-  /**
-   * Gets the list of blocked users for a given user.
-   * @param req The request containing username parameter.
-   * @param res The response, either returning the user with blockedUsers or an error.
-   * @returns A promise resolving to void.
-   */
-  const getBlockedUsersRoute = async (req: Request, res: Response): Promise<void> => {
-    try {
-      const { username } = req.params;
-
-      if (!username) {
-        res.status(400).send('Username must be provided');
-        return;
-      }
-
-      const result = await getBlockedUsers(username);
-
-      if ('error' in result) {
-        res.status(404).json({ error: result.error });
-        return;
-      }
-
-      res.status(200).json(result);
-    } catch (error) {
-      res.status(500).send(`Error getting blocked users: ${error}`);
-    }
-  };
-
   // Define routes for the user-related operations.
   router.post('/signup', createUser);
   router.post('/login', userLogin);
@@ -987,7 +899,6 @@ const userController = (socket: FakeSOSocket) => {
   router.patch('/decrementStreakPasses', protect, decrementStreakPasses);
   router.patch('/toggleProfilePrivacy', protect, toggleProfilePrivacy);
   router.patch('/activatePremium', protect, activatePremium);
-  router.patch('/deactivatePremium', protect, deactivatePremium);
   router.patch('/updateShowLoginStreak', protect, updateShowLoginStreak);
   router.patch('/updateStatus', protect, updateStatus);
   router.patch('/addCoins', protect, addCoinTransaction);
@@ -998,7 +909,6 @@ const userController = (socket: FakeSOSocket) => {
   router.patch('/toggleMessageNotifs', protect, toggleMessageNotifs);
   router.patch('/blockUser', protect, blockUserRoute);
   router.patch('/unblockUser', protect, unblockUserRoute);
-  router.get('/blockedUsers/:username', protect, getBlockedUsersRoute);
 
   return router;
 };

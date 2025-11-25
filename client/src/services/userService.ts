@@ -385,24 +385,6 @@ const activatePremiumProfile = async (username: string): Promise<PopulatedSafeDa
 };
 
 /**
- * Deactivates user's premium membership if they currently have premium.
- * @param username The unique username of the user
- * @returns A promise resolving to the updated user
- * @throws Error if the request fails
- */
-const deactivatePremiumProfile = async (username: string): Promise<PopulatedSafeDatabaseUser> => {
-  const res = await api.patch(`${USER_API_URL}/deactivatePremium`, { username });
-
-  if (res.status !== 200) {
-    if (res.status == 402) {
-      throw new Error('User does not have premium profile.');
-    }
-    throw new Error('Error when deactivating premium profile');
-  }
-  return res.data;
-};
-
-/**
  * Decrements user's streak passes by one if they own any.
  * @param username The unique username of the user
  * @returns A promise resolving to the updated user
@@ -548,24 +530,6 @@ const unblockUser = async (
   }
 };
 
-/**
- * Gets the list of blocked users for a given user.
- * @param username The unique username of the user
- * @returns A promise resolving to the user object containing blockedUsers
- * @throws Error if the request fails
- */
-const getBlockedUsers = async (username: string): Promise<PopulatedSafeDatabaseUser> => {
-  try {
-    const res = await api.get(`${USER_API_URL}/blockedUsers/${username}`);
-    return res.data;
-  } catch (error) {
-    if (error instanceof AxiosError && error.response?.data?.error) {
-      throw new Error(error.response.data.error);
-    }
-    throw new Error('Unable to fetch blocked users. Please try again.');
-  }
-};
-
 export {
   getUsers,
   getUserByUsername,
@@ -585,7 +549,6 @@ export {
   readAllNotifications,
   toggleStreakHold,
   activatePremiumProfile,
-  deactivatePremiumProfile,
   decrementStreakPasses,
   resetLoginStreak,
   updateStatus,
@@ -593,5 +556,4 @@ export {
   toggleMessageNotifs,
   blockUser,
   unblockUser,
-  getBlockedUsers,
 };

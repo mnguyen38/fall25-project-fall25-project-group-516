@@ -23,7 +23,7 @@ export const saveComment = async (comment: Comment): Promise<CommentResponse> =>
   try {
     const commenter = await getUserIfTopContributor(comment.commentBy);
     let newComment;
-    if (!commenter) {
+    if (!commenter || 'error' in commenter) {
       newComment = comment;
     } else {
       newComment = {

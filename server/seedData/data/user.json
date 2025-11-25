@@ -225,8 +225,17 @@
     "password": "linda123",
     "dateJoined": "2024-04-11T16:44:37Z",
     "biography": "Just happy to be here",
-    "lifetimeUpvotes": "50",
+    "lifeUpvotes": "50",
     "coins" : "50",
+    "lastLogin": "2025-11-20T16:44:37Z"
+  },
+  "plutopatisserie": {
+    "username": "plutopatisserie",
+    "password": "kingofriches",
+    "dateJoined": "2025-04-11T16:44:37Z",
+    "biography": "#1 richest man on Pancake Overflow B)",
+    "lifeUpvotes": "0",
+    "coins" : "150",
     "lastLogin": "2025-11-20T16:44:37Z"
   }
 }

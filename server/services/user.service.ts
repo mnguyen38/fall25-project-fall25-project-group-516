@@ -174,7 +174,7 @@ export const loginUser = async (loginCredentials: UserCredentials): Promise<User
     const updatedUser = await populateUser(user._id.toString());
 
     if (!updatedUser) {
-      throw Error('Failed to retrieve updated user');
+      throw Error(`Failed to retrieve updated user`);
     }
     return updatedUser as PopulatedSafeDatabaseUser;
   } catch (error) {
@@ -457,18 +457,18 @@ export const updateUserStatus = async (
  * @param {string} username - The username of the user to update.
  * @returns {Promise<UserResponse>} - Resolves with the user object or an error message.
  */
-export const getUserIfTopContributor = async (username: string): Promise<UserResponse | null> => {
+export const getUserIfTopContributor = async (username: string): Promise<UserResponse> => {
   try {
     interface AverageResult {
       _id: null;
       averageValue: number;
     }
-    const pipeline = [{ $group: { _id: null, averageValue: { $avg: '$lifetimeUpvotes' } } }];
+    const pipeline = [{ $group: { _id: null, averageValue: { $avg: '$lifeUpvotes' } } }];
 
     const avgResult = await UserModel.aggregate<AverageResult>(pipeline).exec();
 
     if (!avgResult) {
-      throw Error('Error finding average lifetimeUpvote score');
+      throw Error('Error finding average lifeUpvote score');
     }
 
     // average lifetimeUpvote value
@@ -476,21 +476,21 @@ export const getUserIfTopContributor = async (username: string): Promise<UserRes
     // Access the result
     if (avgResult.length > 0) {
       average = avgResult[0].averageValue;
+
+      if (!average) {
+        throw Error('Could not find average lifeUpvote score');
+      }
     } else {
-      throw Error('Could not find average lifetimeUpvote score');
+      throw Error('Could not find average lifeUpvote score');
     }
 
-    const user: PopulatedSafeDatabaseUser | null = (await UserModel.find({
+    const user: PopulatedSafeDatabaseUser | null = await UserModel.findOne({
       username: username,
       lifetimeUpvotes: { $gt: { average } },
-    })) as unknown as PopulatedSafeDatabaseUser | null;
+    });
 
     if (!user) {
-      return null;
-    }
-
-    if ('error' in user) {
-      throw Error('Failed to find user');
+      throw Error('User is not top contributor');
     }
 
     return user;

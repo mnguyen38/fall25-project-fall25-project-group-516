@@ -1,4 +1,4 @@
-import mongoose, { Query } from 'mongoose';
+import mongoose, { Aggregate, Query } from 'mongoose';
 import UserModel from '../../models/users.model';
 import {
   deleteUserByUsername,
@@ -12,7 +12,11 @@ import {
   saveUser,
   updateUser,
   updateUserStatus,
+  getUserIfTopContributor,
+  blockUser,
+  unblockUser,
 } from '../../services/user.service';
+import * as util from '../../utils/database.util';
 import { DatabaseUser, PopulatedSafeDatabaseUser, User, UserCredentials } from '../../types/types';
 import { user, safeUser } from '../mockData.models';
 
@@ -214,6 +218,74 @@ describe('User model', () => {
       jest.useRealTimers();
     });
 
+    it('should maintain the same streak if logging in on same day & not activate streak hold', async () => {
+      const threeHoursAgo = new Date(mockNow);
+      threeHoursAgo.setHours(mockNow.getHours() - 3);
+      const returningUser = {
+        ...user,
+        _id: 'user-id',
+        lastLogin: threeHoursAgo,
+        loginStreak: 10,
+      };
+
+      jest.spyOn(UserModel, 'findOne').mockResolvedValue(returningUser);
+      const updateSpy = jest
+        .spyOn(UserModel, 'updateOne')
+        .mockResolvedValue({ acknowledged: true } as any);
+      jest.spyOn(UserModel, 'findById').mockReturnValue({
+        select: jest.fn().mockResolvedValue({
+          lean: jest.fn().mockResolvedValue(safeUser),
+        }),
+      } as any);
+
+      await loginUser({ username: user.username, password: user.password });
+
+      expect(updateSpy).toHaveBeenCalledWith(
+        { username: user.username },
+        expect.objectContaining({
+          $set: expect.objectContaining({
+            streakHold: false,
+            missedDays: 0,
+            loginStreak: 10,
+          }),
+        }),
+      );
+    });
+
+    it('should increase streak by one if logging in one day later', async () => {
+      const oneDayAgo = new Date(mockNow);
+      oneDayAgo.setDate(mockNow.getDate() - 1);
+      const returningUser = {
+        ...user,
+        _id: 'user-id',
+        lastLogin: oneDayAgo,
+        loginStreak: 10,
+      };
+
+      jest.spyOn(UserModel, 'findOne').mockResolvedValue(returningUser);
+      const updateSpy = jest
+        .spyOn(UserModel, 'updateOne')
+        .mockResolvedValue({ acknowledged: true } as any);
+      jest.spyOn(UserModel, 'findById').mockReturnValue({
+        select: jest.fn().mockResolvedValue({
+          lean: jest.fn().mockResolvedValue(safeUser),
+        }),
+      } as any);
+
+      await loginUser({ username: user.username, password: user.password });
+
+      expect(updateSpy).toHaveBeenCalledWith(
+        { username: user.username },
+        expect.objectContaining({
+          $set: expect.objectContaining({
+            streakHold: false,
+            missedDays: 0,
+            loginStreak: 11,
+          }),
+        }),
+      );
+    });
+
     it('should use streak pass if missed days <= 7 and user has a pass', async () => {
       const threeDaysAgo = new Date(mockNow);
       threeDaysAgo.setDate(mockNow.getDate() - 3);
@@ -367,7 +439,19 @@ describe('User model', () => {
       const result = await loginUser({ username: 'test', password: 'pw' });
       expect('error' in result).toBe(true);
     });
+
+    it('should throw error if populateUser returns null', async () => {
+      jest.spyOn(UserModel, 'findOne').mockResolvedValue({ ...user, _id: 'user-id' });
+      jest.spyOn(UserModel, 'updateOne').mockResolvedValue({ acknowledged: true } as any);
+
+      const populateUserSpy = jest.spyOn(util, 'populateUser');
+      populateUserSpy.mockRejectedValueOnce(null);
+
+      const result = await loginUser({ username: 'test', password: 'pw' });
+      expect('error' in result).toBe(true);
+    });
   });
+
   describe('findOrCreateOAuthUser', () => {
     const oauthProfile = {
       id: '123',
@@ -494,15 +578,15 @@ describe('User model', () => {
         notifications: [],
       };
 
-      jest.spyOn(UserModel, 'findOne').mockResolvedValue(rawUser);
+      jest.spyOn(UserModel, 'findOne').mockResolvedValueOnce(rawUser);
 
-      jest.spyOn(UserModel, 'updateOne').mockResolvedValue({
+      jest.spyOn(UserModel, 'updateOne').mockResolvedValueOnce({
         acknowledged: true,
         modifiedCount: 1,
       } as any);
 
-      jest.spyOn(UserModel, 'findById').mockReturnValue({
-        select: jest.fn().mockReturnValue({ lean: jest.fn().mockResolvedValue(safeUser) }),
+      jest.spyOn(UserModel, 'findById').mockReturnValueOnce({
+        select: jest.fn().mockReturnValueOnce({ lean: jest.fn().mockResolvedValueOnce(rawUser) }),
       } as any);
 
       const credentials: UserCredentials = {
@@ -510,10 +594,9 @@ describe('User model', () => {
         password: user.password,
       };
 
-      const loggedInUser = (await loginUser(credentials)) as PopulatedSafeDatabaseUser;
+      const loggedInUser = await loginUser(credentials);
 
-      expect(loggedInUser.username).toEqual(user.username);
-      expect(loggedInUser.dateJoined).toEqual(user.dateJoined);
+      expect(loggedInUser).toStrictEqual({ ...rawUser, roles: new Map<string, string>() });
     });
 
     it('should return the user if the password fails', async () => {
@@ -548,7 +631,7 @@ describe('User model', () => {
           return Promise.resolve(null);
         }
         const query: any = {};
-        query.select = jest.fn().mockResolvedValue(null);
+        query.select = jest.fn().mockResolvedValueOnce(null);
         return query;
       });
 
@@ -907,6 +990,240 @@ describe('User model', () => {
       const transactionError = await makeTransaction(user.username, 10, 'add');
 
       expect('error' in transactionError).toBe(true);
+    });
+  });
+
+  describe('getUserIfTopContribution', () => {
+    const safeUser: DatabaseUser = {
+      ...user,
+      _id: new mongoose.Types.ObjectId(),
+      username: user.username,
+      dateJoined: user.dateJoined,
+      notifications: [],
+    };
+
+    it("should return user if user's lifeUpvotes exceed average", async () => {
+      interface AverageResult {
+        _id: null;
+        averageValue: number;
+      }
+      const mockAverage = [{ averageValue: 4 }];
+      jest.spyOn(UserModel, 'aggregate').mockReturnValue({
+        exec: jest.fn().mockResolvedValue(mockAverage),
+      } as unknown as Aggregate<AverageResult[]>);
+
+      jest.spyOn(UserModel, 'findOne').mockResolvedValue({ ...safeUser, lifeUpvotes: 5 });
+
+      const result = await getUserIfTopContributor(safeUser.username);
+
+      expect(result).toStrictEqual({ ...safeUser, lifeUpvotes: 5 });
+    });
+
+    it('should return null if not top contributor', async () => {
+      interface AverageResult {
+        _id: null;
+        averageValue: number;
+      }
+      const mockAverage = [{ averageValue: 4 }];
+      jest.spyOn(UserModel, 'aggregate').mockReturnValue({
+        exec: jest.fn().mockResolvedValue(mockAverage),
+      } as unknown as Aggregate<AverageResult[]>);
+
+      jest.spyOn(UserModel, 'findOne').mockResolvedValue(null);
+
+      const result = await getUserIfTopContributor(safeUser.username);
+
+      expect('error' in result).toBe(true);
+    });
+
+    it('should throw error if aggregate returns an empty list', async () => {
+      interface AverageResult {
+        _id: null;
+        averageValue: number;
+      }
+      jest.spyOn(UserModel, 'aggregate').mockReturnValue({
+        exec: jest.fn().mockResolvedValue([]),
+      } as unknown as Aggregate<AverageResult[]>);
+
+      const result = await getUserIfTopContributor(safeUser.username);
+
+      expect('error' in result).toBe(true);
+    });
+
+    it("should throw error if aggregate doesn't return average", async () => {
+      interface AverageResult {
+        _id: null;
+        averageValue: number;
+      }
+      jest.spyOn(UserModel, 'aggregate').mockReturnValue({
+        exec: jest.fn().mockResolvedValue([{}]),
+      } as unknown as Aggregate<AverageResult[]>);
+
+      const result = await getUserIfTopContributor(safeUser.username);
+
+      expect('error' in result).toBe(true);
+    });
+
+    it('should throw error if aggregate returns null', async () => {
+      interface AverageResult {
+        _id: null;
+        averageValue: number;
+      }
+
+      jest.spyOn(UserModel, 'aggregate').mockReturnValue({
+        exec: jest.fn().mockRejectedValue(null),
+      } as unknown as Aggregate<AverageResult[]>);
+
+      const result = await getUserIfTopContributor(safeUser.username);
+
+      expect('error' in result).toBe(true);
+    });
+
+    it('should throw error if aggregate throws error', async () => {
+      interface AverageResult {
+        _id: null;
+        averageValue: number;
+      }
+
+      jest.spyOn(UserModel, 'aggregate').mockReturnValue({
+        exec: jest.fn().mockRejectedValue(new Error('Could not find average')),
+      } as unknown as Aggregate<AverageResult[]>);
+
+      const result = await getUserIfTopContributor(safeUser.username);
+
+      expect('error' in result).toBe(true);
+    });
+
+    it('should throw error if findOne throws error', async () => {
+      interface AverageResult {
+        _id: null;
+        averageValue: number;
+      }
+      const mockAverage = [{ averageValue: 4 }];
+      jest.spyOn(UserModel, 'aggregate').mockReturnValue({
+        exec: jest.fn().mockResolvedValue(mockAverage),
+      } as unknown as Aggregate<AverageResult[]>);
+
+      jest.spyOn(UserModel, 'findOne').mockRejectedValue(new Error('User search failed'));
+
+      const result = await getUserIfTopContributor(safeUser.username);
+
+      expect('error' in result).toBe(true);
+    });
+  });
+
+  describe('blockUser', () => {
+    const mockUser: DatabaseUser = {
+      ...user,
+      _id: new mongoose.Types.ObjectId(),
+      username: user.username,
+      notifications: [],
+    };
+
+    const targetUser: DatabaseUser = {
+      ...user,
+      _id: new mongoose.Types.ObjectId(),
+      username: 'targetUser',
+      notifications: [],
+    };
+
+    it('should return updated user if target user is not the user and is not already blocked', async () => {
+      jest.spyOn(UserModel, 'findOne').mockResolvedValueOnce(targetUser);
+      jest.spyOn(UserModel, 'findOne').mockResolvedValueOnce(mockUser);
+      jest.spyOn(UserModel, 'findOneAndUpdate').mockReturnValue({
+        select: jest
+          .fn()
+          .mockResolvedValueOnce({ ...mockUser, blockedUsers: [targetUser.username] }),
+      } as unknown as Query<PopulatedSafeDatabaseUser, typeof UserModel>);
+
+      const result = await blockUser(mockUser.username, targetUser.username);
+
+      expect(result).toBeDefined();
+      expect(result).toStrictEqual({ ...mockUser, blockedUsers: [targetUser.username] });
+    });
+
+    it('should return error if targetUsername equals username', async () => {
+      const result = await blockUser(mockUser.username, mockUser.username);
+
+      expect('error' in result).toBe(true);
+    });
+
+    it('should return error if target user cannot be found', async () => {
+      jest.spyOn(UserModel, 'findOne').mockResolvedValueOnce(null);
+      const result = await blockUser(mockUser.username, targetUser.username);
+
+      expect('error' in result).toBe(true);
+    });
+
+    it('should return error if target user is already blocked', async () => {
+      jest.spyOn(UserModel, 'findOne').mockResolvedValueOnce(targetUser);
+      jest
+        .spyOn(UserModel, 'findOne')
+        .mockResolvedValueOnce({ ...mockUser, blockedUsers: [targetUser.username] });
+      const result = await blockUser(mockUser.username, targetUser.username);
+
+      expect('error' in result).toBe(true);
+    });
+
+    it('should return error if user cannot be found', async () => {
+      jest.spyOn(UserModel, 'findOne').mockResolvedValueOnce(targetUser);
+      jest.spyOn(UserModel, 'findOne').mockResolvedValueOnce(null);
+      const result = await blockUser(mockUser.username, targetUser.username);
+
+      expect('error' in result).toBe(true);
+    });
+
+    it('should throw error if blockedUser fails to update', async () => {
+      jest.spyOn(UserModel, 'findOne').mockResolvedValueOnce(targetUser);
+      jest.spyOn(UserModel, 'findOne').mockResolvedValueOnce(mockUser);
+      jest.spyOn(UserModel, 'findOneAndUpdate').mockReturnValue({
+        select: jest.fn().mockRejectedValueOnce(null),
+      } as unknown as Query<PopulatedSafeDatabaseUser, typeof UserModel>);
+
+      const result = await blockUser(mockUser.username, targetUser.username);
+
+      expect('error' in result).toBe(true);
+    });
+  });
+
+  describe('unblockUser', () => {
+    const mockUser: DatabaseUser = {
+      ...user,
+      _id: new mongoose.Types.ObjectId(),
+      username: user.username,
+      notifications: [],
+      blockedUsers: ['targetUser'],
+    };
+
+    it('should return updated user if target user is not the user and is currently blocked', async () => {
+      jest.spyOn(UserModel, 'findOneAndUpdate').mockReturnValue({
+        select: jest.fn().mockResolvedValueOnce({ ...mockUser, blockedUsers: [] }),
+      } as unknown as Query<PopulatedSafeDatabaseUser, typeof UserModel>);
+
+      const result = await unblockUser(mockUser.username, 'targetUser');
+
+      expect(result).toBeDefined();
+      expect(result).toStrictEqual({ ...mockUser, blockedUsers: [] });
+    });
+
+    it('should return error if findOneAndUpdate returns null', async () => {
+      jest.spyOn(UserModel, 'findOneAndUpdate').mockReturnValue({
+        select: jest.fn().mockRejectedValueOnce(null),
+      } as unknown as Query<PopulatedSafeDatabaseUser, typeof UserModel>);
+
+      const result = await unblockUser(mockUser.username, 'targetUser');
+
+      expect('error' in result).toBe(true);
+    });
+
+    it('should return error if findOneAndUpdate throws error', async () => {
+      jest.spyOn(UserModel, 'findOneAndUpdate').mockReturnValue({
+        select: jest.fn().mockRejectedValueOnce(null),
+      } as unknown as Query<PopulatedSafeDatabaseUser, typeof UserModel>);
+
+      const result = await unblockUser(mockUser.username, 'targetUser');
+
+      expect('error' in result).toBe(true);
     });
   });
 });
