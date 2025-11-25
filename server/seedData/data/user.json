@@ -238,5 +238,14 @@
     "lifeUpvotes": "0",
     "coins" : "150",
     "lastLogin": "2025-11-20T16:44:37Z"
+  },
+  "battybaker": {
+    "username": "battybaker",
+    "password": "baker2",
+    "dateJoined": "2025-04-11T16:44:37Z",
+    "biography": "Absolutely BATTY for baking tips",
+    "loginStreak": "29",
+    "coins": "60",
+    "lastLogin": "2025-11-23T16:44:37Z"
   }
 }

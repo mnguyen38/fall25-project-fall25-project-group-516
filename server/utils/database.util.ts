@@ -175,7 +175,6 @@ export const populateUser = async (userId: string): Promise<PopulatedSafeDatabas
 
   const populatedUser: PopulatedSafeDatabaseUser = {
     ...user,
-    roles: new Map<string, string>(),
     notifications: populatedNotifications,
   } as PopulatedSafeDatabaseUser;
 

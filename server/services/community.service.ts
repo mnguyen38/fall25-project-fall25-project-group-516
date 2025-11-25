@@ -512,6 +512,7 @@ export const isAllowedToPostInCommunity = async (
       _id: communityId,
       participants: { $in: [username] },
       muted: { $nin: [username] },
+      banned: { $nin: [username]}
     });
 
     if (!isAllowed) {
