@@ -28,6 +28,7 @@ import AuthCallbackPage from './auth/callback';
 import Notifications from './notificationsPage';
 import AppealsPage from './main/appealsPage';
 import CommunityDashboard from './main/communities/communityDashboard';
+import LandingPage from './main/landingPage';
 
 const ProtectedRoute = ({
   user,
@@ -112,7 +113,8 @@ const FakeStackOverflow = ({ socket }: { socket: FakeSOSocket | null }) => {
     <LoginContext.Provider value={{ setUser }}>
       <Routes>
         {/* Public Routes - redirect to /home if already logged in */}
-        <Route path='/' element={user ? <Navigate to='/home' /> : <Login />} />
+        <Route path='/' element={user ? <Navigate to='/home' /> : <LandingPage />} />
+        <Route path='/login' element={user ? <Navigate to='/home' /> : <Login />} />
         <Route path='/signup' element={user ? <Navigate to='/home' /> : <Signup />} />
         <Route
           path='/auth/callback/:token'

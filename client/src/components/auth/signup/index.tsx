@@ -23,7 +23,7 @@ const Signup = () => {
   return (
     <div className='container'>
       <h2>Sign up for PancakeOverflow!</h2>
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} className='animate-enter'>
         <h4>Please enter your username.</h4>
         <input
           type='text'

@@ -23,7 +23,7 @@ const Login = () => {
     <div className='container'>
       <h2>Welcome to PancakeOverflow!</h2>
       <h3>Please login to continue.</h3>
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} className='animate-enter'>
         <h4>Please enter your username.</h4>
         <input
           type='text'

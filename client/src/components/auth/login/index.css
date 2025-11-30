@@ -1,14 +1,14 @@
 /* Import Pancake Theme Variables */
 :root {
-  --pancake-brown-dark: #6B4423;
-  --pancake-brown-medium: #8B5A3C;
-  --pancake-brown-light: #C4886B;
-  --pancake-cream: #F5E6D3;
-  --pancake-white: #FFFFFF;
-  --pancake-text-dark: #3D2817;
-  --pancake-text-medium: #6B4423;
-  --pancake-accent: #D4A574;
-  --pancake-border: #E8D4C0;
+  --pancake-brown-dark: #6b4423;
+  --pancake-brown-medium: #8b5a3c;
+  --pancake-brown-light: #c4886b;
+  --pancake-cream: #f5e6d3;
+  --pancake-white: #ffffff;
+  --pancake-text-dark: #3d2817;
+  --pancake-text-medium: #6b4423;
+  --pancake-accent: #d4a574;
+  --pancake-border: #e8d4c0;
   --pancake-shadow: rgba(107, 68, 35, 0.12);
 }
 
@@ -19,7 +19,7 @@
   justify-content: center;
   align-items: center;
   height: 100vh;
-  background: linear-gradient(135deg, var(--pancake-cream) 0%, #FFF5E6 100%);
+  background: linear-gradient(135deg, var(--pancake-cream) 0%, #fff5e6 100%);
   padding: 20px;
   position: relative;
   overflow: hidden;
@@ -37,6 +37,11 @@
   background-size: 40px 40px;
   pointer-events: none;
   opacity: 0.5;
+}
+
+.animate-enter {
+  opacity: 0; /* Starts hidden */
+  animation: fadeUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
 }
 
 /* Login card */
@@ -61,7 +66,7 @@ form {
 .container h2 {
   font-size: 2.5rem;
   color: var(--pancake-brown-dark);
-  margin-bottom: 8px;
+  margin-top: 8px;
   font-weight: 700;
   text-align: center;
   letter-spacing: -0.5px;
@@ -126,7 +131,7 @@ form {
   margin: -8px 0;
 }
 
-.show-password input[type="checkbox"] {
+.show-password input[type='checkbox'] {
   width: 18px;
   height: 18px;
   cursor: pointer;
@@ -145,7 +150,11 @@ form {
   padding: 14px 24px;
   font-size: 16px;
   font-weight: 600;
-  background: linear-gradient(135deg, var(--pancake-brown-medium) 0%, var(--pancake-brown-dark) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--pancake-brown-medium) 0%,
+    var(--pancake-brown-dark) 100%
+  );
   color: var(--pancake-white);
   border: none;
   border-radius: 8px;
@@ -190,6 +199,7 @@ form {
   align-items: center;
   justify-content: center;
   gap: 10px;
+  margin: 0px 16px;
   padding: 12px 20px;
   font-size: 15px;
   font-weight: 500;
@@ -222,6 +232,7 @@ form {
   align-items: center;
   justify-content: center;
   gap: 10px;
+  margin: 0px 16px;
   padding: 12px 20px;
   font-size: 15px;
   font-weight: 500;
