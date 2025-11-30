@@ -547,6 +547,83 @@ describe('User model', () => {
         }),
       );
     });
+
+    it('should generate random suffix if username already exists', async () => {
+      jest.spyOn(UserModel, 'findOne').mockImplementation((query: any) => {
+        if (query.oauthProvider || query.email) {
+          return { select: jest.fn().mockResolvedValue(null) } as any;
+        }
+
+        if (query.username) {
+          return Promise.resolve({ username: 'gh_user' } as any); // Username exists
+        }
+
+        return Promise.resolve(null);
+      });
+
+      jest.spyOn(UserModel, 'create').mockResolvedValue({
+        ...safeUser,
+        _id: 'new-id',
+      } as any);
+
+      const result = await findOrCreateOAuthUser('github', '123', oauthProfile as any);
+
+      expect(result).toHaveProperty('_id', 'new-id');
+      expect(UserModel.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          oauthProvider: 'github',
+        }),
+      );
+    });
+
+    it('should return error if linking OAuth to existing email fails', async () => {
+      const existingEmailUser = { ...safeUser, username: 'existing_user' };
+
+      jest.spyOn(UserModel, 'findOne').mockImplementation((query: any) => {
+        if (query.oauthProvider) {
+          return { select: jest.fn().mockResolvedValue(null) } as any;
+        }
+
+        if (query.email) {
+          return { select: jest.fn().mockResolvedValue(existingEmailUser) } as any;
+        }
+        return Promise.resolve(null);
+      });
+
+      jest.spyOn(UserModel, 'findOneAndUpdate').mockReturnValue({
+        select: jest.fn().mockResolvedValue(null),
+      } as any);
+
+      const result = await findOrCreateOAuthUser('github', '123', oauthProfile as any);
+
+      expect('error' in result).toBe(true);
+      if ('error' in result) {
+        expect(result.error).toContain('Failed to link OAuth');
+      }
+    });
+
+    it('should return error if saving new OAuth user fails', async () => {
+      jest.spyOn(UserModel, 'findOne').mockImplementation((query: any) => {
+        if (query.oauthProvider || query.email) {
+          return { select: jest.fn().mockResolvedValue(null) } as any;
+        }
+
+        if (query.username) {
+          return Promise.resolve(null);
+        }
+
+        return Promise.resolve(null);
+      });
+
+      jest.spyOn(UserModel, 'create').mockResolvedValue(null as any);
+
+      const result = await findOrCreateOAuthUser('github', '123', oauthProfile as any);
+
+      expect('error' in result).toBe(true);
+      if ('error' in result) {
+        expect(result.error).toContain('Failed to save new OAuth user');
+      }
+    });
   });
 
   // describe('getUserRolesById', () => {
@@ -1124,6 +1201,20 @@ describe('User model', () => {
 
       expect('error' in result).toBe(true);
     });
+
+    it('should throw error if aggregate returns null (not falsy array)', async () => {
+      interface AverageResult {
+        _id: null;
+        averageValue: number;
+      }
+      jest.spyOn(UserModel, 'aggregate').mockReturnValue({
+        exec: jest.fn().mockResolvedValue(null),
+      } as unknown as Aggregate<AverageResult[]>);
+
+      const result = await getUserIfTopContributor(safeUser.username);
+
+      expect('error' in result).toBe(true);
+    });
   });
 
   describe('blockUser', () => {
@@ -1198,6 +1289,18 @@ describe('User model', () => {
 
       expect('error' in result).toBe(true);
     });
+
+    it('should throw error if findOneAndUpdate returns null', async () => {
+      jest.spyOn(UserModel, 'findOne').mockResolvedValueOnce(targetUser);
+      jest.spyOn(UserModel, 'findOne').mockResolvedValueOnce(mockUser);
+      jest.spyOn(UserModel, 'findOneAndUpdate').mockReturnValue({
+        select: jest.fn().mockResolvedValueOnce(null),
+      } as unknown as Query<PopulatedSafeDatabaseUser, typeof UserModel>);
+
+      const result = await blockUser(mockUser.username, targetUser.username);
+
+      expect('error' in result).toBe(true);
+    });
   });
 
   describe('unblockUser', () => {
@@ -1222,12 +1325,15 @@ describe('User model', () => {
 
     it('should return error if findOneAndUpdate returns null', async () => {
       jest.spyOn(UserModel, 'findOneAndUpdate').mockReturnValue({
-        select: jest.fn().mockRejectedValueOnce(null),
+        select: jest.fn().mockResolvedValueOnce(null),
       } as unknown as Query<PopulatedSafeDatabaseUser, typeof UserModel>);
 
       const result = await unblockUser(mockUser.username, 'targetUser');
 
       expect('error' in result).toBe(true);
+      if ('error' in result) {
+        expect(result.error).toContain('Error occurred when unblocking user');
+      }
     });
 
     it('should return error if findOneAndUpdate throws error', async () => {

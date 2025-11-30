@@ -319,7 +319,7 @@ describe('POST /addComment', () => {
 
   it('should return bad request error if ID is invalid format (Controller Layer)', async () => {
     const mockReqBody = {
-      id: '12345',
+      id: '123', // Too short to be a valid ObjectId
       type: 'question',
       comment: {
         text: 'This is a test comment',
@@ -330,11 +330,10 @@ describe('POST /addComment', () => {
 
     const response = await supertest(app).post('/api/comment/addComment').send(mockReqBody);
 
-    if (response.status === 400 && response.text === 'Invalid ID format') {
-      expect(response.text).toBe('Invalid ID format');
-    } else {
-      expect(response.status).toBe(400);
-    }
+    // OpenAPI validation catches this before controller
+    expect(response.status).toBe(400);
+    const openApiError = JSON.parse(response.text);
+    expect(openApiError.errors[0].path).toBe('/body/id');
   });
 
   it('should return database error in response if saveComment method throws an error', async () => {

@@ -257,4 +257,79 @@ describe('POST /addAnswer', () => {
 
     expect(response.status).toBe(500);
   });
+
+  it('should return 403 when user is unauthorized to add answer', async () => {
+    const validQid = new mongoose.Types.ObjectId();
+    const mockReqBody = {
+      qid: validQid,
+      ans: {
+        text: 'This is a test answer',
+        ansBy: '65e9b716ff0e892116b2de01',
+        ansDateTime: new Date('2024-06-03'),
+      },
+    };
+
+    const mockAnswer = {
+      _id: new ObjectId('507f191e810c19729de860ea'),
+      text: 'This is a test answer',
+      ansBy: '65e9b716ff0e892116b2de01',
+      ansDateTime: new Date('2024-06-03'),
+      comments: [],
+    };
+
+    saveAnswerSpy.mockResolvedValueOnce(mockAnswer);
+    addAnswerToQuestionSpy.mockResolvedValueOnce({
+      error: 'Unauthorized: User is banned from this community',
+    });
+
+    const response = await supertest(app).post('/api/answer/addAnswer').send(mockReqBody);
+
+    expect(response.status).toBe(403);
+    expect(response.body.error).toContain('Unauthorized');
+  });
+});
+
+describe('GET /user/:username', () => {
+  const getAnswersByUserSpy = jest.spyOn(answerUtil, 'getAnswersByUser');
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    setupMockAuth();
+  });
+
+  it('should return answers for a user', async () => {
+    const mockAnswers = [
+      {
+        _id: new ObjectId(),
+        text: 'Answer 1',
+        ansBy: 'testuser',
+        ansDateTime: new Date(),
+        comments: [],
+      },
+      {
+        _id: new ObjectId(),
+        text: 'Answer 2',
+        ansBy: 'testuser',
+        ansDateTime: new Date(),
+        comments: [],
+      },
+    ];
+
+    getAnswersByUserSpy.mockResolvedValue(mockAnswers);
+
+    const response = await supertest(app).get('/api/answer/user/testuser');
+
+    expect(response.status).toBe(200);
+    expect(getAnswersByUserSpy).toHaveBeenCalledWith('testuser');
+    expect(response.body).toHaveLength(2);
+  });
+
+  it('should return 500 when getAnswersByUser throws error', async () => {
+    getAnswersByUserSpy.mockRejectedValue(new Error('Database error'));
+
+    const response = await supertest(app).get('/api/answer/user/testuser');
+
+    expect(response.status).toBe(500);
+    expect(response.text).toContain('Error when fetching answers by user');
+  });
 });
