@@ -4,18 +4,60 @@
  */
 
 /**
+ * Creates a new user account
+ * @param username - The username for the new account
+ * @param password - The password for the new account (defaults to 'securePass123!')
+ */
+export const createNewUser = (username: string, password: string = 'securePass123!') => {
+  cy.visit('http://localhost:4530');
+  cy.contains('PancakeOverflow');
+  cy.get('.btn-primary').contains('Sign Up').click();
+
+  cy.url().should('include', '/signup');
+  cy.contains('Sign up for PancakeOverflow!');
+
+  cy.get('#username-input').type(username);
+  cy.get('#password-input').type(password);
+  cy.get('input[placeholder="Confirm your password"]').type(password);
+  cy.contains('Submit').click();
+
+  cy.url().should('include', '/home');
+
+  // Accept transaction modal for new users
+  cy.get('.modal-overlay', { timeout: 10000 }).should('be.visible');
+  cy.contains('button', /accept/i).click({ force: true });
+  cy.get('.modal-overlay').should('not.exist');
+};
+
+/**
  * Logs in a user by visiting the login page and entering credentials
  * @param username - The username to log in with
- * @param password - The password to log in with (defaults to 'password123')
+ * @param password - The password to log in with (defaults to 'securePass123!')
  */
 export const loginUser = (username: string, password: string = 'securePass123!') => {
   cy.visit('http://localhost:4530');
+  cy.contains('PancakeOverflow');
+  cy.contains('Login').click();
+
+  cy.url().should('include', '/login');
   cy.contains('Welcome to PancakeOverflow!');
+
   cy.get('#username-input').type(username);
   cy.get('#password-input').type(password);
   cy.contains('Submit').click();
   // Wait for redirect to home page
   cy.url().should('include', '/home');
+};
+
+/**
+ * Logs out the current user
+ */
+export const logoutUser = () => {
+  cy.contains('View Profile').click();
+  cy.get('.icon-button').eq(1).click(); // Settings button
+  cy.get('.settings-dropdown').should('be.visible');
+  cy.contains('Log Out').click();
+  cy.url().should('include', '/');
 };
 
 /**
